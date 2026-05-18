@@ -1,8 +1,8 @@
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import { Alert, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Paper, Stack, TextField, Typography } from '@mui/material'
-import { SectionTitle } from '../../../dashboard/components/SectionTitle'
-import type { Connection } from '../../types'
+import { SectionTitle } from '../../dashboard/components/SectionTitle'
+import type { Connection } from '../types'
 
 type ConnectionsListProps = {
   connectionToDelete: Connection | null;

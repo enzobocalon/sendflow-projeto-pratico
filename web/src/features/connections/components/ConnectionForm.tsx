@@ -2,8 +2,8 @@ import AddIcon from "@mui/icons-material/Add";
 import { Alert, Button, Stack, TextField } from "@mui/material";
 import { Controller } from "react-hook-form";
 import type { Control, FieldErrors } from "react-hook-form";
-import { SectionTitle } from "../../../dashboard/components/SectionTitle";
-import type { Connection, ConnectionFormValues } from "../../types";
+import { SectionTitle } from "../../dashboard/components/SectionTitle";
+import type { Connection, ConnectionFormValues } from "../types";
 
 type ConnectionFormProps = {
   editingConnection: Connection | null;
