@@ -1,0 +1,32 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function ownsResource() {
+      return signedIn() && request.auth.uid == resource.data.userId;
+    }
+
+    function ownsIncomingResource() {
+      return signedIn() && request.auth.uid == request.resource.data.userId;
+    }
+
+    match /connections/{connectionId} {
+      allow read, update, delete: if ownsResource();
+      allow create: if ownsIncomingResource();
+    }
+
+    match /contacts/{contactId} {
+      allow read, update, delete: if ownsResource();
+      allow create: if ownsIncomingResource();
+    }
+
+    match /messages/{messageId} {
+      allow read, update, delete: if ownsResource();
+      allow create: if ownsIncomingResource();
+    }
+  }
+}
