@@ -1,0 +1,12 @@
+{
+  "name": "sendflow",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter web build && pnpm --filter functions build",
+    "lint": "pnpm --filter web lint",
+    "preview": "pnpm --filter web preview",
+    "functions:build": "pnpm --filter functions build"
+  }
+}
