@@ -35,4 +35,27 @@ export const messageSchema = z
         path: ["scheduledTime"],
       });
     }
+
+    if (!scheduledDate || !scheduledTime) {
+      return;
+    }
+
+    const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`);
+
+    if (Number.isNaN(scheduledAt.getTime())) {
+      context.addIssue({
+        code: "custom",
+        message: "Informe uma data e horário válidos.",
+        path: ["scheduledDate"],
+      });
+      return;
+    }
+
+    if (scheduledAt <= new Date()) {
+      context.addIssue({
+        code: "custom",
+        message: "Agende a mensagem para uma data futura.",
+        path: ["scheduledDate"],
+      });
+    }
   });
