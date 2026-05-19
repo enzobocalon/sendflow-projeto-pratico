@@ -1,11 +1,22 @@
 import { MessageComposer } from "./components/MessageComposer";
 import { MessagesList } from "./components/MessagesList";
+import { useMessages } from "./useMessages";
 
 export const MessagesPage = () => {
+  const { cancelEditMessage, editMessage, editingMessage } = useMessages();
+
   return (
     <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-      <MessageComposer/>
-      <MessagesList />
+      <MessageComposer
+        editingMessage={editingMessage}
+        onCancel={cancelEditMessage}
+        onSaved={cancelEditMessage}
+      />
+      <MessagesList
+        editingMessage={editingMessage}
+        onDeletedEditingMessage={cancelEditMessage}
+        onEdit={editMessage}
+      />
     </div>
   );
 };

@@ -1,15 +1,24 @@
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {
   Alert,
   Chip,
   CircularProgress,
   IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
   Stack,
   Typography,
 } from "@mui/material";
+import { useState, type MouseEvent } from "react";
+import { DeleteDialog } from "../../../components/DeleteDialog";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
+import type { Message } from "../types";
 import { MessageFilters } from "./MessageFilters";
-import { useMessagesList } from "./useMessagesList";
+import { type MessageListItem, useMessagesList } from "./useMessagesList";
 
 const statusLabel = {
   scheduled: "Agendada",
@@ -21,8 +30,68 @@ const statusColor = {
   sent: "success",
 } as const;
 
-export const MessagesList = () => {
-  const { messages, error, isLoading, handleFilterChange, filter } = useMessagesList();
+type MessagesListProps = {
+  editingMessage: Message | null;
+  onDeletedEditingMessage: () => void;
+  onEdit: (message: Message) => void;
+};
+
+export const MessagesList = ({
+  editingMessage,
+  onDeletedEditingMessage,
+  onEdit,
+}: MessagesListProps) => {
+  const {
+    closeDeleteModal,
+    confirmDeleteMessage,
+    error,
+    filter,
+    handleFilterChange,
+    isDeleting,
+    isLoading,
+    messageToDelete,
+    messages,
+    requestDeleteMessage,
+  } = useMessagesList({
+    editingMessage,
+    onDeletedEditingMessage,
+  });
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<MessageListItem | null>(
+    null,
+  );
+
+  const openMenu = (
+    event: MouseEvent<HTMLButtonElement>,
+    message: MessageListItem,
+  ) => {
+    setMenuAnchor(event.currentTarget);
+    setSelectedMessage(message);
+  };
+
+  const closeMenu = () => {
+    setMenuAnchor(null);
+    setSelectedMessage(null);
+  };
+
+  const handleEdit = () => {
+    if (!selectedMessage) {
+      return;
+    }
+
+    onEdit(selectedMessage);
+    closeMenu();
+  };
+
+  const handleDelete = () => {
+    if (!selectedMessage) {
+      return;
+    }
+
+    requestDeleteMessage(selectedMessage);
+    closeMenu();
+  };
+
   return (
     <section>
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -86,7 +155,12 @@ export const MessagesList = () => {
                     {message.content}
                   </Typography>
                 </div>
-                <IconButton aria-label="Mais ações" size="small">
+                <IconButton
+                  aria-label="Mais ações"
+                  size="small"
+                  onClick={(event) => openMenu(event, message)}
+                  disabled={isDeleting}
+                >
                   <MoreVertIcon fontSize="small" />
                 </IconButton>
               </div>
@@ -94,6 +168,37 @@ export const MessagesList = () => {
           ))}
         </Stack>
       )}
+
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={closeMenu}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        disableScrollLock
+      >
+        <MenuItem onClick={handleEdit}>
+          <ListItemIcon>
+            <EditOutlinedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Editar</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleDelete}>
+          <ListItemIcon>
+            <DeleteOutlineIcon color="error" fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Excluir</ListItemText>
+        </MenuItem>
+      </Menu>
+
+      <DeleteDialog
+        open={Boolean(messageToDelete)}
+        onClose={closeDeleteModal}
+        onCancel={closeDeleteModal}
+        onConfirm={confirmDeleteMessage}
+        isLoading={isDeleting}
+        message={`Tem certeza que deseja excluir esta mensagem? Esta ação não pode ser desfeita.`}
+      />
     </section>
   );
 };

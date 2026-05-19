@@ -19,11 +19,23 @@ import {
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import { Controller } from "react-hook-form";
 import { useMessageComposer } from "./useMessageComposer";
+import type { Message } from "../types";
 
-export const MessageComposer = () => {
+type MessageComposerProps = {
+  editingMessage: Message | null;
+  onCancel: () => void;
+  onSaved: () => void;
+};
+
+export const MessageComposer = ({
+  editingMessage,
+  onCancel,
+  onSaved,
+}: MessageComposerProps) => {
   const {
     availableContacts,
     cancelScheduledMode,
+    clearSelectedContacts,
     connectionError,
     connections,
     contactsError,
@@ -37,15 +49,23 @@ export const MessageComposer = () => {
     sendMode,
     submitNow,
     submitScheduled,
-  } = useMessageComposer();
+  } = useMessageComposer({
+    editingMessage,
+    onSaved,
+  });
+  const isEditing = Boolean(editingMessage);
   const hasConnections = connections.length > 0;
   const hasContacts = availableContacts.length > 0;
 
   return (
     <section className="rounded-lg border border-slate-200 p-5">
       <SectionTitle
-        title="Preparar mensagem"
-        subtitle="Selecione contatos, escreva o conteúdo e escolha envio imediato ou agendado."
+        title={isEditing ? "Editar mensagem" : "Preparar mensagem"}
+        subtitle={
+          isEditing
+            ? "Atualize os dados da mensagem selecionada."
+            : "Selecione contatos, escreva o conteúdo e escolha envio imediato ou agendado."
+        }
       />
 
       <Stack spacing={2.5} className="mt-5">
@@ -58,6 +78,10 @@ export const MessageComposer = () => {
 
               <Select
                 {...field}
+                onChange={(event) => {
+                  field.onChange(event);
+                  clearSelectedContacts();
+                }}
                 labelId="message-connection-label"
                 label="Conexão"
                 disabled={isLoadingConnections || !hasConnections}
@@ -267,6 +291,17 @@ export const MessageComposer = () => {
               onClick={enableScheduledMode}
             >
               Agendar mensagem
+            </Button>
+          )}
+          {isEditing && (
+            <Button
+              variant="text"
+              type="button"
+              startIcon={<CloseIcon />}
+              disabled={isSubmitting}
+              onClick={onCancel}
+            >
+              Cancelar edição
             </Button>
           )}
         </Stack>

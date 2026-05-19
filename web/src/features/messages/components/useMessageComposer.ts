@@ -2,13 +2,47 @@ import { useForm, useWatch } from "react-hook-form";
 import { useConnectionsOptions } from "../../../hooks/useConnectionsOptions";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { messageSchema } from "../schemas/messageSchema";
-import type { MessageFormValues } from "../types";
+import type { Message, MessageFormValues } from "../types";
 import { useContactsOptions } from "../../../hooks/useContactsOptions";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../hooks/useAuth";
-import { createMessage } from "../../../services/messageService";
+import { createMessage, updateMessage } from "../../../services/messageService";
 
-export function useMessageComposer() {
+type UseMessageComposerParams = {
+  editingMessage: Message | null;
+  onSaved: () => void;
+};
+
+const formatDateInputValue = (date: Date) =>
+  [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+
+const formatTimeInputValue = (date: Date) =>
+  [
+    String(date.getHours()).padStart(2, "0"),
+    String(date.getMinutes()).padStart(2, "0"),
+  ].join(":");
+
+const getMessageFormValues = (message: Message | null): MessageFormValues => {
+  const scheduledDate = message?.scheduledAt?.toDate();
+
+  return {
+    connectionId: message?.connectionId ?? "",
+    contactIds: message?.contactIds ?? [],
+    content: message?.content ?? "",
+    scheduledDate: scheduledDate ? formatDateInputValue(scheduledDate) : "",
+    scheduledTime: scheduledDate ? formatTimeInputValue(scheduledDate) : "",
+    sendMode: message?.status === "scheduled" ? "scheduled" : "now",
+  };
+};
+
+export function useMessageComposer({
+  editingMessage,
+  onSaved,
+}: UseMessageComposerParams) {
   const { user } = useAuth();
   const [formError, setFormError] = useState("");
   const {
@@ -51,8 +85,8 @@ export function useMessageComposer() {
   });
 
   useEffect(() => {
-    setValue("contactIds", []);
-  }, [selectedConnectionId, setValue]);
+    reset(getMessageFormValues(editingMessage));
+  }, [editingMessage, reset]);
 
   const availableContacts = useMemo(() => {
     if (!selectedConnectionId) {
@@ -64,7 +98,7 @@ export function useMessageComposer() {
     );
   }, [contacts, selectedConnectionId]);
 
-  const saveMessage = async (values: MessageFormValues) => {
+  const submitMessage = handleSubmit(async (values) => {
     if (!user) {
       setFormError("Faça login para salvar uma mensagem.");
       return;
@@ -78,28 +112,59 @@ export function useMessageComposer() {
         ? new Date(`${values.scheduledDate}T${values.scheduledTime}`)
         : undefined;
 
-      await createMessage({
-        connectionId: values.connectionId,
-        contactIds: values.contactIds,
-        content: values.content,
-        scheduledAt,
-        status: isScheduled ? "scheduled" : "sent",
-        userId: user.uid,
-      });
+      if (editingMessage) {
+        await updateMessage({
+          connectionId: values.connectionId,
+          contactIds: values.contactIds,
+          content: values.content,
+          messageId: editingMessage.id,
+          scheduledAt,
+          status: isScheduled ? "scheduled" : "sent",
+        });
+      } else {
+        await createMessage({
+          connectionId: values.connectionId,
+          contactIds: values.contactIds,
+          content: values.content,
+          scheduledAt,
+          status: isScheduled ? "scheduled" : "sent",
+          userId: user.uid,
+        });
+      }
 
       reset();
+      onSaved();
     } catch {
       setFormError("Não foi possível salvar a mensagem.");
     }
-  };
+  });
 
   const submitNow = () => {
-    setValue("sendMode", "now", { shouldValidate: true });
+    setValue("sendMode", "now");
+    clearSchedule();
+    submitMessage();
+  };
+
+  const submitScheduled = async () => {
+    setValue("sendMode", "scheduled");
+    const isValidScheduleData = await trigger([
+      "scheduledDate",
+      "scheduledTime",
+    ]);
+
+    if (!isValidScheduleData) {
+      return;
+    }
+    await submitMessage();
+  };
+
+  const clearSchedule = () => {
     setValue("scheduledDate", "");
     setValue("scheduledTime", "");
-    void handleSubmit((values) =>
-      saveMessage({ ...values, sendMode: "now" }),
-    )();
+  };
+
+  const clearSelectedContacts = () => {
+    setValue("contactIds", []);
   };
 
   const enableScheduledMode = () => {
@@ -108,26 +173,12 @@ export function useMessageComposer() {
 
   const cancelScheduledMode = () => {
     setValue("sendMode", "now", { shouldValidate: false });
-    setValue("scheduledDate", "");
-    setValue("scheduledTime", "");
-  };
-
-  const submitScheduled = async () => {
-    setValue("sendMode", "scheduled", { shouldValidate: true });
-
-    const isValidSchedule = await trigger(["scheduledDate", "scheduledTime"]);
-
-    if (!isValidSchedule) {
-      return;
-    }
-
-    void handleSubmit((values) =>
-      saveMessage({ ...values, sendMode: "scheduled" }),
-    )();
+    clearSchedule();
   };
 
   return {
     availableContacts,
+    clearSelectedContacts,
     contactsError,
     connections,
     connectionError,
@@ -141,8 +192,8 @@ export function useMessageComposer() {
     sendMode,
     cancelScheduledMode,
     enableScheduledMode,
-    submitNow,
-    submitScheduled,
     reset,
+    submitScheduled,
+    submitNow
   };
 }
