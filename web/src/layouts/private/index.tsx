@@ -36,12 +36,12 @@ export const PrivateLayout = ({ children, user }: PrivateLayoutProps) => {
   }
 
   return (
-    <Box className="min-h-screen bg-slate-100 text-slate-950">
+    <Box className="min-h-screen w-full bg-slate-100 text-slate-950">
       <AppBar
         position="static"
         color="inherit"
         elevation={0}
-        className="border-b border-slate-200 bg-white"
+        className="w-full border-b border-slate-200 bg-white"
       >
         <Toolbar className="gap-4">
           <div className="flex flex-1 items-center gap-2">
@@ -85,6 +85,7 @@ export const PrivateLayout = ({ children, user }: PrivateLayoutProps) => {
             anchorEl={menuAnchor}
             open={menuOpen}
             onClose={closeMenu}
+            disableScrollLock
             anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             transformOrigin={{ horizontal: 'right', vertical: 'top' }}
           >
