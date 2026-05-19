@@ -192,6 +192,7 @@ export const MessagesList = ({
       </Menu>
 
       <DeleteDialog
+        title="Excluir mensagem?"
         open={Boolean(messageToDelete)}
         onClose={closeDeleteModal}
         onCancel={closeDeleteModal}

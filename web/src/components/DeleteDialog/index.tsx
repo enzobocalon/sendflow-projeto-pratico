@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 
 export type DeleteDialogProps = {
+  title: string;
   open: boolean;
   onClose: () => void;
   message: string;
@@ -17,7 +18,7 @@ export type DeleteDialogProps = {
   isLoading: boolean;
 }
 
-export const DeleteDialog = ({ open, onCancel, onClose, onConfirm, isLoading, message }: DeleteDialogProps) => {
+export const DeleteDialog = ({ title, open, onCancel, onClose, onConfirm, isLoading, message }: DeleteDialogProps) => {
   return (
     <Dialog
       open={open}
@@ -25,7 +26,9 @@ export const DeleteDialog = ({ open, onCancel, onClose, onConfirm, isLoading, me
       aria-labelledby="delete-contact-title"
       aria-describedby="delete-contact-description"
     >
-      <DialogTitle id="delete-contact-title">Excluir contato</DialogTitle>
+      <DialogTitle id="delete-contact-title">
+        {title}
+      </DialogTitle>
       <DialogContent>
         <DialogContentText id="delete-contact-description">
           {message}

@@ -126,6 +126,7 @@ export const ContactsList = ({
       )}
 
       <DeleteDialog
+        title="Excluir contato?"
         open={Boolean(contactToDelete)}
         onClose={closeDeleteModal}
         onCancel={closeDeleteModal}

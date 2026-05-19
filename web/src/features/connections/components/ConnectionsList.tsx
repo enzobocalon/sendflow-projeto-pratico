@@ -125,6 +125,7 @@ export const ConnectionsList = ({
       )}
 
       <DeleteDialog
+        title="Excluir conexão?"
         open={Boolean(connectionToDelete)}
         onClose={closeDeleteModal}
         onCancel={closeDeleteModal}
