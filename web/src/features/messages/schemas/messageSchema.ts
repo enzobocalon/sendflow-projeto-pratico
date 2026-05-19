@@ -5,7 +5,8 @@ export const messageSchema = z
     connectionId: z.string().trim().min(1, "Informe uma conexão."),
     contactIds: z
       .array(z.string().trim().min(1))
-      .min(1, "Selecione pelo menos um contato."),
+      .min(1, "Selecione pelo menos um contato.")
+      .max(100, "Selecione no máximo 100 contatos por mensagem."),
     content: z
       .string()
       .trim()

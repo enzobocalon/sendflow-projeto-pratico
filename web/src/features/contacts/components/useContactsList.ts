@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useConnectionsOptions } from "../../../hooks/useConnectionsOptions";
 import { useContactsOptions } from "../../../hooks/useContactsOptions";
+import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import { deleteContact } from "../../../services/contactService";
 import type { Contact } from "../types";
 
@@ -17,11 +18,17 @@ export const useContactsList = ({
   const [error, setError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebouncedValue(searchTerm);
+
   const {
     contacts,
     error: contactsError,
+    hasMore,
     isLoading: isLoadingContacts,
-  } = useContactsOptions();
+    isLoadingMore,
+    loadMore,
+  } = useContactsOptions({ searchTerm: debouncedSearchTerm });
+  
   const { connections } = useConnectionsOptions();
 
   const connectionNameById = useMemo(
@@ -37,22 +44,6 @@ export const useContactsList = ({
       connectionNameById.get(connectionId) ?? "Conexão não encontrada",
     [connectionNameById],
   );
-
-  const filteredContacts = useMemo(() => {
-    const normalizedSearchTerm = searchTerm.trim().toLowerCase();
-
-    if (!normalizedSearchTerm) {
-      return contacts;
-    }
-
-    return contacts.filter((contact) => {
-      const connectionName = getConnectionName(contact.connectionId);
-
-      return [contact.name, contact.phone, connectionName].some((value) =>
-        value.toLowerCase().includes(normalizedSearchTerm),
-      );
-    });
-  }, [contacts, getConnectionName, searchTerm]);
 
   const requestDeleteContact = (contact: Contact) => {
     setError("");
@@ -94,11 +85,14 @@ export const useContactsList = ({
     closeDeleteModal,
     confirmDeleteContact,
     contactToDelete,
-    contacts: filteredContacts,
+    contacts,
     error: error || contactsError,
     getConnectionName,
+    hasMore,
     isDeleting,
     isLoading: isLoadingContacts,
+    isLoadingMore,
+    loadMore,
     requestDeleteContact,
     searchTerm,
     setSearchTerm,

@@ -3,6 +3,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
@@ -23,33 +24,51 @@ type UpdateContactParams = {
   phone: string;
 };
 
-export const createContact = ({
+const normalizeSearchText = (value: string) => value.trim().toLowerCase();
+
+const getConnectionName = async (connectionId: string) => {
+  const snapshot = await getDoc(doc(db, "connections", connectionId));
+
+  return snapshot.exists() ? String(snapshot.data().name ?? "") : "";
+};
+
+export const createContact = async ({
   connectionId,
   name,
   phone,
   userId,
-}: SaveContactParams) =>
-  addDoc(collection(db, "contacts"), {
+}: SaveContactParams) => {
+  const connectionName = await getConnectionName(connectionId);
+
+  return addDoc(collection(db, "contacts"), {
     connectionId,
+    connectionName,
     createdAt: serverTimestamp(),
     name: name.trim(),
+    nameNormalized: normalizeSearchText(name),
     phone: sanitizePhone(phone),
     updatedAt: serverTimestamp(),
     userId,
   });
+};
 
-export const updateContact = ({
+export const updateContact = async ({
   contactId,
   connectionId,
   name,
   phone,
-}: UpdateContactParams) =>
-  updateDoc(doc(db, "contacts", contactId), {
+}: UpdateContactParams) => {
+  const connectionName = await getConnectionName(connectionId);
+
+  return updateDoc(doc(db, "contacts", contactId), {
     connectionId,
+    connectionName,
     name: name.trim(),
+    nameNormalized: normalizeSearchText(name),
     phone: sanitizePhone(phone),
     updatedAt: serverTimestamp(),
   });
+};
 
 export const deleteContact = (contactId: string) =>
   deleteDoc(doc(db, "contacts", contactId));

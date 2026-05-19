@@ -4,8 +4,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { messageSchema } from "../schemas/messageSchema";
 import type { Message, MessageFormValues } from "../types";
 import { useContactsOptions } from "../../../hooks/useContactsOptions";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../../hooks/useAuth";
+import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import { createMessage, updateMessage } from "../../../services/messageService";
 
 type UseMessageComposerParams = {
@@ -44,17 +45,14 @@ export function useMessageComposer({
   onSaved,
 }: UseMessageComposerParams) {
   const { user } = useAuth();
+  const [contactSearchTerm, setContactSearchTerm] = useState("");
+  const debouncedContactSearchTerm = useDebouncedValue(contactSearchTerm);
   const [formError, setFormError] = useState("");
   const {
     connections,
     error: connectionError,
     isLoading: isLoadingConnections,
   } = useConnectionsOptions();
-  const {
-    contacts,
-    error: contactsError,
-    isLoading: isLoadingContacts,
-  } = useContactsOptions();
   const {
     control,
     formState: { errors, isSubmitting },
@@ -84,19 +82,21 @@ export function useMessageComposer({
     name: "sendMode",
   });
 
+  const {
+    contacts: availableContacts,
+    error: contactsError,
+    hasMore: hasMoreContacts,
+    isLoading: isLoadingContacts,
+    loadMore: loadMoreContacts,
+  } = useContactsOptions({
+    connectionId: selectedConnectionId,
+    enabled: Boolean(selectedConnectionId),
+    searchTerm: debouncedContactSearchTerm,
+  });
+
   useEffect(() => {
     reset(getMessageFormValues(editingMessage));
   }, [editingMessage, reset]);
-
-  const availableContacts = useMemo(() => {
-    if (!selectedConnectionId) {
-      return [];
-    }
-
-    return contacts.filter(
-      (contact) => contact.connectionId === selectedConnectionId,
-    );
-  }, [contacts, selectedConnectionId]);
 
   const submitMessage = handleSubmit(async (values) => {
     if (!user) {
@@ -165,6 +165,7 @@ export function useMessageComposer({
 
   const clearSelectedContacts = () => {
     setValue("contactIds", []);
+    setContactSearchTerm("");
   };
 
   const enableScheduledMode = () => {
@@ -179,11 +180,14 @@ export function useMessageComposer({
   return {
     availableContacts,
     clearSelectedContacts,
+    contactSearchTerm,
     contactsError,
     connections,
     connectionError,
     isLoadingConnections,
     isLoadingContacts,
+    hasMoreContacts,
+    loadMoreContacts,
     control,
     errors,
     isSubmitting,
@@ -193,6 +197,7 @@ export function useMessageComposer({
     cancelScheduledMode,
     enableScheduledMode,
     reset,
+    setContactSearchTerm,
     submitScheduled,
     submitNow
   };

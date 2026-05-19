@@ -56,7 +56,7 @@ export const ConnectionsList = ({
           label="Buscar conexão"
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
-          disabled={isLoading || isDeleting}
+          disabled={isDeleting}
           className="md:w-52"
         />
       </div>
@@ -121,6 +121,7 @@ export const ConnectionsList = ({
               </div>
             </Paper>
           ))}
+
         </Stack>
       )}
 

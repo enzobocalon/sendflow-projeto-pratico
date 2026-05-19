@@ -9,18 +9,21 @@ type ConnectionFormProps = {
   editingConnection: Connection | null;
   onCancel: () => void;
   onSaved: () => void;
+  connectionsCount: number;
 };
 
 export const ConnectionForm = ({
   editingConnection,
   onCancel,
   onSaved,
+  connectionsCount,
 }: ConnectionFormProps) => {
   const isEditing = Boolean(editingConnection);
   const { control, error, errors, isSubmitting, submitConnection } =
     useConnectionForm({
       editingConnection,
       onSaved,
+      connectionsCount,
     });
 
   return (
@@ -54,7 +57,12 @@ export const ConnectionForm = ({
         {error && <Alert severity="error">{error}</Alert>}
 
         <Stack direction="row" spacing={1.5}>
-          <Button type="submit" variant="contained" startIcon={<AddIcon />} disabled={isSubmitting}>
+          <Button
+            type="submit"
+            variant="contained"
+            startIcon={<AddIcon />}
+            disabled={isSubmitting}
+          >
             {isSubmitting ? "Salvando..." : "Salvar conexão"}
           </Button>
           {isEditing && (

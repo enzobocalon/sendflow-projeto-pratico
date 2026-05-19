@@ -8,6 +8,7 @@ export type Message = {
   content: string;
   createdAt?: Timestamp;
   id: string;
+  recipientsCount: number;
   scheduledAt?: Timestamp | null;
   sentAt?: Timestamp | null;
   status: MessageStatus;

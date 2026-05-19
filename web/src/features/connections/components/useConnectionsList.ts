@@ -1,6 +1,11 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useAuth } from "../../../hooks/useAuth";
 import { useConnectionsOptions } from "../../../hooks/useConnectionsOptions";
-import { deleteConnection } from "../../../services/connectionService";
+import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
+import {
+  deleteConnection,
+  hasConnectionDependencies,
+} from "../../../services/connectionService";
 import type { Connection } from "../types";
 
 type UseConnectionsListParams = {
@@ -17,19 +22,14 @@ export const useConnectionsList = ({
   const [error, setError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const { connections, isLoading } = useConnectionsOptions();
+  const debouncedSearchTerm = useDebouncedValue(searchTerm);
+  const { user } = useAuth();
 
-  const filteredConnections = useMemo(() => {
-    const normalizedSearchTerm = searchTerm.trim().toLowerCase();
-
-    if (!normalizedSearchTerm) {
-      return connections;
-    }
-
-    return connections.filter((connection) =>
-      connection.name.toLowerCase().includes(normalizedSearchTerm),
-    );
-  }, [connections, searchTerm]);
+  const {
+    connections,
+    error: connectionsError,
+    isLoading,
+  } = useConnectionsOptions({ searchTerm: debouncedSearchTerm });
 
   const requestDeleteConnection = (connection: Connection) => {
     setError("");
@@ -53,13 +53,31 @@ export const useConnectionsList = ({
     setIsDeleting(true);
 
     try {
+      if (!user) {
+        setError("Faça login para excluir uma conexão.");
+        return;
+      }
+
+      const hasLinkedData = await hasConnectionDependencies({
+        connectionId: connectionToDelete.id,
+        userId: user.uid,
+      });
+
+      if (hasLinkedData) {
+        setError(
+          "Não é possível excluir uma conexão com contatos ou mensagens vinculados.",
+        );
+        setConnectionToDelete(null);
+        return;
+      }
+
       await deleteConnection(connectionToDelete.id);
 
       if (editingConnection?.id === connectionToDelete.id) {
         onDeletedEditingConnection();
       }
 
-      closeDeleteModal();
+      setConnectionToDelete(null);
     } catch {
       setError("Não foi possível excluir a conexão.");
     } finally {
@@ -71,8 +89,8 @@ export const useConnectionsList = ({
     closeDeleteModal,
     confirmDeleteConnection,
     connectionToDelete,
-    connections: filteredConnections,
-    error,
+    connections,
+    error: error || connectionsError,
     isDeleting,
     isLoading,
     requestDeleteConnection,

@@ -11,15 +11,20 @@ import type { Connection, ConnectionFormValues } from "../types";
 
 type UseConnectionFormParams = {
   editingConnection: Connection | null;
+  connectionsCount: number;
   onSaved: () => void;
 };
 
+const MAX_CONNECTIONS = 100;
+
 export const useConnectionForm = ({
   editingConnection,
+  connectionsCount,
   onSaved,
 }: UseConnectionFormParams) => {
   const { user } = useAuth();
   const [error, setError] = useState("");
+
   const {
     control,
     formState: { errors, isSubmitting },
@@ -41,6 +46,11 @@ export const useConnectionForm = ({
   const submitConnection = handleSubmit(async ({ name }) => {
     if (!user) {
       setError("Faça login para cadastrar uma conexão.");
+      return;
+    }
+
+    if (!editingConnection && connectionsCount >= MAX_CONNECTIONS) {
+      setError(`Limite de ${MAX_CONNECTIONS} conexões atingido.`);
       return;
     }
 

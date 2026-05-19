@@ -2,6 +2,7 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import {
   Alert,
+  Button,
   CircularProgress,
   IconButton,
   Stack,
@@ -32,8 +33,11 @@ export const ContactsList = ({
     contacts,
     error,
     getConnectionName,
+    hasMore,
     isDeleting,
     isLoading,
+    isLoadingMore,
+    loadMore,
     requestDeleteContact,
     searchTerm,
     setSearchTerm,
@@ -57,7 +61,7 @@ export const ContactsList = ({
           label="Buscar contato"
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
-          disabled={isLoading}
+          disabled={isDeleting}
           className="md:w-52"
         />
       </div>
@@ -81,7 +85,7 @@ export const ContactsList = ({
               </Typography>
               <Typography className="mt-1 text-sm text-slate-500">
                 {searchTerm.trim()
-                  ? "Tente buscar por outro nome, telefone ou conexão."
+                  ? "Tente buscar por outro nome."
                   : "Cadastre contatos para enviar mensagens depois."}
               </Typography>
             </div>
@@ -123,6 +127,19 @@ export const ContactsList = ({
               </Stack>
             </div>
           ))}
+
+          {hasMore && (
+            <div className="flex justify-center pt-2">
+              <Button
+                type="button"
+                variant="outlined"
+                onClick={loadMore}
+                disabled={isDeleting || isLoadingMore}
+              >
+                {isLoadingMore ? "Carregando..." : "Carregar mais contatos"}
+              </Button>
+            </div>
+          )}
         </Stack>
       )}
 

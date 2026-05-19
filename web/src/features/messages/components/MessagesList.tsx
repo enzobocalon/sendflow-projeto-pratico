@@ -3,6 +3,7 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {
   Alert,
+  Button,
   Chip,
   CircularProgress,
   IconButton,
@@ -46,8 +47,11 @@ export const MessagesList = ({
     error,
     filter,
     handleFilterChange,
+    hasMore,
     isDeleting,
     isLoading,
+    isLoadingMore,
+    loadMore,
     messageToDelete,
     messages,
     handleDelete,
@@ -141,6 +145,19 @@ export const MessagesList = ({
               </div>
             </div>
           ))}
+
+          {hasMore && (
+            <div className="flex justify-center pt-2">
+              <Button
+                type="button"
+                variant="outlined"
+                onClick={loadMore}
+                disabled={isDeleting || isLoadingMore}
+              >
+                {isLoadingMore ? "Carregando..." : "Carregar mais mensagens"}
+              </Button>
+            </div>
+          )}
         </Stack>
       )}
 

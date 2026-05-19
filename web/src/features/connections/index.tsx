@@ -7,6 +7,8 @@ export const ConnectionsPage = () => {
     cancelEdit,
     editConnection,
     editingConnection,
+    setTotalConnections,
+    totalConnections
   } = useConnections();
 
   return (
@@ -15,11 +17,13 @@ export const ConnectionsPage = () => {
         editingConnection={editingConnection}
         onCancel={cancelEdit}
         onSaved={cancelEdit}
+        connectionsCount={totalConnections}
       />
       <ConnectionsList
         editingConnection={editingConnection}
         onEdit={editConnection}
         onDeletedEditingConnection={cancelEdit}
+
       />
     </div>
   );

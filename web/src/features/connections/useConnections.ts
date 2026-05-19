@@ -5,6 +5,7 @@ export const useConnections = () => {
   const [editingConnection, setEditingConnection] = useState<Connection | null>(
     null,
   );
+  const [totalConnections, setTotalConnections] = useState(0);
 
   const editConnection = (connection: Connection) => {
     setEditingConnection(connection);
@@ -18,5 +19,7 @@ export const useConnections = () => {
     cancelEdit,
     editConnection,
     editingConnection,
+    setTotalConnections,
+    totalConnections,
   };
 };

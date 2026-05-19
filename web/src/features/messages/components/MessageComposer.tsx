@@ -39,15 +39,19 @@ export const MessageComposer = ({
     clearSelectedContacts,
     connectionError,
     connections,
+    contactSearchTerm,
     contactsError,
     control,
     enableScheduledMode,
     errors,
     formError,
+    hasMoreContacts,
     isLoadingConnections,
     isLoadingContacts,
     isSubmitting,
+    loadMoreContacts,
     sendMode,
+    setContactSearchTerm,
     submitNow,
     submitScheduled,
   } = useMessageComposer({
@@ -143,6 +147,15 @@ export const MessageComposer = ({
           <Typography className="mb-2 text-sm font-semibold text-slate-700">
             Selecionar contatos
           </Typography>
+          <TextField
+            size="small"
+            label="Buscar contato"
+            value={contactSearchTerm}
+            onChange={(event) => setContactSearchTerm(event.target.value)}
+            disabled={!hasConnections || isSubmitting}
+            fullWidth
+            className="mb-3"
+          />
           <Controller
             name="contactIds"
             control={control}
@@ -182,6 +195,20 @@ export const MessageComposer = ({
                       label={`${contact.name} · ${formatPhone(contact.phone)}`}
                     />
                   ))}
+
+                  {hasMoreContacts && (
+                    <div className="pt-2">
+                      <Button
+                        type="button"
+                        size="small"
+                        variant="outlined"
+                        onClick={loadMoreContacts}
+                        disabled={isSubmitting}
+                      >
+                        Carregar mais contatos
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {errors.contactIds && (

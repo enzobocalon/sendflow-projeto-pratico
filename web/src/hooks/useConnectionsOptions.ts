@@ -1,112 +1,116 @@
-import { useCallback, useEffect, useState } from "react";
-import type { Connection } from "../features/connections/types";
-import { useAuth } from "./useAuth";
 import {
   collection,
+  getDocs,
   limit,
   onSnapshot,
   orderBy,
   query,
+  startAt,
+  endAt,
   where,
+  type QueryConstraint,
 } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import type { Connection } from "../features/connections/types";
 import { db } from "../lib/firebase";
+import { useAuth } from "./useAuth";
+
+const MAX_CONNECTIONS = 100;
+
+const normalizeSearchText = (value: string) => value.trim().toLowerCase();
+
+const getFirestoreErrorMessage = (code?: string) => {
+  if (code === "failed-precondition")
+    return "Não foi possível carregar as conexões porque um índice do Firestore ainda está sendo preparado.";
+  if (code === "permission-denied")
+    return "Você não tem permissão para carregar estas conexões.";
+  return code
+    ? `Não foi possível carregar as conexões. (${code})`
+    : "Não foi possível carregar as conexões.";
+};
 
 type UseConnectionsOptionsParams = {
   enabled?: boolean;
-  pageSize?: number;
-};
-
-const DEFAULT_PAGE_SIZE = 30;
-
-const getFirestoreErrorMessage = (error: { code?: string }) => {
-  if (error.code === "failed-precondition") {
-    return "A consulta precisa de um índice do Firestore. Aguarde a criação do índice ou faça o deploy dos índices.";
-  }
-
-  if (error.code === "permission-denied") {
-    return "Você não tem permissão para carregar estas conexões.";
-  }
-
-  return error.code
-    ? `Não foi possível carregar as conexões. (${error.code})`
-    : "Não foi possível carregar as conexões.";
+  searchTerm?: string;
 };
 
 export function useConnectionsOptions({
   enabled = true,
-  pageSize = DEFAULT_PAGE_SIZE,
+  searchTerm = "",
 }: UseConnectionsOptionsParams = {}) {
   const { user } = useAuth();
   const [connections, setConnections] = useState<Connection[]>([]);
   const [error, setError] = useState("");
-  const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(() => Boolean(user && enabled));
-  const [loadedQueryKey, setLoadedQueryKey] = useState("");
-  const [pagination, setPagination] = useState({
-    limit: pageSize,
-    queryKey: "",
-  });
-  const queryKey = user ? user.uid : "";
-  const visibleLimit =
-    pagination.queryKey === queryKey ? pagination.limit : pageSize;
+
+  const normalizedSearchTerm = normalizeSearchText(searchTerm);
   const canLoad = Boolean(user && enabled);
 
   useEffect(() => {
-    if (!canLoad || !user) {
-      return;
+    if (!canLoad || !user) return;
+
+    const constraints: QueryConstraint[] = [
+      where("userId", "==", user.uid),
+      orderBy(normalizedSearchTerm ? "nameNormalized" : "name", "asc"),
+    ];
+
+    if (normalizedSearchTerm) {
+      constraints.push(
+        startAt(normalizedSearchTerm),
+        endAt(`${normalizedSearchTerm}\uf8ff`),
+      );
     }
 
-    const connectionsQuery = query(
-      collection(db, "connections"),
-      where("userId", "==", user.uid),
-      orderBy("name", "asc"),
-      limit(visibleLimit + 1),
-    );
+    constraints.push(limit(MAX_CONNECTIONS));
 
     const unsubscribe = onSnapshot(
-      connectionsQuery,
+      query(collection(db, "connections"), ...constraints),
       (snapshot) => {
-        const nextConnections = snapshot.docs
-          .slice(0, visibleLimit)
-          .map(
-            (document) =>
-              ({
-                id: document.id,
-                ...document.data(),
-              }) as Connection,
-          );
-
-        setConnections(nextConnections);
-        setHasMore(snapshot.docs.length > visibleLimit);
-        setLoadedQueryKey(queryKey);
-        setIsLoading(false);
+        setConnections(
+          snapshot.docs.map(
+            (doc) => ({ id: doc.id, ...doc.data() }) as Connection,
+          ),
+        );
         setError("");
+        setIsLoading(false);
       },
-      (error) => {
-        setLoadedQueryKey(queryKey);
-        setError(getFirestoreErrorMessage(error));
+      async (firestoreError) => {
+        if (firestoreError.code === "failed-precondition") {
+          try {
+            const snapshot = await getDocs(
+              query(
+                collection(db, "connections"),
+                where("userId", "==", user.uid),
+                limit(MAX_CONNECTIONS),
+              ),
+            );
+            const nextConnections = snapshot.docs
+              .map((doc) => ({ id: doc.id, ...doc.data() }) as Connection)
+              .filter(
+                (c) =>
+                  !normalizedSearchTerm ||
+                  c.name.toLowerCase().startsWith(normalizedSearchTerm),
+              )
+              .sort((a, b) => a.name.localeCompare(b.name));
+
+            setConnections(nextConnections);
+            setError("");
+            setIsLoading(false);
+            return;
+          } catch {
+            //
+          }
+        }
+
+        setError(getFirestoreErrorMessage(firestoreError.code));
         setIsLoading(false);
       },
     );
 
     return unsubscribe;
-  }, [canLoad, queryKey, user, visibleLimit]);
+  }, [canLoad, normalizedSearchTerm, user]);
 
-  const loadMore = useCallback(() => {
-    setPagination((currentPagination) => ({
-      limit:
-        currentPagination.queryKey === queryKey
-          ? currentPagination.limit + pageSize
-          : pageSize,
-      queryKey,
-    }));
-  }, [pageSize, queryKey]);
+  if (!canLoad) return { connections: [], error: "", isLoading: false };
 
-  return {
-    connections: canLoad && loadedQueryKey === queryKey ? connections : [],
-    error: canLoad ? error : "",
-    hasMore: canLoad && loadedQueryKey === queryKey ? hasMore : false,
-    isLoading: canLoad ? isLoading || loadedQueryKey !== queryKey : false,
-    loadMore,
-  };
+  return { connections, error, isLoading };
 }

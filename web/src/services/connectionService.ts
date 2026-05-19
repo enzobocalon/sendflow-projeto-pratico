@@ -21,10 +21,13 @@ type UpdateConnectionParams = {
   name: string;
 };
 
+const normalizeSearchText = (value: string) => value.trim().toLowerCase();
+
 export const createConnection = ({ name, userId }: SaveConnectionParams) =>
   addDoc(collection(db, "connections"), {
     createdAt: serverTimestamp(),
     name: name.trim(),
+    nameNormalized: normalizeSearchText(name),
     updatedAt: serverTimestamp(),
     userId,
   });
@@ -35,6 +38,7 @@ export const updateConnection = ({
 }: UpdateConnectionParams) =>
   updateDoc(doc(db, "connections", connectionId), {
     name: name.trim(),
+    nameNormalized: normalizeSearchText(name),
     updatedAt: serverTimestamp(),
   });
 

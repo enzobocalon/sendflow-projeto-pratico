@@ -27,12 +27,16 @@ service cloud.firestore {
       return request.resource.data.keys().hasOnly([
           "createdAt",
           "name",
+          "nameNormalized",
           "updatedAt",
           "userId"
         ])
         && request.resource.data.name is string
         && request.resource.data.name.size() >= 2
         && request.resource.data.name.size() <= 80
+        && request.resource.data.nameNormalized is string
+        && request.resource.data.nameNormalized.size() >= 2
+        && request.resource.data.nameNormalized.size() <= 80
         && validTimestamps();
     }
 
@@ -45,8 +49,10 @@ service cloud.firestore {
     function validContactPayload() {
       return request.resource.data.keys().hasOnly([
           "connectionId",
+          "connectionName",
           "createdAt",
           "name",
+          "nameNormalized",
           "phone",
           "updatedAt",
           "userId"
@@ -54,6 +60,12 @@ service cloud.firestore {
         && request.resource.data.name is string
         && request.resource.data.name.size() >= 2
         && request.resource.data.name.size() <= 80
+        && request.resource.data.nameNormalized is string
+        && request.resource.data.nameNormalized.size() >= 2
+        && request.resource.data.nameNormalized.size() <= 80
+        && request.resource.data.connectionName is string
+        && request.resource.data.connectionName.size() >= 2
+        && request.resource.data.connectionName.size() <= 80
         && request.resource.data.phone is string
         && request.resource.data.phone.size() >= 10
         && request.resource.data.phone.size() <= 20
@@ -77,10 +89,16 @@ service cloud.firestore {
     }
 
     function validMessageSchedule() {
-      return request.resource.data.status == "sent"
+      return (
+          request.resource.data.status == "sent"
+          && request.resource.data.sentAt is timestamp
+          && request.resource.data.scheduledAt == null
+        )
         || (
-          request.resource.data.scheduledAt is timestamp
+          request.resource.data.status == "scheduled"
+          && request.resource.data.scheduledAt is timestamp
           && request.resource.data.scheduledAt > request.time
+          && request.resource.data.sentAt == null
         );
     }
 
@@ -96,6 +114,10 @@ service cloud.firestore {
           "status",
           "updatedAt",
           "userId"
+        ])
+        && request.resource.data.keys().hasAll([
+          "scheduledAt",
+          "sentAt"
         ])
         && request.resource.data.content is string
         && request.resource.data.content.size() >= 2

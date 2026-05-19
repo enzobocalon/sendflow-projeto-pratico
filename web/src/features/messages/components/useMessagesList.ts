@@ -20,8 +20,11 @@ export function useMessagesList({
   onDeletedEditingMessage,
   onEdit,
 }: UseMessagesListParams) {
-  const { messages, error, isLoading } = useMessagesOptions();
   const [filter, setFilter] = useState<MessageStatus | "all">("all");
+  const { messages, error, hasMore, isLoading, isLoadingMore, loadMore } =
+    useMessagesOptions({
+      status: filter,
+    });
   const [isDeleting, setIsDeleting] = useState(false);
   const [listError, setListError] = useState("");
   const [messageToDelete, setMessageToDelete] = useState<Message | null>(null);
@@ -30,19 +33,12 @@ export function useMessagesList({
     useState<MessageListItem | null>(null);
 
   const formattedMessages = useMemo(() => {
-    if (!messages) return [];
-    return messages.reduce((acc, message) => {
-      if (filter === "all" || message.status === filter) {
-        const m = {
-          ...message,
-          date: formatMessageDate(message),
-          recipients: message.contactIds.length,
-        };
-        acc.push(m);
-      }
-      return acc;
-    }, [] as MessageListItem[]);
-  }, [messages, filter]);
+    return messages.map((message) => ({
+      ...message,
+      date: formatMessageDate(message),
+      recipients: message.recipientsCount ?? message.contactIds.length,
+    }));
+  }, [messages]);
 
   const handleFilterChange = (status: MessageStatus | "all") => {
     setFilter(status);
@@ -121,6 +117,9 @@ export function useMessagesList({
     isLoading,
     handleFilterChange,
     filter,
+    hasMore,
+    isLoadingMore,
+    loadMore,
     closeDeleteModal,
     confirmDeleteMessage,
     isDeleting,
