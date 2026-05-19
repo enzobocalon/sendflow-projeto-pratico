@@ -4,11 +4,8 @@ import {
   collection,
   deleteDoc,
   doc,
-  onSnapshot,
-  query,
   serverTimestamp,
   updateDoc,
-  where,
 } from "firebase/firestore";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -16,15 +13,18 @@ import { useAuth } from "../../hooks/useAuth";
 import { db } from "../../lib/firebase";
 import { connectionSchema } from "./schemas/connectionSchema";
 import type { Connection, ConnectionFormValues } from "./types";
+import { useConnectionOptions } from "../../hooks/useConnectionsOptions";
 
 export const useConnections = () => {
   const { user } = useAuth();
-  const [connections, setConnections] = useState<Connection[]>([]);
-  const [connectionToDelete, setConnectionToDelete] = useState<Connection | null>(null);
-  const [editingConnection, setEditingConnection] = useState<Connection | null>(null);
+  const [connectionToDelete, setConnectionToDelete] =
+    useState<Connection | null>(null);
+  const [editingConnection, setEditingConnection] = useState<Connection | null>(
+    null,
+  );
   const [formError, setFormError] = useState("");
   const [listError, setListError] = useState("");
-  const [loading, setLoading] = useState(() => Boolean(user));
+  const { connections, isLoading } = useConnectionOptions();
   const [searchTerm, setSearchTerm] = useState("");
   const {
     control,
@@ -37,38 +37,6 @@ export const useConnections = () => {
     },
     resolver: zodResolver(connectionSchema),
   });
-
-  useEffect(() => {
-    if (!user) {
-      return;
-    }
-
-    const connectionsQuery = query(
-      collection(db, "connections"),
-      where("userId", "==", user.uid),
-    );
-
-    const unsubscribe = onSnapshot(
-      connectionsQuery,
-      (snapshot) => {
-        const nextConnections = snapshot.docs
-          .map((document) => ({
-            id: document.id,
-            ...document.data(),
-          }) as Connection)
-          .sort((current, next) => current.name.localeCompare(next.name));
-
-        setConnections(nextConnections);
-        setLoading(false);
-      },
-      () => {
-        setListError("Não foi possível carregar as conexões.");
-        setLoading(false);
-      },
-    );
-
-    return unsubscribe;
-  }, [user]);
 
   useEffect(() => {
     reset({
@@ -170,7 +138,7 @@ export const useConnections = () => {
     formControl: control,
     isSubmitting,
     listError,
-    loading,
+    isLoading,
     requestDeleteConnection,
     searchTerm,
     setSearchTerm,

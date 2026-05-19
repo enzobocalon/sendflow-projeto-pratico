@@ -16,7 +16,7 @@ export const ConnectionsPage = () => {
     formControl,
     isSubmitting,
     listError,
-    loading,
+    isLoading,
     requestDeleteConnection,
     searchTerm,
     setSearchTerm,
@@ -39,7 +39,7 @@ export const ConnectionsPage = () => {
         connectionToDelete={connectionToDelete}
         connections={connections}
         error={listError}
-        loading={loading}
+        loading={isLoading}
         onCloseDeleteModal={closeDeleteModal}
         onConfirmDelete={confirmDeleteConnection}
         onDelete={requestDeleteConnection}
