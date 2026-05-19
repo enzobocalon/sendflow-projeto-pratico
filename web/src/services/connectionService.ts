@@ -3,8 +3,11 @@ import {
   collection,
   deleteDoc,
   doc,
+  getCountFromServer,
+  query,
   serverTimestamp,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
@@ -37,3 +40,33 @@ export const updateConnection = ({
 
 export const deleteConnection = (connectionId: string) =>
   deleteDoc(doc(db, "connections", connectionId));
+
+export const hasConnectionDependencies = async ({
+  connectionId,
+  userId,
+}: {
+  connectionId: string;
+  userId: string;
+}) => {
+  const contactsCount = await getCountFromServer(
+    query(
+      collection(db, "contacts"),
+      where("connectionId", "==", connectionId),
+      where("userId", "==", userId),
+    ),
+  );
+
+  if (contactsCount.data().count > 0) {
+    return true;
+  }
+
+  const messagesCount = await getCountFromServer(
+    query(
+      collection(db, "messages"),
+      where("connectionId", "==", connectionId),
+      where("userId", "==", userId),
+    ),
+  );
+
+  return messagesCount.data().count > 0;
+};
