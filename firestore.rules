@@ -14,19 +14,33 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == request.resource.data.userId;
     }
 
+    function ownsConnection(connectionId) {
+      return connectionId is string
+        && exists(/databases/$(database)/documents/connections/$(connectionId))
+        && get(/databases/$(database)/documents/connections/$(connectionId)).data.userId == request.auth.uid;
+    }
+
     match /connections/{connectionId} {
       allow read, update, delete: if ownsResource();
       allow create: if ownsIncomingResource();
     }
 
     match /contacts/{contactId} {
-      allow read, update, delete: if ownsResource();
-      allow create: if ownsIncomingResource();
+      allow read, delete: if ownsResource();
+      allow create: if ownsIncomingResource()
+        && ownsConnection(request.resource.data.connectionId);
+      allow update: if ownsResource()
+        && ownsIncomingResource()
+        && ownsConnection(request.resource.data.connectionId);
     }
 
     match /messages/{messageId} {
-      allow read, update, delete: if ownsResource();
-      allow create: if ownsIncomingResource();
+      allow read, delete: if ownsResource();
+      allow create: if ownsIncomingResource()
+        && ownsConnection(request.resource.data.connectionId);
+      allow update: if ownsResource()
+        && ownsIncomingResource()
+        && ownsConnection(request.resource.data.connectionId);
     }
   }
 }
