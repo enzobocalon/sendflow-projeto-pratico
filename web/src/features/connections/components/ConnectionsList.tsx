@@ -45,7 +45,7 @@ export const ConnectionsList = ({
   const subTitle =
     totalConnections === 0
       ? "Nenhuma conexão encontrada"
-      : `${totalConnections} conexão${totalConnections === 1 ? "" : "ões"} cadastrada${totalConnections === 1 ? "" : "s"}.`;
+      : `${totalConnections} conex${totalConnections === 1 ? "ão" : "ões"} cadastrada${totalConnections === 1 ? "" : "s"}.`;
 
   return (
     <section>
