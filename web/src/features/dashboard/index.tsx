@@ -1,31 +1,31 @@
-import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
-import { Paper, Stack, Tab, Tabs } from "@mui/material";
-import { useState } from "react";
-import { ConnectionsPage } from "../connections";
-import { PageHeader } from "./components/PageHeader";
-import { WorkflowSummary } from "./components/WorkflowSummary";
-import type { DashboardTab, TTabs } from "./types";
+import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined'
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined'
+import { Paper, Stack, Tab, Tabs } from '@mui/material'
+import { useState } from 'react'
+import { ContactsPage } from '../contacts'
+import { ConnectionsPage } from '../connections'
+import { PageHeader } from './components/PageHeader'
+import { WorkflowSummary } from './components/WorkflowSummary'
+import type { DashboardTab, TTabs } from './types'
 
 const tabs: TTabs[] = [
-  { icon: <GroupsOutlinedIcon />, label: "Conexões", value: "connections" },
+  { icon: <GroupsOutlinedIcon />, label: 'Conexões', value: 'connections' },
+  { icon: <PhoneOutlinedIcon />, label: 'Contatos', value: 'contacts' },
 ];
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<DashboardTab>("connections");
+  const [activeTab, setActiveTab] = useState<DashboardTab>('connections')
 
   const changeTab = (_event: unknown, value: DashboardTab) => {
-    setActiveTab(value);
-  };
+    setActiveTab(value)
+  }
 
   return (
     <Stack spacing={3}>
       <PageHeader activeTab={activeTab} />
       <WorkflowSummary />
 
-      <Paper
-        elevation={0}
-        className="overflow-hidden rounded-lg border border-slate-200 bg-white"
-      >
+      <Paper elevation={0} className="overflow-hidden rounded-lg border border-slate-200 bg-white">
         <Tabs
           value={activeTab}
           onChange={changeTab}
@@ -45,9 +45,10 @@ export default function Dashboard() {
         </Tabs>
 
         <div className="p-5">
-          {activeTab === "connections" && <ConnectionsPage />}
+          {activeTab === 'connections' && <ConnectionsPage />}
+          {activeTab === 'contacts' && <ContactsPage />}
         </div>
       </Paper>
     </Stack>
-  );
+  )
 }
