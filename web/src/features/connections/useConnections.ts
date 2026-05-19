@@ -1,16 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  serverTimestamp,
-  updateDoc,
-} from "firebase/firestore";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useAuth } from "../../hooks/useAuth";
-import { db } from "../../lib/firebase";
+import {
+  createConnection,
+  deleteConnection,
+  updateConnection,
+} from "../../services/connectionService";
 import { connectionSchema } from "./schemas/connectionSchema";
 import type { Connection, ConnectionFormValues } from "./types";
 import { useConnectionOptions } from "../../hooks/useConnectionsOptions";
@@ -67,15 +63,13 @@ export const useConnections = () => {
 
     try {
       if (editingConnection) {
-        await updateDoc(doc(db, "connections", editingConnection.id), {
-          name: name.trim(),
-          updatedAt: serverTimestamp(),
+        await updateConnection({
+          connectionId: editingConnection.id,
+          name,
         });
       } else {
-        await addDoc(collection(db, "connections"), {
-          createdAt: serverTimestamp(),
-          name: name.trim(),
-          updatedAt: serverTimestamp(),
+        await createConnection({
+          name,
           userId: user.uid,
         });
       }
@@ -120,7 +114,7 @@ export const useConnections = () => {
     setIsDeletingConnection(true);
 
     try {
-      await deleteDoc(doc(db, "connections", connectionToDelete.id));
+      await deleteConnection(connectionToDelete.id);
 
       if (editingConnection?.id === connectionToDelete.id) {
         cancelEdit();

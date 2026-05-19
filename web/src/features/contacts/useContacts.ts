@@ -4,16 +4,12 @@ import { contactSchema } from "./schemas/contactSchema";
 import { useConnectionOptions } from "../../hooks/useConnectionsOptions";
 import { useAuth } from "../../hooks/useAuth";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  serverTimestamp,
-  updateDoc,
-} from "firebase/firestore";
-import { db } from "../../lib/firebase";
 import { useContactsOptions } from "../../hooks/useContactsOptions";
+import {
+  createContact,
+  deleteContact,
+  updateContact,
+} from "../../services/contactService";
 import type { Contact, ContactFormValues } from "./types";
 
 export function useContacts() {
@@ -55,19 +51,17 @@ export function useContacts() {
 
     try {
       if (editingContact) {
-        await updateDoc(doc(db, "contacts", editingContact.id), {
-          name: name.trim(),
-          phone: phone.trim(),
+        await updateContact({
+          contactId: editingContact.id,
           connectionId,
-          updatedAt: serverTimestamp(),
+          name,
+          phone,
         });
       } else {
-        await addDoc(collection(db, "contacts"), {
-          createdAt: serverTimestamp(),
-          name: name.trim(),
-          phone: phone.trim(),
+        await createContact({
           connectionId,
-          updatedAt: serverTimestamp(),
+          name,
+          phone,
           userId: user.uid,
         });
       }
@@ -111,7 +105,7 @@ export function useContacts() {
     setIsDeletingContact(true);
 
     try {
-      await deleteDoc(doc(db, "contacts", contactToDelete.id));
+      await deleteContact(contactToDelete.id);
 
       if (editingContact?.id === contactToDelete.id) {
         cancelEditContact();
