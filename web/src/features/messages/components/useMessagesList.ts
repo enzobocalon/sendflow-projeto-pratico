@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type MouseEvent } from "react";
 import { useMessagesOptions } from "../../../hooks/useMessagesOptions";
 import type { Message, MessageStatus } from "../types";
 import { formatMessageDate } from "../../../utils/dates";
@@ -12,22 +12,27 @@ export type MessageListItem = Message & {
 type UseMessagesListParams = {
   editingMessage: Message | null;
   onDeletedEditingMessage: () => void;
+  onEdit: (message: Message) => void;
 };
 
 export function useMessagesList({
   editingMessage,
   onDeletedEditingMessage,
+  onEdit,
 }: UseMessagesListParams) {
   const { messages, error, isLoading } = useMessagesOptions();
-  const [filter, setFilter] = useState<MessageStatus | 'all'>('all');
+  const [filter, setFilter] = useState<MessageStatus | "all">("all");
   const [isDeleting, setIsDeleting] = useState(false);
   const [listError, setListError] = useState("");
   const [messageToDelete, setMessageToDelete] = useState<Message | null>(null);
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [selectedMessage, setSelectedMessage] =
+    useState<MessageListItem | null>(null);
 
   const formattedMessages = useMemo(() => {
     if (!messages) return [];
     return messages.reduce((acc, message) => {
-      if (filter === 'all' || message.status === filter) {
+      if (filter === "all" || message.status === filter) {
         const m = {
           ...message,
           date: formatMessageDate(message),
@@ -39,7 +44,7 @@ export function useMessagesList({
     }, [] as MessageListItem[]);
   }, [messages, filter]);
 
-  const handleFilterChange = (status: MessageStatus | 'all') => {
+  const handleFilterChange = (status: MessageStatus | "all") => {
     setFilter(status);
   };
 
@@ -79,6 +84,37 @@ export function useMessagesList({
     }
   };
 
+  const openMenu = (
+    event: MouseEvent<HTMLButtonElement>,
+    message: MessageListItem,
+  ) => {
+    setMenuAnchor(event.currentTarget);
+    setSelectedMessage(message);
+  };
+
+  const closeMenu = () => {
+    setMenuAnchor(null);
+    setSelectedMessage(null);
+  };
+
+  const handleEdit = () => {
+    if (!selectedMessage) {
+      return;
+    }
+
+    onEdit(selectedMessage);
+    closeMenu();
+  };
+
+  const handleDelete = () => {
+    if (!selectedMessage) {
+      return;
+    }
+
+    requestDeleteMessage(selectedMessage);
+    closeMenu();
+  };
+
   return {
     messages: formattedMessages,
     error: listError || error,
@@ -90,5 +126,11 @@ export function useMessagesList({
     isDeleting,
     messageToDelete,
     requestDeleteMessage,
+    handleEdit,
+    handleDelete,
+    openMenu,
+    menuAnchor,
+    closeMenu,
+    selectedMessage,
   };
 }

@@ -13,12 +13,11 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useState, type MouseEvent } from "react";
 import { DeleteDialog } from "../../../components/DeleteDialog";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Message } from "../types";
 import { MessageFilters } from "./MessageFilters";
-import { type MessageListItem, useMessagesList } from "./useMessagesList";
+import { useMessagesList } from "./useMessagesList";
 
 const statusLabel = {
   scheduled: "Agendada",
@@ -51,46 +50,17 @@ export const MessagesList = ({
     isLoading,
     messageToDelete,
     messages,
-    requestDeleteMessage,
+    handleDelete,
+    handleEdit,
+    menuAnchor,
+    openMenu,
+    closeMenu,
+    selectedMessage,
   } = useMessagesList({
     editingMessage,
     onDeletedEditingMessage,
+    onEdit,
   });
-  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
-  const [selectedMessage, setSelectedMessage] = useState<MessageListItem | null>(
-    null,
-  );
-
-  const openMenu = (
-    event: MouseEvent<HTMLButtonElement>,
-    message: MessageListItem,
-  ) => {
-    setMenuAnchor(event.currentTarget);
-    setSelectedMessage(message);
-  };
-
-  const closeMenu = () => {
-    setMenuAnchor(null);
-    setSelectedMessage(null);
-  };
-
-  const handleEdit = () => {
-    if (!selectedMessage) {
-      return;
-    }
-
-    onEdit(selectedMessage);
-    closeMenu();
-  };
-
-  const handleDelete = () => {
-    if (!selectedMessage) {
-      return;
-    }
-
-    requestDeleteMessage(selectedMessage);
-    closeMenu();
-  };
 
   return (
     <section>
@@ -148,7 +118,12 @@ export const MessagesList = ({
                       }
                     />
                     <Typography className="text-xs text-slate-500">
-                      {message.date} · {!message.recipients ? 0 : message.recipients <= 1 ? `${message.recipients} contato` : `${message.recipients} contatos`}
+                      {message.date} ·{" "}
+                      {!message.recipients
+                        ? 0
+                        : message.recipients <= 1
+                          ? `${message.recipients} contato`
+                          : `${message.recipients} contatos`}
                     </Typography>
                   </Stack>
                   <Typography className="text-sm text-slate-700">
@@ -177,7 +152,10 @@ export const MessagesList = ({
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         disableScrollLock
       >
-        <MenuItem onClick={handleEdit}>
+        <MenuItem
+          onClick={handleEdit}
+          disabled={selectedMessage?.status === "sent"}
+        >
           <ListItemIcon>
             <EditOutlinedIcon fontSize="small" />
           </ListItemIcon>
