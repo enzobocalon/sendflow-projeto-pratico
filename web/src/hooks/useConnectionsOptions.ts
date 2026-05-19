@@ -4,7 +4,7 @@ import { useAuth } from "./useAuth";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
-export function useConnectionOptions() {
+export function useConnectionsOptions() {
   const [connections, setConnections] = useState<Connection[]>([]);
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(() => Boolean(user));

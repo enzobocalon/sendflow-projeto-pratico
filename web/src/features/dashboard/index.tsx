@@ -1,9 +1,11 @@
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined'
+import MailOutlineIcon from '@mui/icons-material/MailOutline'
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined'
 import { Paper, Stack, Tab, Tabs } from '@mui/material'
 import { useState } from 'react'
 import { ContactsPage } from '../contacts'
 import { ConnectionsPage } from '../connections'
+import { MessagesPage } from '../messages'
 import { PageHeader } from './components/PageHeader'
 import { WorkflowSummary } from './components/WorkflowSummary'
 import type { DashboardTab, TTabs } from './types'
@@ -11,6 +13,7 @@ import type { DashboardTab, TTabs } from './types'
 const tabs: TTabs[] = [
   { icon: <GroupsOutlinedIcon />, label: 'Conexões', value: 'connections' },
   { icon: <PhoneOutlinedIcon />, label: 'Contatos', value: 'contacts' },
+  { icon: <MailOutlineIcon />, label: 'Mensagens', value: 'messages' },
 ];
 
 export default function Dashboard() {
@@ -47,6 +50,7 @@ export default function Dashboard() {
         <div className="p-5">
           {activeTab === 'connections' && <ConnectionsPage />}
           {activeTab === 'contacts' && <ContactsPage />}
+          {activeTab === 'messages' && <MessagesPage />}
         </div>
       </Paper>
     </Stack>
