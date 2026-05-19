@@ -53,7 +53,7 @@ export const ContactForm = ({
         subtitle={
           isEditing
             ? "Atualize os dados do contato selecionado."
-            : "Contatos pertencem a uma conexão e possuem nome e telefone."
+            : "Preencha o nome, telefone e selecione a conexão para cadastrar um novo contato."
         }
       />
 

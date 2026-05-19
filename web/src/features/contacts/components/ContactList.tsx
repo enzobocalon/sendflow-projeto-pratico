@@ -2,13 +2,7 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import {
   Alert,
-  Button,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   IconButton,
   Stack,
   TextField,
@@ -16,6 +10,7 @@ import {
 } from "@mui/material";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Contact } from "../types";
+import { DeleteDialog } from "../../../components/DeleteDialog";
 
 type ContactsListProps = {
   contactToDelete: Contact | null;
@@ -58,10 +53,7 @@ export const ContactsList = ({
   return (
     <section>
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <SectionTitle
-          title="Lista de contatos"
-          subtitle={subtitle}
-        />
+        <SectionTitle title="Lista de contatos" subtitle={subtitle} />
         <TextField
           size="small"
           label="Buscar contato"
@@ -72,7 +64,11 @@ export const ContactsList = ({
         />
       </div>
 
-      {error && <Alert severity="error" className="mb-4">{error}</Alert>}
+      {error && (
+        <Alert severity="error" className="mb-4">
+          {error}
+        </Alert>
+      )}
 
       {isLoading ? (
         <div className="grid min-h-40 place-items-center rounded-lg border border-dashed border-slate-200">
@@ -86,7 +82,9 @@ export const ContactsList = ({
                 Nenhum contato encontrado
               </Typography>
               <Typography className="mt-1 text-sm text-slate-500">
-                Cadastre contatos para enviar mensagens depois.
+                {searchTerm.trim()
+                  ? "Tente buscar por outro nome, telefone ou conexão."
+                  : "Cadastre contatos para enviar mensagens depois."}
               </Typography>
             </div>
           )}
@@ -109,7 +107,9 @@ export const ContactsList = ({
                   aria-label="Editar contato"
                   size="small"
                   onClick={() => editContact(contact)}
-                  color={editingContact?.id === contact.id ? "primary" : "default"}
+                  color={
+                    editingContact?.id === contact.id ? "primary" : "default"
+                  }
                   disabled={isDeleting}
                 >
                   <EditOutlinedIcon fontSize="small" />
@@ -128,35 +128,14 @@ export const ContactsList = ({
         </Stack>
       )}
 
-      <Dialog
+      <DeleteDialog
         open={Boolean(contactToDelete)}
         onClose={onCloseDeleteModal}
-        aria-labelledby="delete-contact-title"
-        aria-describedby="delete-contact-description"
-      >
-        <DialogTitle id="delete-contact-title">Excluir contato</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-contact-description">
-            Tem certeza que deseja excluir o contato {contactToDelete?.name}? Esta ação não pode ser desfeita.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={onCloseDeleteModal} disabled={isDeleting}>
-            Cancelar
-          </Button>
-          <Button
-            color="error"
-            variant="contained"
-            onClick={onConfirmDelete}
-            disabled={isDeleting}
-            startIcon={
-              isDeleting ? <CircularProgress color="inherit" size={18} /> : null
-            }
-          >
-            {isDeleting ? "Excluindo..." : "Excluir"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onCancel={onCloseDeleteModal}
+        onConfirm={onConfirmDelete}
+        isLoading={isDeleting}
+        message={`Tem certeza que deseja excluir o contato ${contactToDelete?.name}? Esta ação não pode ser desfeita.`}
+      />
     </section>
   );
 };
