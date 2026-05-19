@@ -1,151 +1,22 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
-import { useAuth } from "../../hooks/useAuth";
-import {
-  createConnection,
-  deleteConnection,
-  updateConnection,
-} from "../../services/connectionService";
-import { connectionSchema } from "./schemas/connectionSchema";
-import type { Connection, ConnectionFormValues } from "./types";
-import { useConnectionOptions } from "../../hooks/useConnectionsOptions";
+import { useState } from "react";
+import type { Connection } from "./types";
 
 export const useConnections = () => {
-  const { user } = useAuth();
-  const [connectionToDelete, setConnectionToDelete] =
-    useState<Connection | null>(null);
   const [editingConnection, setEditingConnection] = useState<Connection | null>(
     null,
   );
-  const [formError, setFormError] = useState("");
-  const [listError, setListError] = useState("");
-  const [isDeletingConnection, setIsDeletingConnection] = useState(false);
-  const { connections, isLoading } = useConnectionOptions();
-  const [searchTerm, setSearchTerm] = useState("");
-  const {
-    control,
-    formState: { errors, isSubmitting },
-    handleSubmit,
-    reset,
-  } = useForm<ConnectionFormValues>({
-    defaultValues: {
-      name: "",
-    },
-    resolver: zodResolver(connectionSchema),
-  });
-
-  useEffect(() => {
-    reset({
-      name: editingConnection?.name ?? "",
-    });
-  }, [editingConnection, reset]);
-
-  const filteredConnections = useMemo(() => {
-    const normalizedSearchTerm = searchTerm.trim().toLowerCase();
-
-    if (!normalizedSearchTerm) {
-      return connections;
-    }
-
-    return connections.filter((connection) =>
-      connection.name.toLowerCase().includes(normalizedSearchTerm),
-    );
-  }, [connections, searchTerm]);
-
-  const submitConnection = handleSubmit(async ({ name }) => {
-    if (!user) {
-      setFormError("Faça login para cadastrar uma conexão.");
-      return;
-    }
-
-    setFormError("");
-
-    try {
-      if (editingConnection) {
-        await updateConnection({
-          connectionId: editingConnection.id,
-          name,
-        });
-      } else {
-        await createConnection({
-          name,
-          userId: user.uid,
-        });
-      }
-
-      setEditingConnection(null);
-      reset();
-    } catch {
-      setFormError("Não foi possível salvar a conexão.");
-    }
-  });
 
   const editConnection = (connection: Connection) => {
-    setFormError("");
     setEditingConnection(connection);
   };
 
   const cancelEdit = () => {
-    setFormError("");
     setEditingConnection(null);
-    reset();
-  };
-
-  const requestDeleteConnection = (connection: Connection) => {
-    setListError("");
-    setConnectionToDelete(connection);
-  };
-
-  const closeDeleteModal = () => {
-    if (isDeletingConnection) {
-      return;
-    }
-
-    setConnectionToDelete(null);
-  };
-
-  const confirmDeleteConnection = async () => {
-    if (!connectionToDelete) {
-      return;
-    }
-
-    setListError("");
-    setIsDeletingConnection(true);
-
-    try {
-      await deleteConnection(connectionToDelete.id);
-
-      if (editingConnection?.id === connectionToDelete.id) {
-        cancelEdit();
-      }
-      closeDeleteModal();
-    } catch {
-      setListError("Não foi possível excluir a conexão.");
-    } finally {
-      setIsDeletingConnection(false);
-    }
   };
 
   return {
     cancelEdit,
-    closeDeleteModal,
-    confirmDeleteConnection,
-    connections: filteredConnections,
-    connectionToDelete,
     editConnection,
     editingConnection,
-    formError,
-    formErrors: errors,
-    formControl: control,
-    isSubmitting,
-    isDeletingConnection,
-    listError,
-    isLoading,
-    requestDeleteConnection,
-    searchTerm,
-    setSearchTerm,
-    submitConnection,
-    totalConnections: connections.length,
   };
 };

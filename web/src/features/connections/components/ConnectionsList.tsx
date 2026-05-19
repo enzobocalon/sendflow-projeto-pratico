@@ -12,36 +12,36 @@ import {
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Connection } from "../types";
 import { DeleteDialog } from "../../../components/DeleteDialog";
+import { useConnectionsList } from "./useConnectionsList";
 
 type ConnectionsListProps = {
-  connectionToDelete: Connection | null;
-  connections: Connection[];
-  error: string;
-  isDeleting: boolean;
-  loading: boolean;
-  onCloseDeleteModal: () => void;
-  onConfirmDelete: () => void;
-  onDelete: (connection: Connection) => void;
+  editingConnection: Connection | null;
   onEdit: (connection: Connection) => void;
-  onSearchChange: (value: string) => void;
-  searchTerm: string;
-  totalConnections: number;
+  onDeletedEditingConnection: () => void;
 };
 
 export const ConnectionsList = ({
-  connectionToDelete,
-  connections,
-  error,
-  isDeleting,
-  loading,
-  onCloseDeleteModal,
-  onConfirmDelete,
-  onDelete,
+  editingConnection,
   onEdit,
-  onSearchChange,
-  searchTerm,
-  totalConnections,
+  onDeletedEditingConnection,
 }: ConnectionsListProps) => {
+  const {
+    closeDeleteModal,
+    confirmDeleteConnection,
+    connectionToDelete,
+    connections,
+    error,
+    isDeleting,
+    isLoading,
+    requestDeleteConnection,
+    searchTerm,
+    setSearchTerm,
+    totalConnections,
+  } = useConnectionsList({
+    editingConnection,
+    onDeletedEditingConnection,
+  });
+
   const subTitle =
     totalConnections === 0
       ? "Nenhuma conexão encontrada"
@@ -55,8 +55,8 @@ export const ConnectionsList = ({
           size="small"
           label="Buscar conexão"
           value={searchTerm}
-          onChange={(event) => onSearchChange(event.target.value)}
-          disabled={loading || isDeleting}
+          onChange={(event) => setSearchTerm(event.target.value)}
+          disabled={isLoading || isDeleting}
           className="md:w-52"
         />
       </div>
@@ -67,7 +67,7 @@ export const ConnectionsList = ({
         </Alert>
       )}
 
-      {loading ? (
+      {isLoading ? (
         <div className="grid min-h-40 place-items-center rounded-lg border border-dashed border-slate-200">
           <CircularProgress aria-label="Carregando conexões" />
         </div>
@@ -112,7 +112,7 @@ export const ConnectionsList = ({
                   <IconButton
                     aria-label="Excluir conexão"
                     size="small"
-                    onClick={() => onDelete(connection)}
+                    onClick={() => requestDeleteConnection(connection)}
                     disabled={isDeleting}
                   >
                     <DeleteOutlineIcon fontSize="small" />
@@ -126,9 +126,9 @@ export const ConnectionsList = ({
 
       <DeleteDialog
         open={Boolean(connectionToDelete)}
-        onClose={onCloseDeleteModal}
-        onCancel={onCloseDeleteModal}
-        onConfirm={onConfirmDelete}
+        onClose={closeDeleteModal}
+        onCancel={closeDeleteModal}
+        onConfirm={confirmDeleteConnection}
         isLoading={isDeleting}
         message={`Tem certeza que deseja excluir a conexão "${connectionToDelete?.name}"? Esta ação não pode ser desfeita.`}
       />

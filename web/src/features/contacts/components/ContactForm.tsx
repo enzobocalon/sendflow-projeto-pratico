@@ -14,36 +14,35 @@ import {
   TextField,
 } from "@mui/material";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
-import { Controller, type Control, type FieldErrors } from "react-hook-form";
-import type { Contact, ContactFormValues } from "../types";
-import type { Connection } from "../../connections/types";
+import { Controller } from "react-hook-form";
+import type { Contact } from "../types";
+import { useContactForm } from "./useContactForm";
 
 type ContactFormProps = {
-  error: string;
-  errors: FieldErrors<ContactFormValues>;
-  control: Control<ContactFormValues>;
-  handleSubmit: () => void;
-  connections: Connection[];
-  connectionsError: string;
-  isLoadingConnections: boolean;
-  isSubmitting: boolean;
   editingContact: Contact | null;
-  cancelEditContact: () => void;
+  onCancel: () => void;
+  onSaved: () => void;
 };
 
 export const ContactForm = ({
-  error,
-  errors,
-  control,
-  handleSubmit,
-  connections,
-  connectionsError,
-  isLoadingConnections,
-  isSubmitting,
   editingContact,
-  cancelEditContact,
+  onCancel,
+  onSaved,
 }: ContactFormProps) => {
   const isEditing = Boolean(editingContact);
+  const {
+    connections,
+    connectionsError,
+    control,
+    error,
+    errors,
+    isLoadingConnections,
+    isSubmitting,
+    submitContact,
+  } = useContactForm({
+    editingContact,
+    onSaved,
+  });
   const hasConnections = connections.length > 0;
 
   return (
@@ -61,7 +60,7 @@ export const ContactForm = ({
         spacing={2.5}
         className="mt-5"
         component="form"
-        onSubmit={handleSubmit}
+        onSubmit={submitContact}
       >
         <Controller
           name="name"
@@ -163,7 +162,7 @@ export const ContactForm = ({
               variant="outlined"
               type="button"
               startIcon={<CloseIcon />}
-              onClick={cancelEditContact}
+              onClick={onCancel}
               disabled={isSubmitting}
             >
               Cancelar

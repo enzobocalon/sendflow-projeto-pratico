@@ -1,30 +1,27 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Alert, Button, Stack, TextField } from "@mui/material";
 import { Controller } from "react-hook-form";
-import type { Control, FieldErrors } from "react-hook-form";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
-import type { Connection, ConnectionFormValues } from "../types";
+import type { Connection } from "../types";
+import { useConnectionForm } from "./useConnectionForm";
 
 type ConnectionFormProps = {
   editingConnection: Connection | null;
-  error: string;
-  errors: FieldErrors<ConnectionFormValues>;
-  control: Control<ConnectionFormValues>;
-  isSubmitting: boolean;
   onCancel: () => void;
-  onSubmit: () => void;
+  onSaved: () => void;
 };
 
 export const ConnectionForm = ({
-  control,
   editingConnection,
-  error,
-  errors,
-  isSubmitting,
   onCancel,
-  onSubmit,
+  onSaved,
 }: ConnectionFormProps) => {
   const isEditing = Boolean(editingConnection);
+  const { control, error, errors, isSubmitting, submitConnection } =
+    useConnectionForm({
+      editingConnection,
+      onSaved,
+    });
 
   return (
     <section className="rounded-lg border border-slate-200 p-5">
@@ -33,7 +30,12 @@ export const ConnectionForm = ({
         subtitle="Crie ou edite uma conexão."
       />
 
-      <Stack component="form" spacing={2.5} className="mt-5" onSubmit={onSubmit}>
+      <Stack
+        component="form"
+        spacing={2.5}
+        className="mt-5"
+        onSubmit={submitConnection}
+      >
         <Controller
           control={control}
           name="name"

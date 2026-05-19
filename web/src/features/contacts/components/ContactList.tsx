@@ -11,40 +11,37 @@ import {
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Contact } from "../types";
 import { DeleteDialog } from "../../../components/DeleteDialog";
+import { useContactsList } from "./useContactsList";
 
 type ContactsListProps = {
-  contactToDelete: Contact | null;
-  contacts: Contact[];
   editContact: (contact: Contact) => void;
   editingContact: Contact | null;
-  error: string;
-  getConnectionName: (connectionId: string) => string;
-  isDeleting: boolean;
-  isLoading: boolean;
-  onCloseDeleteModal: () => void;
-  onConfirmDelete: () => void;
-  onDelete: (contact: Contact) => void;
-  onSearchChange: (value: string) => void;
-  searchTerm: string;
-  totalContacts: number;
+  onDeletedEditingContact: () => void;
 };
 
 export const ContactsList = ({
-  contactToDelete,
-  contacts,
   editContact,
   editingContact,
-  error,
-  getConnectionName,
-  isDeleting,
-  isLoading,
-  onCloseDeleteModal,
-  onConfirmDelete,
-  onDelete,
-  onSearchChange,
-  searchTerm,
-  totalContacts,
+  onDeletedEditingContact,
 }: ContactsListProps) => {
+  const {
+    closeDeleteModal,
+    confirmDeleteContact,
+    contactToDelete,
+    contacts,
+    error,
+    getConnectionName,
+    isDeleting,
+    isLoading,
+    requestDeleteContact,
+    searchTerm,
+    setSearchTerm,
+    totalContacts,
+  } = useContactsList({
+    editingContact,
+    onDeletedEditingContact,
+  });
+
   const subtitle =
     totalContacts === 0
       ? "Nenhum contato cadastrado."
@@ -58,7 +55,7 @@ export const ContactsList = ({
           size="small"
           label="Buscar contato"
           value={searchTerm}
-          onChange={(event) => onSearchChange(event.target.value)}
+          onChange={(event) => setSearchTerm(event.target.value)}
           disabled={isLoading}
           className="md:w-52"
         />
@@ -117,7 +114,7 @@ export const ContactsList = ({
                 <IconButton
                   aria-label="Excluir contato"
                   size="small"
-                  onClick={() => onDelete(contact)}
+                  onClick={() => requestDeleteContact(contact)}
                   disabled={isDeleting}
                 >
                   <DeleteOutlineIcon fontSize="small" />
@@ -130,9 +127,9 @@ export const ContactsList = ({
 
       <DeleteDialog
         open={Boolean(contactToDelete)}
-        onClose={onCloseDeleteModal}
-        onCancel={onCloseDeleteModal}
-        onConfirm={onConfirmDelete}
+        onClose={closeDeleteModal}
+        onCancel={closeDeleteModal}
+        onConfirm={confirmDeleteContact}
         isLoading={isDeleting}
         message={`Tem certeza que deseja excluir o contato ${contactToDelete?.name}? Esta ação não pode ser desfeita.`}
       />
