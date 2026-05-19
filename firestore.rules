@@ -20,6 +20,31 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/connections/$(connectionId)).data.userId == request.auth.uid;
     }
 
+    function validMessageContacts(contactIds) {
+      return contactIds is list
+        && contactIds.size() > 0
+        && contactIds.size() <= 100;
+    }
+
+    function validMessageStatus(status) {
+      return status in ["sent", "scheduled"];
+    }
+
+    function validMessageSchedule() {
+      return request.resource.data.status == "sent"
+        || request.resource.data.scheduledAt is timestamp;
+    }
+
+    function validMessagePayload() {
+      return request.resource.data.content is string
+        && request.resource.data.content.size() >= 2
+        && request.resource.data.content.size() <= 500
+        && validMessageStatus(request.resource.data.status)
+        && ownsConnection(request.resource.data.connectionId)
+        && validMessageContacts(request.resource.data.contactIds)
+        && validMessageSchedule();
+    }
+
     match /connections/{connectionId} {
       allow read, update, delete: if ownsResource();
       allow create: if ownsIncomingResource();
@@ -37,10 +62,10 @@ service cloud.firestore {
     match /messages/{messageId} {
       allow read, delete: if ownsResource();
       allow create: if ownsIncomingResource()
-        && ownsConnection(request.resource.data.connectionId);
+        && validMessagePayload();
       allow update: if ownsResource()
         && ownsIncomingResource()
-        && ownsConnection(request.resource.data.connectionId);
+        && validMessagePayload();
     }
   }
 }
