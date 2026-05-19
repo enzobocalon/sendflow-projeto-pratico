@@ -8,6 +8,7 @@ type ConnectionsListProps = {
   connectionToDelete: Connection | null;
   connections: Connection[];
   error: string;
+  isDeleting: boolean;
   loading: boolean;
   onCloseDeleteModal: () => void;
   onConfirmDelete: () => void;
@@ -22,6 +23,7 @@ export const ConnectionsList = ({
   connectionToDelete,
   connections,
   error,
+  isDeleting,
   loading,
   onCloseDeleteModal,
   onConfirmDelete,
@@ -46,6 +48,7 @@ export const ConnectionsList = ({
         label="Buscar conexão"
         value={searchTerm}
         onChange={(event) => onSearchChange(event.target.value)}
+        disabled={loading || isDeleting}
         className="md:w-52"
       />
     </div>
@@ -87,6 +90,7 @@ export const ConnectionsList = ({
                   aria-label="Editar conexão"
                   size="small"
                   onClick={() => onEdit(connection)}
+                  disabled={isDeleting}
                 >
                   <EditOutlinedIcon fontSize="small" />
                 </IconButton>
@@ -94,6 +98,7 @@ export const ConnectionsList = ({
                   aria-label="Excluir conexão"
                   size="small"
                   onClick={() => onDelete(connection)}
+                  disabled={isDeleting}
                 >
                   <DeleteOutlineIcon fontSize="small" />
                 </IconButton>
@@ -117,9 +122,19 @@ export const ConnectionsList = ({
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCloseDeleteModal}>Cancelar</Button>
-        <Button color="error" variant="contained" onClick={onConfirmDelete}>
-          Excluir
+        <Button onClick={onCloseDeleteModal} disabled={isDeleting}>
+          Cancelar
+        </Button>
+        <Button
+          color="error"
+          variant="contained"
+          onClick={onConfirmDelete}
+          disabled={isDeleting}
+          startIcon={
+            isDeleting ? <CircularProgress color="inherit" size={18} /> : null
+          }
+        >
+          {isDeleting ? 'Excluindo...' : 'Excluir'}
         </Button>
       </DialogActions>
     </Dialog>

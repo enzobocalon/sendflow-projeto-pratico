@@ -24,6 +24,7 @@ export const useConnections = () => {
   );
   const [formError, setFormError] = useState("");
   const [listError, setListError] = useState("");
+  const [isDeletingConnection, setIsDeletingConnection] = useState(false);
   const { connections, isLoading } = useConnectionOptions();
   const [searchTerm, setSearchTerm] = useState("");
   const {
@@ -103,6 +104,10 @@ export const useConnections = () => {
   };
 
   const closeDeleteModal = () => {
+    if (isDeletingConnection) {
+      return;
+    }
+
     setConnectionToDelete(null);
   };
 
@@ -112,6 +117,7 @@ export const useConnections = () => {
     }
 
     setListError("");
+    setIsDeletingConnection(true);
 
     try {
       await deleteDoc(doc(db, "connections", connectionToDelete.id));
@@ -122,6 +128,8 @@ export const useConnections = () => {
       closeDeleteModal();
     } catch {
       setListError("Não foi possível excluir a conexão.");
+    } finally {
+      setIsDeletingConnection(false);
     }
   };
 
@@ -137,6 +145,7 @@ export const useConnections = () => {
     formErrors: errors,
     formControl: control,
     isSubmitting,
+    isDeletingConnection,
     listError,
     isLoading,
     requestDeleteConnection,
