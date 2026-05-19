@@ -14,10 +14,51 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == request.resource.data.userId;
     }
 
+    function userIdDidNotChange() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+    function validTimestamps() {
+      return request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
+    }
+
+    function validConnectionPayload() {
+      return request.resource.data.keys().hasOnly([
+          "createdAt",
+          "name",
+          "updatedAt",
+          "userId"
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 80
+        && validTimestamps();
+    }
+
     function ownsConnection(connectionId) {
       return connectionId is string
         && exists(/databases/$(database)/documents/connections/$(connectionId))
         && get(/databases/$(database)/documents/connections/$(connectionId)).data.userId == request.auth.uid;
+    }
+
+    function validContactPayload() {
+      return request.resource.data.keys().hasOnly([
+          "connectionId",
+          "createdAt",
+          "name",
+          "phone",
+          "updatedAt",
+          "userId"
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 80
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() >= 10
+        && request.resource.data.phone.size() <= 20
+        && ownsConnection(request.resource.data.connectionId)
+        && validTimestamps();
     }
 
     function validMessageContacts(contactIds) {
@@ -26,37 +67,65 @@ service cloud.firestore {
         && contactIds.size() <= 100;
     }
 
+    function validRecipientsCount() {
+      return request.resource.data.recipientsCount is int
+        && request.resource.data.recipientsCount == request.resource.data.contactIds.size();
+    }
+
     function validMessageStatus(status) {
       return status in ["sent", "scheduled"];
     }
 
     function validMessageSchedule() {
       return request.resource.data.status == "sent"
-        || request.resource.data.scheduledAt is timestamp;
+        || (
+          request.resource.data.scheduledAt is timestamp
+          && request.resource.data.scheduledAt > request.time
+        );
     }
 
     function validMessagePayload() {
-      return request.resource.data.content is string
+      return request.resource.data.keys().hasOnly([
+          "connectionId",
+          "contactIds",
+          "content",
+          "createdAt",
+          "recipientsCount",
+          "scheduledAt",
+          "sentAt",
+          "status",
+          "updatedAt",
+          "userId"
+        ])
+        && request.resource.data.content is string
         && request.resource.data.content.size() >= 2
         && request.resource.data.content.size() <= 500
         && validMessageStatus(request.resource.data.status)
         && ownsConnection(request.resource.data.connectionId)
         && validMessageContacts(request.resource.data.contactIds)
-        && validMessageSchedule();
+        && validRecipientsCount()
+        && validMessageSchedule()
+        && validTimestamps();
     }
 
     match /connections/{connectionId} {
-      allow read, update, delete: if ownsResource();
-      allow create: if ownsIncomingResource();
+      allow read, delete: if ownsResource();
+      allow create: if ownsIncomingResource()
+        && validConnectionPayload();
+      allow update: if ownsResource()
+        && ownsIncomingResource()
+        && userIdDidNotChange()
+        && validConnectionPayload();
     }
 
     match /contacts/{contactId} {
       allow read, delete: if ownsResource();
       allow create: if ownsIncomingResource()
-        && ownsConnection(request.resource.data.connectionId);
+        && validContactPayload();
       allow update: if ownsResource()
         && ownsIncomingResource()
-        && ownsConnection(request.resource.data.connectionId);
+        && userIdDidNotChange()
+        && validContactPayload();
     }
 
     match /messages/{messageId} {
@@ -65,6 +134,8 @@ service cloud.firestore {
         && validMessagePayload();
       allow update: if ownsResource()
         && ownsIncomingResource()
+        && userIdDidNotChange()
+        && resource.data.status != "sent"
         && validMessagePayload();
     }
   }
