@@ -17,6 +17,7 @@ import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import { Controller } from "react-hook-form";
 import type { Contact } from "../types";
 import { useContactForm } from "./useContactForm";
+import { formatPhone, sanitizePhone } from "../../../utils/formatPhone";
 
 type ContactFormProps = {
   editingContact: Contact | null;
@@ -82,6 +83,8 @@ export const ContactForm = ({
           render={({ field }) => (
             <TextField
               {...field}
+              value={formatPhone(field.value)}
+              onChange={(event) => field.onChange(sanitizePhone(event.target.value))}
               label="Telefone"
               error={Boolean(errors.phone)}
               helperText={errors.phone?.message}

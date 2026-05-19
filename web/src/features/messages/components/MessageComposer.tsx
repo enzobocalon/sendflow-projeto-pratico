@@ -20,6 +20,7 @@ import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import { Controller } from "react-hook-form";
 import { useMessageComposer } from "./useMessageComposer";
 import type { Message } from "../types";
+import { formatPhone } from "../../../utils/formatPhone";
 
 type MessageComposerProps = {
   editingMessage: Message | null;
@@ -178,7 +179,7 @@ export const MessageComposer = ({
                           disabled={isSubmitting}
                         />
                       }
-                      label={`${contact.name} · ${contact.phone}`}
+                      label={`${contact.name} · ${formatPhone(contact.phone)}`}
                     />
                   ))}
                 </div>

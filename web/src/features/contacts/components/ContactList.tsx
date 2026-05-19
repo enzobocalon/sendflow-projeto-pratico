@@ -12,6 +12,7 @@ import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Contact } from "../types";
 import { DeleteDialog } from "../../../components/DeleteDialog";
 import { useContactsList } from "./useContactsList";
+import { formatPhone } from "../../../utils/formatPhone";
 
 type ContactsListProps = {
   editContact: (contact: Contact) => void;
@@ -96,7 +97,7 @@ export const ContactsList = ({
                   {contact.name}
                 </Typography>
                 <Typography className="text-sm text-slate-500">
-                  {contact.phone} · {getConnectionName(contact.connectionId)}
+                  {formatPhone(contact.phone)} · {getConnectionName(contact.connectionId)}
                 </Typography>
               </div>
               <Stack direction="row" spacing={0.5}>

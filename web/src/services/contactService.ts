@@ -7,6 +7,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import { sanitizePhone } from "../utils/formatPhone";
 
 type SaveContactParams = {
   connectionId: string;
@@ -32,7 +33,7 @@ export const createContact = ({
     connectionId,
     createdAt: serverTimestamp(),
     name: name.trim(),
-    phone: phone.trim(),
+    phone: sanitizePhone(phone),
     updatedAt: serverTimestamp(),
     userId,
   });
@@ -46,7 +47,7 @@ export const updateContact = ({
   updateDoc(doc(db, "contacts", contactId), {
     connectionId,
     name: name.trim(),
-    phone: phone.trim(),
+    phone: sanitizePhone(phone),
     updatedAt: serverTimestamp(),
   });
 
