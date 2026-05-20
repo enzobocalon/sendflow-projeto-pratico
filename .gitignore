@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 functions/lib
+.firebase
 firebase-debug.log
 firebase-debug.*.log
 *.local
