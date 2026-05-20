@@ -7,6 +7,8 @@ import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { db } from "./firebase";
 import {
   MAX_CONNECTIONS_PER_USER,
+  getAuthenticatedUserId,
+  getStringField,
   normalizeSearchText,
 } from "./utils";
 
@@ -77,6 +79,88 @@ export const createConnection = onCall(
     });
 
     return { id: connectionRef.id };
+  },
+);
+
+export const updateConnection = onCall(
+  { region: "southamerica-east1" },
+  async (request) => {
+    const userId = getAuthenticatedUserId(request.auth?.uid);
+    const connectionId = getStringField(request.data?.connectionId);
+    const name = getStringField(request.data?.name);
+    const connectionRef = db.collection("connections").doc(connectionId);
+    const connectionSnapshot = await connectionRef.get();
+
+    if (
+      !connectionSnapshot.exists ||
+      connectionSnapshot.data()?.userId !== userId
+    ) {
+      throw new HttpsError("permission-denied", "Conexão inválida.");
+    }
+
+    if (name.length < 2 || name.length > 80) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Informe um nome com 2 a 80 caracteres.",
+      );
+    }
+
+    await connectionRef.update({
+      name,
+      nameNormalized: normalizeSearchText(name),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    return { id: connectionId };
+  },
+);
+
+export const deleteConnection = onCall(
+  { region: "southamerica-east1" },
+  async (request) => {
+    const userId = getAuthenticatedUserId(request.auth?.uid);
+    const connectionId = getStringField(request.data?.connectionId);
+    const connectionRef = db.collection("connections").doc(connectionId);
+    const connectionSnapshot = await connectionRef.get();
+
+    if (
+      !connectionSnapshot.exists ||
+      connectionSnapshot.data()?.userId !== userId
+    ) {
+      throw new HttpsError("permission-denied", "Conexão inválida.");
+    }
+
+    const linkedContacts = await db
+      .collection("contacts")
+      .where("connectionId", "==", connectionId)
+      .where("userId", "==", userId)
+      .limit(1)
+      .get();
+
+    if (!linkedContacts.empty) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Não é possível excluir uma conexão com contatos vinculados.",
+      );
+    }
+
+    const linkedMessages = await db
+      .collection("messages")
+      .where("connectionId", "==", connectionId)
+      .where("userId", "==", userId)
+      .limit(1)
+      .get();
+
+    if (!linkedMessages.empty) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Não é possível excluir uma conexão com mensagens vinculadas.",
+      );
+    }
+
+    await connectionRef.delete();
+
+    return { id: connectionId };
   },
 );
 

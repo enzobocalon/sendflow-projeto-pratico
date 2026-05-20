@@ -10,43 +10,9 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == resource.data.userId;
     }
 
-    function ownsIncomingResource() {
-      return signedIn() && request.auth.uid == request.resource.data.userId;
-    }
-
-    function userIdDidNotChange() {
-      return request.resource.data.userId == resource.data.userId;
-    }
-
-    function validTimestamps() {
-      return request.resource.data.createdAt is timestamp
-        && request.resource.data.updatedAt is timestamp;
-    }
-
-    function validConnectionPayload() {
-      return request.resource.data.keys().hasOnly([
-          "createdAt",
-          "name",
-          "nameNormalized",
-          "updatedAt",
-          "userId"
-        ])
-        && request.resource.data.name is string
-        && request.resource.data.name.size() >= 2
-        && request.resource.data.name.size() <= 80
-        && request.resource.data.nameNormalized is string
-        && request.resource.data.nameNormalized.size() >= 2
-        && request.resource.data.nameNormalized.size() <= 80
-        && validTimestamps();
-    }
-
     match /connections/{connectionId} {
-      allow read, delete: if ownsResource();
-      allow create: if false;
-      allow update: if ownsResource()
-        && ownsIncomingResource()
-        && userIdDidNotChange()
-        && validConnectionPayload();
+      allow read: if ownsResource();
+      allow create, update, delete: if false;
     }
 
     match /usageLimits/{userId} {

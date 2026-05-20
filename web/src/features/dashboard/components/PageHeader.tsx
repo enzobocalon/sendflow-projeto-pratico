@@ -1,18 +1,6 @@
-import AddIcon from '@mui/icons-material/Add'
-import { Button, Typography } from '@mui/material'
-import type { DashboardTab } from '../types'
+import { Typography } from '@mui/material'
 
-const actionLabel: Record<DashboardTab, string> = {
-  connections: 'Nova conexão',
-  contacts: 'Novo contato',
-  messages: 'Nova mensagem',
-}
-
-type PageHeaderProps = {
-  activeTab: DashboardTab
-}
-
-export const PageHeader = ({ activeTab }: PageHeaderProps) => (
+export const PageHeader = () => (
   <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
     <div>
       <Typography component="p" className="text-sm font-medium text-blue-700">
@@ -25,9 +13,5 @@ export const PageHeader = ({ activeTab }: PageHeaderProps) => (
         Administre uma conexão por vez e avance para contatos e mensagens sem misturar fluxos.
       </Typography>
     </div>
-
-    <Button variant="contained" startIcon={<AddIcon />}>
-      {actionLabel[activeTab]}
-    </Button>
   </header>
 )

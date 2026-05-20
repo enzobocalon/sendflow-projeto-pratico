@@ -26,15 +26,15 @@ export const getOwnedConnection = async (
   connectionId: string,
   userId: string,
 ) => {
-  const snapshot = await db.collection("connections").doc(connectionId).get();
+  const connection = await db.collection("connections").doc(connectionId).get();
 
-  if (!snapshot.exists || snapshot.data()?.userId !== userId) {
+  if (!connection.exists || connection.data()?.userId !== userId) {
     throw new HttpsError("permission-denied", "Conexão inválida.");
   }
 
   return {
-    id: snapshot.id,
-    name: String(snapshot.data()?.name ?? ""),
+    id: connection.id,
+    name: String(connection.data()?.name ?? ""),
   };
 };
 

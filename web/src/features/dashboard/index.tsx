@@ -25,7 +25,7 @@ export default function Dashboard() {
 
   return (
     <Stack spacing={3}>
-      <PageHeader activeTab={activeTab} />
+      <PageHeader />
       <WorkflowSummary />
 
       <Paper elevation={0} className="overflow-hidden rounded-lg border border-slate-200 bg-white">
