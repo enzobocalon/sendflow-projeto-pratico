@@ -1,8 +1,5 @@
 import { FieldValue } from "firebase-admin/firestore";
-import {
-  onDocumentDeleted,
-  onDocumentUpdated,
-} from "firebase-functions/v2/firestore";
+import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { db } from "./firebase";
 import {
@@ -11,6 +8,7 @@ import {
   getStringField,
   normalizeSearchText,
 } from "./utils";
+import { incrementUsage } from "./usage";
 
 export const createConnection = onCall(
   { region: "southamerica-east1" },
@@ -34,7 +32,7 @@ export const createConnection = onCall(
     }
 
     const connectionRef = db.collection("connections").doc();
-    const usageRef = db.collection("usageLimits").doc(userId);
+    const usageRef = db.collection("usage").doc(userId);
 
     await db.runTransaction(async (transaction) => {
       const usageSnapshot = await transaction.get(usageRef);
@@ -42,7 +40,10 @@ export const createConnection = onCall(
         ? Number(usageSnapshot.data()?.connectionsCount ?? 0)
         : 0;
 
-      if (!usageSnapshot.exists || connectionsCount >= MAX_CONNECTIONS_PER_USER) {
+      if (
+        !usageSnapshot.exists ||
+        connectionsCount >= MAX_CONNECTIONS_PER_USER
+      ) {
         const existingConnections = await transaction.get(
           db.collection("connections").where("userId", "==", userId).limit(101),
         );
@@ -69,7 +70,7 @@ export const createConnection = onCall(
       transaction.set(
         usageRef,
         {
-          connectionsCount: connectionsCount + 1,
+          connectionsCount: FieldValue.increment(1),
           updatedAt: now,
           userId,
           ...(usageSnapshot.exists ? {} : { createdAt: now }),
@@ -159,34 +160,9 @@ export const deleteConnection = onCall(
     }
 
     await connectionRef.delete();
+    await incrementUsage(userId, { connectionsCount: -1 });
 
     return { id: connectionId };
-  },
-);
-
-export const decrementConnectionUsage = onDocumentDeleted(
-  {
-    document: "connections/{connectionId}",
-    region: "southamerica-east1",
-  },
-  async (event) => {
-    const userId = event.data?.data().userId;
-
-    if (typeof userId !== "string") {
-      return;
-    }
-
-    await db
-      .collection("usageLimits")
-      .doc(userId)
-      .set(
-        {
-          connectionsCount: FieldValue.increment(-1),
-          updatedAt: FieldValue.serverTimestamp(),
-          userId,
-        },
-        { merge: true },
-      );
   },
 );
 

@@ -8,6 +8,7 @@ import {
   normalizeSearchText,
   sanitizePhone,
 } from "./utils";
+import { incrementUsage } from "./usage";
 
 export const createContact = onCall(
   { region: "southamerica-east1" },
@@ -40,6 +41,7 @@ export const createContact = onCall(
       updatedAt: now,
       userId,
     });
+    await incrementUsage(userId, { contactsCount: 1 });
 
     return { id: contactRef.id };
   },
@@ -99,6 +101,7 @@ export const deleteContact = onCall(
     }
 
     await contactRef.delete();
+    await incrementUsage(userId, { contactsCount: -1 });
 
     return { id: contactId };
   },

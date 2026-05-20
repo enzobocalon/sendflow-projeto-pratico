@@ -1,9 +1,4 @@
-import {
-  collection,
-  onSnapshot,
-  query,
-  where,
-} from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { db } from "../lib/firebase";
 import { useAuth } from "./useAuth";
@@ -15,6 +10,13 @@ const emptySummary = {
   scheduledMessages: 0,
 };
 
+type UsageDocument = Partial<{
+  connectionsCount: number;
+  contactsCount: number;
+  messagesCount: number;
+  scheduledMessagesCount: number;
+}>;
+
 export const useDashboardSummary = () => {
   const { user } = useAuth();
   const [error, setError] = useState("");
@@ -24,62 +26,27 @@ export const useDashboardSummary = () => {
   useEffect(() => {
     if (!user) return;
 
-    const userFilter = where("userId", "==", user.uid);
+    let isActive = true;
     const handleError = () => {
+      if (!isActive) return;
+
       setError("Não foi possível carregar os dados totais do dashboard.");
       setIsLoading(false);
     };
 
-    const unsubscribeConnections = onSnapshot(
-      query(collection(db, "connections"), userFilter),
+    const unsubscribe = onSnapshot(
+      doc(db, "usage", user.uid),
       (snapshot) => {
-        setSummary((currentSummary) => ({
-          ...currentSummary,
-          connections: snapshot.size,
-        }));
-        setError("");
-        setIsLoading(false);
-      },
-      handleError,
-    );
+        if (!isActive) return;
 
-    const unsubscribeContacts = onSnapshot(
-      query(collection(db, "contacts"), userFilter),
-      (snapshot) => {
-        setSummary((currentSummary) => ({
-          ...currentSummary,
-          contacts: snapshot.size,
-        }));
-        setError("");
-        setIsLoading(false);
-      },
-      handleError,
-    );
+        const usage = (snapshot.data() ?? {}) as UsageDocument;
 
-    const unsubscribeMessages = onSnapshot(
-      query(collection(db, "messages"), userFilter),
-      (snapshot) => {
-        setSummary((currentSummary) => ({
-          ...currentSummary,
-          messages: snapshot.size,
-        }));
-        setError("");
-        setIsLoading(false);
-      },
-      handleError,
-    );
-
-    const unsubscribeScheduledMessages = onSnapshot(
-      query(
-        collection(db, "messages"),
-        userFilter,
-        where("status", "==", "scheduled"),
-      ),
-      (snapshot) => {
-        setSummary((currentSummary) => ({
-          ...currentSummary,
-          scheduledMessages: snapshot.size,
-        }));
+        setSummary({
+          connections: usage.connectionsCount ?? 0,
+          contacts: usage.contactsCount ?? 0,
+          messages: usage.messagesCount ?? 0,
+          scheduledMessages: usage.scheduledMessagesCount ?? 0,
+        });
         setError("");
         setIsLoading(false);
       },
@@ -87,10 +54,8 @@ export const useDashboardSummary = () => {
     );
 
     return () => {
-      unsubscribeConnections();
-      unsubscribeContacts();
-      unsubscribeMessages();
-      unsubscribeScheduledMessages();
+      isActive = false;
+      unsubscribe();
     };
   }, [user]);
 

@@ -1,7 +1,6 @@
 export {
   createConnection,
   deleteConnection,
-  decrementConnectionUsage,
   syncConnectionNameInContacts,
   updateConnection,
 } from "./connections";
