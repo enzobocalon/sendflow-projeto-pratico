@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAuth } from "../../../hooks/useAuth";
-import { useConnectionsOptions } from "../../../hooks/useConnectionsOptions";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import {
   deleteConnection,
@@ -9,12 +8,18 @@ import {
 import type { Connection } from "../types";
 
 type UseConnectionsListParams = {
+  connections: Connection[];
+  connectionsError: string;
   editingConnection: Connection | null;
+  isLoadingConnections: boolean;
   onDeletedEditingConnection: () => void;
 };
 
 export const useConnectionsList = ({
+  connections,
+  connectionsError,
   editingConnection,
+  isLoadingConnections,
   onDeletedEditingConnection,
 }: UseConnectionsListParams) => {
   const [connectionToDelete, setConnectionToDelete] =
@@ -24,12 +29,17 @@ export const useConnectionsList = ({
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebouncedValue(searchTerm);
   const { user } = useAuth();
+  const filteredConnections = useMemo(() => {
+    const normalizedSearchTerm = debouncedSearchTerm.trim().toLowerCase();
 
-  const {
-    connections,
-    error: connectionsError,
-    isLoading,
-  } = useConnectionsOptions({ searchTerm: debouncedSearchTerm });
+    if (!normalizedSearchTerm) {
+      return connections;
+    }
+
+    return connections.filter((connection) =>
+      connection.name.toLowerCase().includes(normalizedSearchTerm),
+    );
+  }, [connections, debouncedSearchTerm]);
 
   const requestDeleteConnection = (connection: Connection) => {
     setError("");
@@ -89,13 +99,13 @@ export const useConnectionsList = ({
     closeDeleteModal,
     confirmDeleteConnection,
     connectionToDelete,
-    connections,
+    connections: filteredConnections,
     error: error || connectionsError,
     isDeleting,
-    isLoading,
+    isLoading: isLoadingConnections,
     requestDeleteConnection,
     searchTerm,
     setSearchTerm,
-    totalConnections: connections.length,
+    totalConnections: filteredConnections.length,
   };
 };

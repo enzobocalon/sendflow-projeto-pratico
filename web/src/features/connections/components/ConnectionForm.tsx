@@ -6,24 +6,31 @@ import type { Connection } from "../types";
 import { useConnectionForm } from "./useConnectionForm";
 
 type ConnectionFormProps = {
+  connectionsCount: number;
   editingConnection: Connection | null;
   onCancel: () => void;
   onSaved: () => void;
-  connectionsCount: number;
 };
 
 export const ConnectionForm = ({
+  connectionsCount,
   editingConnection,
   onCancel,
   onSaved,
-  connectionsCount,
 }: ConnectionFormProps) => {
   const isEditing = Boolean(editingConnection);
-  const { control, error, errors, isSubmitting, submitConnection } =
+  const {
+    control,
+    error,
+    errors,
+    hasReachedConnectionsLimit,
+    isSubmitting,
+    submitConnection,
+  } =
     useConnectionForm({
+      connectionsCount,
       editingConnection,
       onSaved,
-      connectionsCount,
     });
 
   return (
@@ -55,13 +62,18 @@ export const ConnectionForm = ({
         />
 
         {error && <Alert severity="error">{error}</Alert>}
+        {hasReachedConnectionsLimit && (
+          <Alert severity="warning">
+            Limite de 100 conexões atingido. Exclua uma conexão para cadastrar outra.
+          </Alert>
+        )}
 
         <Stack direction="row" spacing={1.5}>
           <Button
             type="submit"
             variant="contained"
             startIcon={<AddIcon />}
-            disabled={isSubmitting}
+            disabled={isSubmitting || hasReachedConnectionsLimit}
           >
             {isSubmitting ? "Salvando..." : "Salvar conexão"}
           </Button>

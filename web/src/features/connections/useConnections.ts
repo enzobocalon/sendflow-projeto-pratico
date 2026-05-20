@@ -1,11 +1,16 @@
 import { useState } from "react";
+import { useConnectionsOptions } from "../../hooks/useConnectionsOptions";
 import type { Connection } from "./types";
 
 export const useConnections = () => {
+  const {
+    connections,
+    error: connectionsError,
+    isLoading: isLoadingConnections,
+  } = useConnectionsOptions();
   const [editingConnection, setEditingConnection] = useState<Connection | null>(
     null,
   );
-  const [totalConnections, setTotalConnections] = useState(0);
 
   const editConnection = (connection: Connection) => {
     setEditingConnection(connection);
@@ -17,9 +22,11 @@ export const useConnections = () => {
 
   return {
     cancelEdit,
+    connections,
+    connectionsError,
     editConnection,
     editingConnection,
-    setTotalConnections,
-    totalConnections,
+    isLoadingConnections,
+    totalConnections: connections.length,
   };
 };

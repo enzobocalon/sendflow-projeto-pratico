@@ -10,20 +10,22 @@ import { connectionSchema } from "../schemas/connectionSchema";
 import type { Connection, ConnectionFormValues } from "../types";
 
 type UseConnectionFormParams = {
-  editingConnection: Connection | null;
   connectionsCount: number;
+  editingConnection: Connection | null;
   onSaved: () => void;
 };
 
 const MAX_CONNECTIONS = 100;
 
 export const useConnectionForm = ({
-  editingConnection,
   connectionsCount,
+  editingConnection,
   onSaved,
 }: UseConnectionFormParams) => {
   const { user } = useAuth();
   const [error, setError] = useState("");
+  const hasReachedConnectionsLimit =
+    !editingConnection && connectionsCount >= MAX_CONNECTIONS;
 
   const {
     control,
@@ -49,7 +51,7 @@ export const useConnectionForm = ({
       return;
     }
 
-    if (!editingConnection && connectionsCount >= MAX_CONNECTIONS) {
+    if (hasReachedConnectionsLimit) {
       setError(`Limite de ${MAX_CONNECTIONS} conexões atingido.`);
       return;
     }
@@ -71,7 +73,12 @@ export const useConnectionForm = ({
 
       reset();
       onSaved();
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.message === "connections-limit-reached") {
+        setError(`Limite de ${MAX_CONNECTIONS} conexões atingido.`);
+        return;
+      }
+
       setError("Não foi possível salvar a conexão.");
     }
   });
@@ -80,6 +87,7 @@ export const useConnectionForm = ({
     control,
     error,
     errors,
+    hasReachedConnectionsLimit,
     isSubmitting,
     submitConnection,
   };

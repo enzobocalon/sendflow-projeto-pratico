@@ -1,5 +1,4 @@
 import {
-  addDoc,
   collection,
   deleteDoc,
   doc,
@@ -9,7 +8,10 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { httpsCallable } from "firebase/functions";
+import { db, functions } from "../lib/firebase";
+
+const MAX_CONNECTIONS_PER_USER = 100;
 
 type SaveConnectionParams = {
   name: string;
@@ -23,14 +25,22 @@ type UpdateConnectionParams = {
 
 const normalizeSearchText = (value: string) => value.trim().toLowerCase();
 
-export const createConnection = ({ name, userId }: SaveConnectionParams) =>
-  addDoc(collection(db, "connections"), {
-    createdAt: serverTimestamp(),
-    name: name.trim(),
-    nameNormalized: normalizeSearchText(name),
-    updatedAt: serverTimestamp(),
-    userId,
-  });
+export const createConnection = async ({ name, userId }: SaveConnectionParams) => {
+  const connectionsCount = await getCountFromServer(
+    query(collection(db, "connections"), where("userId", "==", userId)),
+  );
+
+  if (connectionsCount.data().count >= MAX_CONNECTIONS_PER_USER) {
+    throw new Error("connections-limit-reached");
+  }
+
+  const createConnectionFunction = httpsCallable<
+    { name: string },
+    { id: string }
+  >(functions, "createConnection");
+
+  return createConnectionFunction({ name });
+};
 
 export const updateConnection = ({
   connectionId,

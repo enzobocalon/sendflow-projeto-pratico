@@ -1,14 +1,5 @@
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  getDoc,
-  serverTimestamp,
-  updateDoc,
-} from "firebase/firestore";
-import { db } from "../lib/firebase";
-import { sanitizePhone } from "../utils/formatPhone";
+import { httpsCallable } from "firebase/functions";
+import { functions } from "../lib/firebase";
 
 type SaveContactParams = {
   connectionId: string;
@@ -24,31 +15,24 @@ type UpdateContactParams = {
   phone: string;
 };
 
-const normalizeSearchText = (value: string) => value.trim().toLowerCase();
-
-const getConnectionName = async (connectionId: string) => {
-  const snapshot = await getDoc(doc(db, "connections", connectionId));
-
-  return snapshot.exists() ? String(snapshot.data().name ?? "") : "";
-};
-
 export const createContact = async ({
   connectionId,
   name,
   phone,
-  userId,
 }: SaveContactParams) => {
-  const connectionName = await getConnectionName(connectionId);
+  const createContactFunction = httpsCallable<
+    {
+      connectionId: string;
+      name: string;
+      phone: string;
+    },
+    { id: string }
+  >(functions, "createContact");
 
-  return addDoc(collection(db, "contacts"), {
+  return createContactFunction({
     connectionId,
-    connectionName,
-    createdAt: serverTimestamp(),
-    name: name.trim(),
-    nameNormalized: normalizeSearchText(name),
-    phone: sanitizePhone(phone),
-    updatedAt: serverTimestamp(),
-    userId,
+    name,
+    phone,
   });
 };
 
@@ -58,17 +42,29 @@ export const updateContact = async ({
   name,
   phone,
 }: UpdateContactParams) => {
-  const connectionName = await getConnectionName(connectionId);
+  const updateContactFunction = httpsCallable<
+    {
+      contactId: string;
+      connectionId: string;
+      name: string;
+      phone: string;
+    },
+    { id: string }
+  >(functions, "updateContact");
 
-  return updateDoc(doc(db, "contacts", contactId), {
+  return updateContactFunction({
+    contactId,
     connectionId,
-    connectionName,
-    name: name.trim(),
-    nameNormalized: normalizeSearchText(name),
-    phone: sanitizePhone(phone),
-    updatedAt: serverTimestamp(),
+    name,
+    phone,
   });
 };
 
-export const deleteContact = (contactId: string) =>
-  deleteDoc(doc(db, "contacts", contactId));
+export const deleteContact = (contactId: string) => {
+  const deleteContactFunction = httpsCallable<
+    { contactId: string },
+    { id: string }
+  >(functions, "deleteContact");
+
+  return deleteContactFunction({ contactId });
+};

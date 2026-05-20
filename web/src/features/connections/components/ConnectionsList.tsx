@@ -15,13 +15,19 @@ import { DeleteDialog } from "../../../components/DeleteDialog";
 import { useConnectionsList } from "./useConnectionsList";
 
 type ConnectionsListProps = {
+  connections: Connection[];
+  connectionsError: string;
   editingConnection: Connection | null;
+  isLoadingConnections: boolean;
   onEdit: (connection: Connection) => void;
   onDeletedEditingConnection: () => void;
 };
 
 export const ConnectionsList = ({
+  connections: loadedConnections,
+  connectionsError,
   editingConnection,
+  isLoadingConnections,
   onEdit,
   onDeletedEditingConnection,
 }: ConnectionsListProps) => {
@@ -38,7 +44,10 @@ export const ConnectionsList = ({
     setSearchTerm,
     totalConnections,
   } = useConnectionsList({
+    connections: loadedConnections,
+    connectionsError,
     editingConnection,
+    isLoadingConnections,
     onDeletedEditingConnection,
   });
 

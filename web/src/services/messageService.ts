@@ -1,14 +1,6 @@
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  serverTimestamp,
-  Timestamp,
-  updateDoc,
-} from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { httpsCallable } from "firebase/functions";
 import type { MessageStatus } from "../features/messages/types";
+import { functions } from "../lib/firebase";
 
 type SaveMessageBaseParams = {
   connectionId: string;
@@ -28,36 +20,29 @@ type UpdateMessageParams = SaveMessageBaseParams & {
   status: MessageStatus;
 };
 
-const getMessageScheduleFields = (
-  status: MessageStatus,
-  scheduledAt?: Date,
-) => ({
-  scheduledAt:
-    status === "scheduled" && scheduledAt
-      ? Timestamp.fromDate(scheduledAt)
-      : null,
-  sentAt: status === "sent" ? serverTimestamp() : null,
-});
-
 export const createMessage = ({
   connectionId,
   contactIds,
   content,
   scheduledAt,
   status,
-  userId,
-}: CreateMessageParams) =>
-  addDoc(collection(db, "messages"), {
+}: CreateMessageParams) => {
+  const createMessageFunction = httpsCallable<
+    SaveMessageBaseParams & {
+      scheduledAt?: string;
+      status: MessageStatus;
+    },
+    { id: string }
+  >(functions, "createMessage");
+
+  return createMessageFunction({
     connectionId,
     contactIds,
-    content: content.trim(),
-    createdAt: serverTimestamp(),
-    recipientsCount: contactIds.length,
+    content,
+    scheduledAt: scheduledAt?.toISOString(),
     status,
-    updatedAt: serverTimestamp(),
-    userId,
-    ...getMessageScheduleFields(status, scheduledAt),
   });
+};
 
 export const updateMessage = ({
   connectionId,
@@ -66,16 +51,31 @@ export const updateMessage = ({
   messageId,
   scheduledAt,
   status,
-}: UpdateMessageParams) =>
-  updateDoc(doc(db, "messages", messageId), {
+}: UpdateMessageParams) => {
+  const updateMessageFunction = httpsCallable<
+    SaveMessageBaseParams & {
+      messageId: string;
+      scheduledAt?: string;
+      status: MessageStatus;
+    },
+    { id: string }
+  >(functions, "updateMessage");
+
+  return updateMessageFunction({
     connectionId,
     contactIds,
-    content: content.trim(),
-    recipientsCount: contactIds.length,
+    content,
+    messageId,
+    scheduledAt: scheduledAt?.toISOString(),
     status,
-    updatedAt: serverTimestamp(),
-    ...getMessageScheduleFields(status, scheduledAt),
   });
+};
 
-export const deleteMessage = (messageId: string) =>
-  deleteDoc(doc(db, "messages", messageId));
+export const deleteMessage = (messageId: string) => {
+  const deleteMessageFunction = httpsCallable<
+    { messageId: string },
+    { id: string }
+  >(functions, "deleteMessage");
+
+  return deleteMessageFunction({ messageId });
+};
