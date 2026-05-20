@@ -1,12 +1,8 @@
-import { collection, getCountFromServer, query, where } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
-import { db, functions } from "../lib/firebase";
-
-const MAX_CONNECTIONS_PER_USER = 100;
+import { functions } from "../lib/firebase";
 
 type SaveConnectionParams = {
   name: string;
-  userId: string;
 };
 
 type UpdateConnectionParams = {
@@ -14,15 +10,7 @@ type UpdateConnectionParams = {
   name: string;
 };
 
-export const createConnection = async ({ name, userId }: SaveConnectionParams) => {
-  const connectionsCount = await getCountFromServer(
-    query(collection(db, "connections"), where("userId", "==", userId)),
-  );
-
-  if (connectionsCount.data().count >= MAX_CONNECTIONS_PER_USER) {
-    throw new Error("connections-limit-reached");
-  }
-
+export const createConnection = async ({ name }: SaveConnectionParams) => {
   const createConnectionFunction = httpsCallable<
     { name: string },
     { id: string }

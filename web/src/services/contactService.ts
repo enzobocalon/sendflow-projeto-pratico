@@ -5,7 +5,6 @@ type SaveContactParams = {
   connectionId: string;
   name: string;
   phone: string;
-  userId: string;
 };
 
 type UpdateContactParams = {

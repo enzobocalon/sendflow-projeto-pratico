@@ -68,7 +68,6 @@ export const useConnectionForm = ({
       } else {
         await createConnection({
           name,
-          userId: user.uid,
         });
       }
 

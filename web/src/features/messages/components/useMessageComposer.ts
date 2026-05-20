@@ -134,7 +134,6 @@ export function useMessageComposer({
           content: values.content,
           scheduledAt,
           status: isScheduled ? "scheduled" : "sent",
-          userId: user.uid,
         });
       }
 

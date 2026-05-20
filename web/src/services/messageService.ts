@@ -11,7 +11,6 @@ type SaveMessageBaseParams = {
 type CreateMessageParams = SaveMessageBaseParams & {
   scheduledAt?: Date;
   status: MessageStatus;
-  userId: string;
 };
 
 type UpdateMessageParams = SaveMessageBaseParams & {

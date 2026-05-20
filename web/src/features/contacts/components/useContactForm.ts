@@ -67,7 +67,6 @@ export const useContactForm = ({
           connectionId,
           name,
           phone,
-          userId: user.uid,
         });
       }
 
