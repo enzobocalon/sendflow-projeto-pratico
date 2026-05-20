@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../../hooks/useAuth";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import { createMessage, updateMessage } from "../../../services/messageService";
+import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
 
 type UseMessageComposerParams = {
   editingMessage: Message | null;
@@ -81,6 +82,11 @@ export function useMessageComposer({
     control,
     name: "sendMode",
   });
+  const selectedContactIds =
+    useWatch({
+      control,
+      name: "contactIds",
+    }) ?? [];
 
   const {
     contacts: availableContacts,
@@ -134,8 +140,10 @@ export function useMessageComposer({
 
       reset();
       onSaved();
-    } catch {
-      setFormError("Não foi possível salvar a mensagem.");
+    } catch (error) {
+      setFormError(
+        getFirebaseErrorMessage(error, "Não foi possível salvar a mensagem."),
+      );
     }
   });
 
@@ -192,6 +200,8 @@ export function useMessageComposer({
     errors,
     isSubmitting,
     formError,
+    selectedContactIds,
+    selectedContactsCount: selectedContactIds.length,
     selectedConnectionId,
     sendMode,
     cancelScheduledMode,
@@ -199,6 +209,6 @@ export function useMessageComposer({
     reset,
     setContactSearchTerm,
     submitScheduled,
-    submitNow
+    submitNow,
   };
 }

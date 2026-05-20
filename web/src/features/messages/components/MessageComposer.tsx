@@ -50,6 +50,8 @@ export const MessageComposer = ({
     isLoadingContacts,
     isSubmitting,
     loadMoreContacts,
+    selectedContactsCount,
+    selectedConnectionId,
     sendMode,
     setContactSearchTerm,
     submitNow,
@@ -61,6 +63,13 @@ export const MessageComposer = ({
   const isEditing = Boolean(editingMessage);
   const hasConnections = connections.length > 0;
   const hasContacts = availableContacts.length > 0;
+  const hasSelectedContacts = selectedContactsCount > 0;
+  const actionDisabled =
+    isSubmitting ||
+    isLoadingConnections ||
+    !hasConnections ||
+    !selectedConnectionId ||
+    !hasSelectedContacts;
 
   return (
     <section className="rounded-lg border border-slate-200 p-5">
@@ -144,9 +153,30 @@ export const MessageComposer = ({
         />
 
         <div className="rounded-lg border border-slate-200 p-4">
-          <Typography className="mb-2 text-sm font-semibold text-slate-700">
-            Selecionar contatos
-          </Typography>
+          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <Typography className="text-sm font-semibold text-slate-700">
+                Selecionar contatos
+              </Typography>
+              <Typography className="text-xs text-slate-500">
+                {hasSelectedContacts
+                  ? `${selectedContactsCount} contato${selectedContactsCount === 1 ? "" : "s"} selecionado${selectedContactsCount === 1 ? "" : "s"}`
+                  : "Nenhum contato selecionado"}
+              </Typography>
+            </div>
+
+            {hasSelectedContacts && (
+              <Button
+                type="button"
+                size="small"
+                startIcon={<CloseIcon />}
+                onClick={clearSelectedContacts}
+                disabled={isSubmitting}
+              >
+                Limpar seleção
+              </Button>
+            )}
+          </div>
           <TextField
             size="small"
             label="Buscar contato"
@@ -170,7 +200,11 @@ export const MessageComposer = ({
 
                   {!isLoadingContacts && !hasContacts && (
                     <Typography className="text-sm text-slate-500">
-                      Selecione uma conexão com contatos cadastrados.
+                      {selectedConnectionId
+                        ? contactSearchTerm.trim()
+                          ? "Nenhum contato encontrado para esta busca."
+                          : "Esta conexão ainda não possui contatos cadastrados."
+                        : "Selecione uma conexão para listar os contatos."}
                     </Typography>
                   )}
 
@@ -214,6 +248,11 @@ export const MessageComposer = ({
                 {errors.contactIds && (
                   <FormHelperText error>
                     {errors.contactIds.message}
+                  </FormHelperText>
+                )}
+                {!errors.contactIds && hasContacts && field.value.length === 0 && (
+                  <FormHelperText>
+                    Selecione pelo menos um contato para enviar ou agendar.
                   </FormHelperText>
                 )}
                 {!errors.contactIds && contactsError && (
@@ -287,7 +326,7 @@ export const MessageComposer = ({
                 <SendOutlinedIcon />
               )
             }
-            disabled={isSubmitting || isLoadingConnections || !hasConnections}
+            disabled={actionDisabled}
             onClick={submitNow}
           >
             {isSubmitting && sendMode === "now"
@@ -305,7 +344,7 @@ export const MessageComposer = ({
                   <EventIcon />
                 )
               }
-              disabled={isSubmitting || isLoadingConnections || !hasConnections}
+              disabled={actionDisabled}
               onClick={submitScheduled}
             >
               {isSubmitting ? "Agendando..." : "Confirmar agendamento"}
@@ -315,7 +354,12 @@ export const MessageComposer = ({
               variant="outlined"
               type="button"
               startIcon={<EventIcon />}
-              disabled={isSubmitting || isLoadingConnections || !hasConnections}
+              disabled={
+                isSubmitting ||
+                isLoadingConnections ||
+                !hasConnections ||
+                !selectedConnectionId
+              }
               onClick={enableScheduledMode}
             >
               Agendar mensagem

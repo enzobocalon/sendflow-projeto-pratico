@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { useAuth } from "../../../hooks/useAuth";
 import { useConnectionsOptions } from "../../../hooks/useConnectionsOptions";
 import { createContact, updateContact } from "../../../services/contactService";
+import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
 import { contactSchema } from "../schemas/contactSchema";
 import type { Contact, ContactFormValues } from "../types";
 
@@ -72,8 +73,10 @@ export const useContactForm = ({
 
       reset();
       onSaved();
-    } catch {
-      setError("Não foi possível salvar o contato.");
+    } catch (error) {
+      setError(
+        getFirebaseErrorMessage(error, "Não foi possível salvar o contato."),
+      );
     }
   });
 

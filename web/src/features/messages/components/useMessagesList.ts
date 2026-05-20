@@ -3,6 +3,7 @@ import { useMessagesOptions } from "../../../hooks/useMessagesOptions";
 import type { Message, MessageStatus } from "../types";
 import { formatMessageDate } from "../../../utils/dates";
 import { deleteMessage } from "../../../services/messageService";
+import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
 
 export type MessageListItem = Message & {
   date: string;
@@ -73,8 +74,10 @@ export function useMessagesList({
       }
 
       closeDeleteModal();
-    } catch {
-      setListError("Não foi possível excluir a mensagem.");
+    } catch (error) {
+      setListError(
+        getFirebaseErrorMessage(error, "Não foi possível excluir a mensagem."),
+      );
     } finally {
       setIsDeleting(false);
     }

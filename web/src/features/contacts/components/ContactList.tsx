@@ -49,7 +49,9 @@ export const ContactsList = ({
 
   const subtitle =
     totalContacts === 0
-      ? "Nenhum contato cadastrado."
+      ? searchTerm.trim()
+        ? "Nenhum contato encontrado."
+        : "Nenhum contato cadastrado."
       : `${totalContacts} contato${totalContacts === 1 ? "" : "s"} cadastrado${totalContacts === 1 ? "" : "s"}.`;
 
   return (
@@ -86,7 +88,7 @@ export const ContactsList = ({
               <Typography className="mt-1 text-sm text-slate-500">
                 {searchTerm.trim()
                   ? "Tente buscar por outro nome."
-                  : "Cadastre contatos para enviar mensagens depois."}
+                  : "Use o cadastro ao lado para vincular contatos a uma conexão antes de enviar mensagens."}
               </Typography>
             </div>
           )}
@@ -101,7 +103,8 @@ export const ContactsList = ({
                   {contact.name}
                 </Typography>
                 <Typography className="text-sm text-slate-500">
-                  {formatPhone(contact.phone)} · {getConnectionName(contact.connectionId)}
+                  {formatPhone(contact.phone)} ·{" "}
+                  {contact.connectionName ?? getConnectionName(contact.connectionId)}
                 </Typography>
               </div>
               <Stack direction="row" spacing={0.5}>

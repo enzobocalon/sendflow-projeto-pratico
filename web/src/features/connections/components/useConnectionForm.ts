@@ -6,6 +6,7 @@ import {
   createConnection,
   updateConnection,
 } from "../../../services/connectionService";
+import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
 import { connectionSchema } from "../schemas/connectionSchema";
 import type { Connection, ConnectionFormValues } from "../types";
 
@@ -79,7 +80,9 @@ export const useConnectionForm = ({
         return;
       }
 
-      setError("Não foi possível salvar a conexão.");
+      setError(
+        getFirebaseErrorMessage(error, "Não foi possível salvar a conexão."),
+      );
     }
   });
 

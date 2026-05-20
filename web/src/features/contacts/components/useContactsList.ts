@@ -3,6 +3,7 @@ import { useConnectionsOptions } from "../../../hooks/useConnectionsOptions";
 import { useContactsOptions } from "../../../hooks/useContactsOptions";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import { deleteContact } from "../../../services/contactService";
+import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
 import type { Contact } from "../types";
 
 type UseContactsListParams = {
@@ -74,8 +75,10 @@ export const useContactsList = ({
       }
 
       closeDeleteModal();
-    } catch {
-      setError("Não foi possível excluir o contato.");
+    } catch (error) {
+      setError(
+        getFirebaseErrorMessage(error, "Não foi possível excluir o contato."),
+      );
     } finally {
       setIsDeleting(false);
     }

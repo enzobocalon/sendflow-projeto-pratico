@@ -85,11 +85,14 @@ export const ConnectionsList = ({
           {connections.length === 0 && (
             <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center">
               <Typography className="font-medium text-slate-800">
-                Nenhuma conexão encontrada
+                {searchTerm.trim()
+                  ? "Nenhuma conexão encontrada"
+                  : "Nenhuma conexão cadastrada"}
               </Typography>
               <Typography className="mt-1 text-sm text-slate-500">
-                Cadastre a primeira conexão para começar a organizar contatos e
-                mensagens.
+                {searchTerm.trim()
+                  ? "Tente buscar por outro nome de conexão."
+                  : "Use o cadastro ao lado para criar a primeira conexão e começar a organizar contatos e mensagens."}
               </Typography>
             </div>
           )}

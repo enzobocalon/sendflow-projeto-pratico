@@ -65,6 +65,18 @@ export const MessagesList = ({
     onDeletedEditingMessage,
     onEdit,
   });
+  const emptyMessage =
+    filter === "sent"
+      ? "Nenhuma mensagem enviada encontrada."
+      : filter === "scheduled"
+        ? "Nenhuma mensagem agendada encontrada."
+        : "Nenhuma mensagem encontrada";
+  const emptyDescription =
+    filter === "sent"
+      ? "Envie uma mensagem para que ela apareça neste filtro."
+      : filter === "scheduled"
+        ? "Agende uma mensagem para acompanhar os próximos disparos."
+        : "Envie ou agende uma mensagem para acompanhar o histórico.";
 
   return (
     <section>
@@ -91,10 +103,10 @@ export const MessagesList = ({
           {messages.length === 0 && (
             <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center">
               <Typography className="font-medium text-slate-800">
-                Nenhuma mensagem encontrada
+                {emptyMessage}
               </Typography>
               <Typography className="mt-1 text-sm text-slate-500">
-                Envie ou agende uma mensagem para acompanhar o histórico.
+                {emptyDescription}
               </Typography>
             </div>
           )}

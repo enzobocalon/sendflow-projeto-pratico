@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useAuth } from "../../../hooks/useAuth";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import { deleteConnection } from "../../../services/connectionService";
+import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
 import type { Connection } from "../types";
 
 type UseConnectionsListParams = {
@@ -24,7 +25,7 @@ const getDeleteConnectionErrorMessage = (error: unknown) => {
       : "Não é possível excluir uma conexão com dados vinculados.";
   }
 
-  return "Não foi possível excluir a conexão.";
+  return getFirebaseErrorMessage(error, "Não foi possível excluir a conexão.");
 };
 
 export const useConnectionsList = ({
