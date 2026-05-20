@@ -8,7 +8,6 @@ import {
   normalizeSearchText,
   sanitizePhone,
 } from "./utils";
-import { incrementUsage } from "./usage";
 
 export const createContact = onCall(
   { region: "southamerica-east1" },
@@ -31,7 +30,11 @@ export const createContact = onCall(
 
     const connection = await getOwnedConnection(connectionId, userId);
     const now = FieldValue.serverTimestamp();
-    const contactRef = await db.collection("contacts").add({
+    const contactRef = db.collection("contacts").doc();
+    const usageRef = db.collection("usage").doc(userId);
+
+    const batch = db.batch();
+    batch.set(contactRef, {
       connectionId: connection.id,
       connectionName: connection.name,
       createdAt: now,
@@ -41,7 +44,13 @@ export const createContact = onCall(
       updatedAt: now,
       userId,
     });
-    await incrementUsage(userId, { contactsCount: 1 });
+    batch.set(
+      usageRef,
+      { contactsCount: FieldValue.increment(1) },
+      { merge: true },
+    );
+
+    await batch.commit();
 
     return { id: contactRef.id };
   },
@@ -100,8 +109,16 @@ export const deleteContact = onCall(
       throw new HttpsError("permission-denied", "Contato inválido.");
     }
 
-    await contactRef.delete();
-    await incrementUsage(userId, { contactsCount: -1 });
+    const usageRef = db.collection("usage").doc(userId);
+
+    const batch = db.batch();
+    batch.delete(contactRef);
+    batch.set(
+      usageRef,
+      { contactsCount: FieldValue.increment(-1) },
+      { merge: true },
+    );
+    await batch.commit();
 
     return { id: contactId };
   },

@@ -8,7 +8,6 @@ import {
   getStringField,
   normalizeSearchText,
 } from "./utils";
-import { incrementUsage } from "./usage";
 
 export const createConnection = onCall(
   { region: "southamerica-east1" },
@@ -159,8 +158,16 @@ export const deleteConnection = onCall(
       );
     }
 
-    await connectionRef.delete();
-    await incrementUsage(userId, { connectionsCount: -1 });
+    const usageRef = db.collection("usage").doc(userId);
+
+    const batch = db.batch();
+    batch.delete(connectionRef);
+    batch.set(
+      usageRef,
+      { connectionsCount: FieldValue.increment(-1) },
+      { merge: true },
+    );
+    await batch.commit();
 
     return { id: connectionId };
   },

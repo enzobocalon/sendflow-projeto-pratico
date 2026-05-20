@@ -8,7 +8,6 @@ import {
   getStringField,
   validateContactIds,
 } from "./utils";
-import { incrementUsage } from "./usage";
 
 export const createMessage = onCall(
   { region: "southamerica-east1" },
@@ -37,8 +36,11 @@ export const createMessage = onCall(
 
     const isScheduled = scheduleFields.status === "scheduled";
     const now = FieldValue.serverTimestamp();
+    const messageRef = db.collection("messages").doc();
+    const usageRef = db.collection("usage").doc(userId);
 
-    const messageRef = await db.collection("messages").add({
+    const batch = db.batch();
+    batch.set(messageRef, {
       connectionId,
       contactIds,
       content,
@@ -49,10 +51,15 @@ export const createMessage = onCall(
       ...scheduleFields,
     });
 
-    await incrementUsage(userId, {
-      messagesCount: 1,
-      ...(isScheduled && { scheduledMessagesCount: 1 }),
-    });
+    batch.set(
+      usageRef,
+      {
+        messagesCount: FieldValue.increment(1),
+        ...(isScheduled && { scheduledMessagesCount: FieldValue.increment(1) }),
+      },
+      { merge: true },
+    );
+    await batch.commit();
 
     return { id: messageRef.id };
   },
@@ -65,19 +72,6 @@ export const updateMessage = onCall(
     const messageId = getStringField(request.data?.messageId);
     const connectionId = getStringField(request.data?.connectionId);
     const content = getStringField(request.data?.content);
-    const messageRef = db.collection("messages").doc(messageId);
-    const messageSnapshot = await messageRef.get();
-
-    if (!messageSnapshot.exists || messageSnapshot.data()?.userId !== userId) {
-      throw new HttpsError("permission-denied", "Mensagem inválida.");
-    }
-
-    if (messageSnapshot.data()?.status === "sent") {
-      throw new HttpsError(
-        "failed-precondition",
-        "Mensagens enviadas não podem ser editadas.",
-      );
-    }
 
     if (content.length < 2 || content.length > 500) {
       throw new HttpsError(
@@ -97,22 +91,46 @@ export const updateMessage = onCall(
       request.data?.scheduledAt,
     );
 
-    const wasScheduled = messageSnapshot.data()?.status === "scheduled";
-    const isNowSent = scheduleFields.status === "sent";
-    const becameSent = wasScheduled && isNowSent;
+    const messageRef = db.collection("messages").doc(messageId);
+    const usageRef = db.collection("usage").doc(userId);
 
-    await messageRef.update({
-      connectionId,
-      contactIds,
-      content,
-      recipientsCount: contactIds.length,
-      updatedAt: FieldValue.serverTimestamp(),
-      ...scheduleFields,
+    await db.runTransaction(async (transaction) => {
+      const messageSnapshot = await transaction.get(messageRef);
+
+      if (
+        !messageSnapshot.exists ||
+        messageSnapshot.data()?.userId !== userId
+      ) {
+        throw new HttpsError("permission-denied", "Mensagem inválida.");
+      }
+
+      if (messageSnapshot.data()?.status === "sent") {
+        throw new HttpsError(
+          "failed-precondition",
+          "Mensagens enviadas não podem ser editadas.",
+        );
+      }
+
+      const wasScheduled = messageSnapshot.data()?.status === "scheduled";
+      const becameSent = wasScheduled && scheduleFields.status === "sent";
+
+      transaction.update(messageRef, {
+        connectionId,
+        contactIds,
+        content,
+        recipientsCount: contactIds.length,
+        updatedAt: FieldValue.serverTimestamp(),
+        ...scheduleFields,
+      });
+
+      if (becameSent) {
+        transaction.set(
+          usageRef,
+          { scheduledMessagesCount: FieldValue.increment(-1) },
+          { merge: true },
+        );
+      }
     });
-
-    if (becameSent) {
-      await incrementUsage(userId, { scheduledMessagesCount: -1 });
-    }
 
     return { id: messageId };
   },
@@ -131,12 +149,21 @@ export const deleteMessage = onCall(
     }
 
     const isScheduled = messageSnapshot.data()?.status === "scheduled";
+    const usageRef = db.collection("usage").doc(userId);
 
-    await messageRef.delete();
-    await incrementUsage(userId, {
-      messagesCount: -1,
-      ...(isScheduled && { scheduledMessagesCount: -1 }),
-    });
+    const batch = db.batch();
+    batch.delete(messageRef);
+    batch.set(
+      usageRef,
+      {
+        messagesCount: FieldValue.increment(-1),
+        ...(isScheduled && {
+          scheduledMessagesCount: FieldValue.increment(-1),
+        }),
+      },
+      { merge: true },
+    );
+    await batch.commit();
 
     return { id: messageId };
   },

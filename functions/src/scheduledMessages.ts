@@ -1,7 +1,6 @@
-import { Timestamp } from "firebase-admin/firestore";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { db } from "./firebase";
-import { incrementUsage } from "./usage";
 
 const DUE_MESSAGES_LIMIT = 500;
 
@@ -20,14 +19,20 @@ const markMessagesAsSent = async (
   messages: MessageDocument[],
   sentAt: Timestamp,
 ) => {
+  const countByUser = countMessagesByUser(messages);
   const batch = db.batch();
 
   messages.forEach((message) => {
-    batch.update(message.ref, {
-      sentAt,
-      status: "sent",
-      updatedAt: sentAt,
-    });
+    batch.update(message.ref, { sentAt, status: "sent", updatedAt: sentAt });
+  });
+
+  countByUser.forEach((count, userId) => {
+    const usageRef = db.collection("usage").doc(userId);
+    batch.set(
+      usageRef,
+      { scheduledMessagesCount: FieldValue.increment(-count) },
+      { merge: true },
+    );
   });
 
   await batch.commit();
@@ -45,16 +50,6 @@ const countMessagesByUser = (messages: MessageDocument[]) => {
   }, new Map<string, number>());
 };
 
-const decrementScheduledUsage = async (messages: MessageDocument[]) => {
-  const countByUser = countMessagesByUser(messages);
-
-  await Promise.all(
-    [...countByUser.entries()].map(([userId, count]) =>
-      incrementUsage(userId, { scheduledMessagesCount: -count }),
-    ),
-  );
-};
-
 export const markScheduledMessagesAsSent = onSchedule(
   {
     region: "southamerica-east1",
@@ -65,11 +60,8 @@ export const markScheduledMessagesAsSent = onSchedule(
     const now = Timestamp.now();
     const snapshot = await getDueScheduledMessages(now);
 
-    if (snapshot.empty) {
-      return;
-    }
+    if (snapshot.empty) return;
 
     await markMessagesAsSent(snapshot.docs, now);
-    await decrementScheduledUsage(snapshot.docs);
   },
 );
