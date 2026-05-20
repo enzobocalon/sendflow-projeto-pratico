@@ -15,8 +15,9 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
-    match /usageLimits/{userId} {
-      allow read, write: if false;
+    match /usage/{userId} {
+      allow read: if signedIn() && request.auth.uid == userId;
+      allow write: if false;
     }
 
     match /contacts/{contactId} {
