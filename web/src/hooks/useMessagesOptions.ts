@@ -38,9 +38,7 @@ const getFirestoreErrorMessage = (error: { code?: string }) => {
     : "Não foi possível carregar as mensagens.";
 };
 
-const mapMessageDocuments = (
-  documents: Array<{ data: () => unknown; id: string }>,
-) =>
+const mapMessageDocuments = (documents: Array<{ data: () => unknown; id: string }>) =>
   documents.map(
     (document) =>
       ({
@@ -54,6 +52,22 @@ const getFallbackMessageDate = (message: Message) => {
 
   return date?.toMillis() ?? 0;
 };
+
+const getVisibleMessages = ({
+  messages,
+  status,
+  pageSize,
+}: {
+  messages: Message[];
+  status: MessageStatus | "all";
+  pageSize: number;
+}) =>
+  messages
+    .filter((message) => (status === "all" ? true : message.status === status))
+    .sort(
+      (current, next) => getFallbackMessageDate(next) - getFallbackMessageDate(current),
+    )
+    .slice(0, pageSize);
 
 export function useMessagesOptions({
   enabled = true,
@@ -77,6 +91,17 @@ export function useMessagesOptions({
       return;
     }
 
+    let isActive = true;
+    let unsubscribeFallback: (() => void) | undefined;
+
+    const handleFallbackError = (error: { code?: string }) => {
+      if (!isActive) return;
+
+      setLoadedQueryKey(queryKey);
+      setError(getFirestoreErrorMessage(error));
+      setIsLoading(false);
+    };
+
     const constraints: QueryConstraint[] = [
       where("userId", "==", user.uid),
       orderBy("createdAt", "desc"),
@@ -87,17 +112,12 @@ export function useMessagesOptions({
       constraints.splice(1, 0, where("status", "==", status));
     }
 
-    const messagesQuery = query(
-      collection(db, "messages"),
-      ...constraints,
-    );
+    const messagesQuery = query(collection(db, "messages"), ...constraints);
 
     const unsubscribe = onSnapshot(
       messagesQuery,
       (snapshot) => {
-        const nextMessages = mapMessageDocuments(
-          snapshot.docs.slice(0, pageSize),
-        );
+        const nextMessages = mapMessageDocuments(snapshot.docs.slice(0, pageSize));
 
         setMessages(nextMessages);
         setHasMore(snapshot.docs.length > pageSize);
@@ -106,42 +126,31 @@ export function useMessagesOptions({
         setIsLoading(false);
         setError("");
       },
-      async (error) => {
+      (error) => {
+        if (!isActive) return;
+
         if (error.code === "failed-precondition") {
-          const fallbackConstraints: QueryConstraint[] = [
-            where("userId", "==", user.uid),
-            limit(pageSize + 1),
-          ];
+          unsubscribeFallback = onSnapshot(
+            query(collection(db, "messages"), where("userId", "==", user.uid)),
+            (snapshot) => {
+              if (!isActive) return;
 
-          if (status !== "all") {
-            fallbackConstraints.splice(1, 0, where("status", "==", status));
-          }
+              const nextMessages = getVisibleMessages({
+                messages: mapMessageDocuments(snapshot.docs),
+                status,
+                pageSize,
+              });
 
-          try {
-            const snapshot = await getDocs(
-              query(collection(db, "messages"), ...fallbackConstraints),
-            );
-            const nextMessages = mapMessageDocuments(snapshot.docs)
-              .sort(
-                (current, next) =>
-                  getFallbackMessageDate(next) -
-                  getFallbackMessageDate(current),
-              )
-              .slice(0, pageSize);
-
-            setMessages(nextMessages);
-            setHasMore(false);
-            setLastDocument(null);
-            setLoadedQueryKey(queryKey);
-            setIsLoading(false);
-            setError("");
-            return;
-          } catch {
-            setLoadedQueryKey(queryKey);
-            setError(getFirestoreErrorMessage(error));
-            setIsLoading(false);
-            return;
-          }
+              setMessages(nextMessages);
+              setHasMore(false);
+              setLastDocument(null);
+              setLoadedQueryKey(queryKey);
+              setIsLoading(false);
+              setError("");
+            },
+            handleFallbackError,
+          );
+          return;
         }
 
         setLoadedQueryKey(queryKey);
@@ -150,7 +159,11 @@ export function useMessagesOptions({
       },
     );
 
-    return unsubscribe;
+    return () => {
+      isActive = false;
+      unsubscribe();
+      unsubscribeFallback?.();
+    };
   }, [canLoad, pageSize, queryKey, status, user]);
 
   const loadMore = useCallback(async () => {
@@ -172,12 +185,8 @@ export function useMessagesOptions({
     constraints.push(startAfter(lastDocument), limit(pageSize + 1));
 
     try {
-      const snapshot = await getDocs(
-        query(collection(db, "messages"), ...constraints),
-      );
-      const nextMessages = mapMessageDocuments(
-        snapshot.docs.slice(0, pageSize),
-      );
+      const snapshot = await getDocs(query(collection(db, "messages"), ...constraints));
+      const nextMessages = mapMessageDocuments(snapshot.docs.slice(0, pageSize));
 
       setMessages((currentMessages) => [...currentMessages, ...nextMessages]);
       setHasMore(snapshot.docs.length > pageSize);

@@ -1,6 +1,5 @@
 import {
   collection,
-  getDocs,
   limit,
   onSnapshot,
   orderBy,
@@ -9,6 +8,7 @@ import {
   endAt,
   where,
   type QueryConstraint,
+  type QuerySnapshot,
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import type { Connection } from "../features/connections/types";
@@ -18,6 +18,18 @@ import { useAuth } from "./useAuth";
 const MAX_CONNECTIONS = 100;
 
 const normalizeSearchText = (value: string) => value.trim().toLowerCase();
+
+const mapConnectionSnapshot = (snapshot: QuerySnapshot): Connection[] =>
+  snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Connection);
+
+const filterConnections = (connections: Connection[], normalizedSearchTerm: string) =>
+  connections
+    .filter(
+      (connection) =>
+        !normalizedSearchTerm ||
+        connection.name.toLowerCase().startsWith(normalizedSearchTerm),
+    )
+    .sort((current, next) => current.name.localeCompare(next.name));
 
 const getFirestoreErrorMessage = (code?: string) => {
   if (code === "failed-precondition")
@@ -49,6 +61,30 @@ export function useConnectionsOptions({
   useEffect(() => {
     if (!canLoad || !user) return;
 
+    let isActive = true;
+    let unsubscribeFallback: (() => void) | undefined;
+
+    const handleSnapshot = (snapshot: QuerySnapshot) => {
+      if (!isActive) return;
+
+      setConnections(mapConnectionSnapshot(snapshot));
+      setError("");
+      setIsLoading(false);
+    };
+
+    const handleFallbackSnapshot = (snapshot: QuerySnapshot) => {
+      if (!isActive) return;
+
+      const nextConnections = filterConnections(
+        mapConnectionSnapshot(snapshot),
+        normalizedSearchTerm,
+      );
+
+      setConnections(nextConnections);
+      setError("");
+      setIsLoading(false);
+    };
+
     const constraints: QueryConstraint[] = [
       where("userId", "==", user.uid),
       orderBy(normalizedSearchTerm ? "nameNormalized" : "name", "asc"),
@@ -66,40 +102,27 @@ export function useConnectionsOptions({
     const unsubscribe = onSnapshot(
       query(collection(db, "connections"), ...constraints),
       (snapshot) => {
-        setConnections(
-          snapshot.docs.map(
-            (doc) => ({ id: doc.id, ...doc.data() }) as Connection,
-          ),
-        );
-        setError("");
-        setIsLoading(false);
+        handleSnapshot(snapshot);
       },
-      async (firestoreError) => {
-        if (firestoreError.code === "failed-precondition") {
-          try {
-            const snapshot = await getDocs(
-              query(
-                collection(db, "connections"),
-                where("userId", "==", user.uid),
-                limit(MAX_CONNECTIONS),
-              ),
-            );
-            const nextConnections = snapshot.docs
-              .map((doc) => ({ id: doc.id, ...doc.data() }) as Connection)
-              .filter(
-                (c) =>
-                  !normalizedSearchTerm ||
-                  c.name.toLowerCase().startsWith(normalizedSearchTerm),
-              )
-              .sort((a, b) => a.name.localeCompare(b.name));
+      (firestoreError) => {
+        if (!isActive) return;
 
-            setConnections(nextConnections);
-            setError("");
-            setIsLoading(false);
-            return;
-          } catch {
-            //
-          }
+        if (firestoreError.code === "failed-precondition") {
+          unsubscribeFallback = onSnapshot(
+            query(
+              collection(db, "connections"),
+              where("userId", "==", user.uid),
+              limit(MAX_CONNECTIONS),
+            ),
+            handleFallbackSnapshot,
+            (fallbackError) => {
+              if (!isActive) return;
+
+              setError(getFirestoreErrorMessage(fallbackError.code));
+              setIsLoading(false);
+            },
+          );
+          return;
         }
 
         setError(getFirestoreErrorMessage(firestoreError.code));
@@ -107,7 +130,11 @@ export function useConnectionsOptions({
       },
     );
 
-    return unsubscribe;
+    return () => {
+      isActive = false;
+      unsubscribe();
+      unsubscribeFallback?.();
+    };
   }, [canLoad, normalizedSearchTerm, user]);
 
   if (!canLoad) return { connections: [], error: "", isLoading: false };

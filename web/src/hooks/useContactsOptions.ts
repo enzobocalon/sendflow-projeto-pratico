@@ -29,6 +29,33 @@ const DEFAULT_PAGE_SIZE = 30;
 
 const normalizeSearchText = (value: string) => value.trim().toLowerCase();
 
+const mapContactSnapshot = (snapshot: QueryDocumentSnapshot[]) =>
+  snapshot.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Contact[];
+
+const filterContacts = ({
+  contacts,
+  connectionId,
+  normalizedSearchTerm,
+  pageSize,
+}: {
+  contacts: Contact[];
+  connectionId?: string;
+  normalizedSearchTerm: string;
+  pageSize: number;
+}) =>
+  contacts
+    .filter((contact) => (connectionId ? contact.connectionId === connectionId : true))
+    .filter((contact) =>
+      normalizedSearchTerm
+        ? contact.name.toLowerCase().startsWith(normalizedSearchTerm)
+        : true,
+    )
+    .sort((current, next) => current.name.localeCompare(next.name))
+    .slice(0, pageSize);
+
 const getFirestoreErrorMessage = (error: { code?: string }) => {
   if (error.code === "failed-precondition") {
     return "Não foi possível carregar os contatos porque um índice do Firestore ainda está sendo preparado.";
@@ -58,19 +85,28 @@ export function useContactsOptions({
   const [loadedQueryKey, setLoadedQueryKey] = useState("");
   const [lastDocument, setLastDocument] =
     useState<QueryDocumentSnapshot<DocumentData> | null>(null);
-    
+
   const normalizedSearchTerm = normalizeSearchText(searchTerm);
-  const queryKey = [
-    user?.uid ?? "",
-    connectionId ?? "all",
-    normalizedSearchTerm,
-  ].join(":");
+  const queryKey = [user?.uid ?? "", connectionId ?? "all", normalizedSearchTerm].join(
+    ":",
+  );
   const canLoad = Boolean(user && enabled);
 
   useEffect(() => {
     if (!canLoad || !user) {
       return;
     }
+
+    let isActive = true;
+    let unsubscribeFallback: (() => void) | undefined;
+
+    const handleFallbackError = (error: { code?: string }) => {
+      if (!isActive) return;
+
+      setLoadedQueryKey(queryKey);
+      setError(getFirestoreErrorMessage(error));
+      setIsLoading(false);
+    };
 
     const constraints: QueryConstraint[] = [
       where("userId", "==", user.uid),
@@ -95,12 +131,7 @@ export function useContactsOptions({
     const unsubscribe = onSnapshot(
       contactsQuery,
       (snapshot) => {
-        const contactsData: Contact[] = snapshot.docs
-          .slice(0, pageSize)
-          .map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          })) as Contact[];
+        const contactsData = mapContactSnapshot(snapshot.docs.slice(0, pageSize));
 
         setContacts(contactsData);
         setHasMore(snapshot.docs.length > pageSize);
@@ -109,46 +140,32 @@ export function useContactsOptions({
         setIsLoading(false);
         setError("");
       },
-      async (error) => {
-        if (error.code === "failed-precondition") {
-          try {
-            const snapshot = await getDocs(
-              query(
-                collection(db, "contacts"),
-                where("userId", "==", user.uid),
-                limit(pageSize + 1),
-              ),
-            );
-            const contactsData = snapshot.docs
-              .map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-              })) as Contact[];
-            const nextContacts = contactsData
-              .filter((contact) =>
-                connectionId ? contact.connectionId === connectionId : true,
-              )
-              .filter((contact) =>
-                normalizedSearchTerm
-                  ? contact.name.toLowerCase().startsWith(normalizedSearchTerm)
-                  : true,
-              )
-              .sort((current, next) => current.name.localeCompare(next.name))
-              .slice(0, pageSize);
+      (error) => {
+        if (!isActive) return;
 
-            setContacts(nextContacts);
-            setHasMore(false);
-            setLastDocument(null);
-            setLoadedQueryKey(queryKey);
-            setIsLoading(false);
-            setError("");
-            return;
-          } catch {
-            setLoadedQueryKey(queryKey);
-            setError(getFirestoreErrorMessage(error));
-            setIsLoading(false);
-            return;
-          }
+        if (error.code === "failed-precondition") {
+          unsubscribeFallback = onSnapshot(
+            query(collection(db, "contacts"), where("userId", "==", user.uid)),
+            (snapshot) => {
+              if (!isActive) return;
+
+              const nextContacts = filterContacts({
+                contacts: mapContactSnapshot(snapshot.docs),
+                connectionId,
+                normalizedSearchTerm,
+                pageSize,
+              });
+
+              setContacts(nextContacts);
+              setHasMore(false);
+              setLastDocument(null);
+              setLoadedQueryKey(queryKey);
+              setIsLoading(false);
+              setError("");
+            },
+            handleFallbackError,
+          );
+          return;
         }
 
         setLoadedQueryKey(queryKey);
@@ -158,7 +175,9 @@ export function useContactsOptions({
     );
 
     return () => {
+      isActive = false;
       unsubscribe();
+      unsubscribeFallback?.();
     };
   }, [canLoad, connectionId, normalizedSearchTerm, pageSize, queryKey, user]);
 
@@ -185,15 +204,8 @@ export function useContactsOptions({
     constraints.push(startAfter(lastDocument), limit(pageSize + 1));
 
     try {
-      const snapshot = await getDocs(
-        query(collection(db, "contacts"), ...constraints),
-      );
-      const nextContacts = snapshot.docs
-        .slice(0, pageSize)
-        .map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Contact[];
+      const snapshot = await getDocs(query(collection(db, "contacts"), ...constraints));
+      const nextContacts = mapContactSnapshot(snapshot.docs.slice(0, pageSize));
 
       setContacts((currentContacts) => [...currentContacts, ...nextContacts]);
       setHasMore(snapshot.docs.length > pageSize);
