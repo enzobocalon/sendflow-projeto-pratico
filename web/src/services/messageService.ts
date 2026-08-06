@@ -1,6 +1,5 @@
-import { httpsCallable } from "firebase/functions";
 import type { MessageStatus } from "../features/messages/types";
-import { functions } from "../lib/firebase";
+import { callFirebaseFunction, type MutationResponse } from "./firebase-callable";
 
 type SaveMessageBaseParams = {
   connectionId: string;
@@ -25,23 +24,20 @@ export const createMessage = ({
   content,
   scheduledAt,
   status,
-}: CreateMessageParams) => {
-  const createMessageFunction = httpsCallable<
+}: CreateMessageParams) =>
+  callFirebaseFunction<
     SaveMessageBaseParams & {
       scheduledAt?: string;
       status: MessageStatus;
     },
-    { id: string }
-  >(functions, "createMessage");
-
-  return createMessageFunction({
+    MutationResponse
+  >("createMessage", {
     connectionId,
     contactIds,
     content,
     scheduledAt: scheduledAt?.toISOString(),
     status,
   });
-};
 
 export const updateMessage = ({
   connectionId,
@@ -50,17 +46,15 @@ export const updateMessage = ({
   messageId,
   scheduledAt,
   status,
-}: UpdateMessageParams) => {
-  const updateMessageFunction = httpsCallable<
+}: UpdateMessageParams) =>
+  callFirebaseFunction<
     SaveMessageBaseParams & {
       messageId: string;
       scheduledAt?: string;
       status: MessageStatus;
     },
-    { id: string }
-  >(functions, "updateMessage");
-
-  return updateMessageFunction({
+    MutationResponse
+  >("updateMessage", {
     connectionId,
     contactIds,
     content,
@@ -68,13 +62,8 @@ export const updateMessage = ({
     scheduledAt: scheduledAt?.toISOString(),
     status,
   });
-};
 
-export const deleteMessage = (messageId: string) => {
-  const deleteMessageFunction = httpsCallable<
-    { messageId: string },
-    { id: string }
-  >(functions, "deleteMessage");
-
-  return deleteMessageFunction({ messageId });
-};
+export const deleteMessage = (messageId: string) =>
+  callFirebaseFunction<{ messageId: string }, MutationResponse>("deleteMessage", {
+    messageId,
+  });

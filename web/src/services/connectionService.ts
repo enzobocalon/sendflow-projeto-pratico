@@ -1,5 +1,4 @@
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../lib/firebase";
+import { callFirebaseFunction, type MutationResponse } from "./firebase-callable";
 
 type SaveConnectionParams = {
   name: string;
@@ -10,35 +9,18 @@ type UpdateConnectionParams = {
   name: string;
 };
 
-export const createConnection = async ({ name }: SaveConnectionParams) => {
-  const createConnectionFunction = httpsCallable<
-    { name: string },
-    { id: string }
-  >(functions, "createConnection");
+export const createConnection = ({ name }: SaveConnectionParams) =>
+  callFirebaseFunction<SaveConnectionParams, MutationResponse>("createConnection", {
+    name,
+  });
 
-  return createConnectionFunction({ name });
-};
-
-export const updateConnection = ({
-  connectionId,
-  name,
-}: UpdateConnectionParams) => {
-  const updateConnectionFunction = httpsCallable<
-    { connectionId: string; name: string },
-    { id: string }
-  >(functions, "updateConnection");
-
-  return updateConnectionFunction({
+export const updateConnection = ({ connectionId, name }: UpdateConnectionParams) =>
+  callFirebaseFunction<UpdateConnectionParams, MutationResponse>("updateConnection", {
     connectionId,
     name,
   });
-};
 
-export const deleteConnection = (connectionId: string) => {
-  const deleteConnectionFunction = httpsCallable<
-    { connectionId: string },
-    { id: string }
-  >(functions, "deleteConnection");
-
-  return deleteConnectionFunction({ connectionId });
-};
+export const deleteConnection = (connectionId: string) =>
+  callFirebaseFunction<{ connectionId: string }, MutationResponse>("deleteConnection", {
+    connectionId,
+  });

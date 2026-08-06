@@ -13,8 +13,6 @@ export type Message = {
   sentAt?: Timestamp | null;
   status: MessageStatus;
   updatedAt?: Timestamp;
-  date?: string;
-  recipients?: number;
   userId: string;
 };
 

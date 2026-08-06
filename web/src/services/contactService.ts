@@ -1,5 +1,4 @@
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../lib/firebase";
+import { callFirebaseFunction, type MutationResponse } from "./firebase-callable";
 
 type SaveContactParams = {
   connectionId: string;
@@ -14,56 +13,27 @@ type UpdateContactParams = {
   phone: string;
 };
 
-export const createContact = async ({
-  connectionId,
-  name,
-  phone,
-}: SaveContactParams) => {
-  const createContactFunction = httpsCallable<
-    {
-      connectionId: string;
-      name: string;
-      phone: string;
-    },
-    { id: string }
-  >(functions, "createContact");
-
-  return createContactFunction({
+export const createContact = ({ connectionId, name, phone }: SaveContactParams) =>
+  callFirebaseFunction<SaveContactParams, MutationResponse>("createContact", {
     connectionId,
     name,
     phone,
   });
-};
 
-export const updateContact = async ({
+export const updateContact = ({
   contactId,
   connectionId,
   name,
   phone,
-}: UpdateContactParams) => {
-  const updateContactFunction = httpsCallable<
-    {
-      contactId: string;
-      connectionId: string;
-      name: string;
-      phone: string;
-    },
-    { id: string }
-  >(functions, "updateContact");
-
-  return updateContactFunction({
+}: UpdateContactParams) =>
+  callFirebaseFunction<UpdateContactParams, MutationResponse>("updateContact", {
     contactId,
     connectionId,
     name,
     phone,
   });
-};
 
-export const deleteContact = (contactId: string) => {
-  const deleteContactFunction = httpsCallable<
-    { contactId: string },
-    { id: string }
-  >(functions, "deleteContact");
-
-  return deleteContactFunction({ contactId });
-};
+export const deleteContact = (contactId: string) =>
+  callFirebaseFunction<{ contactId: string }, MutationResponse>("deleteContact", {
+    contactId,
+  });
