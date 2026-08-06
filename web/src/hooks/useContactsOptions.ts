@@ -1,19 +1,16 @@
 import {
   collection,
   endAt,
-  getDocs,
   limit,
   onSnapshot,
   orderBy,
   query,
-  startAfter,
   startAt,
   where,
-  type DocumentData,
   type QueryConstraint,
   type QueryDocumentSnapshot,
 } from "firebase/firestore";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Contact } from "../features/contacts/types";
 import { db } from "../lib/firebase";
 import { useAuth } from "./useAuth";
@@ -39,12 +36,12 @@ const filterContacts = ({
   contacts,
   connectionId,
   normalizedSearchTerm,
-  pageSize,
+  visibleLimit,
 }: {
   contacts: Contact[];
   connectionId?: string;
   normalizedSearchTerm: string;
-  pageSize: number;
+  visibleLimit: number;
 }) =>
   contacts
     .filter((contact) => (connectionId ? contact.connectionId === connectionId : true))
@@ -54,7 +51,7 @@ const filterContacts = ({
         : true,
     )
     .sort((current, next) => current.name.localeCompare(next.name))
-    .slice(0, pageSize);
+    .slice(0, visibleLimit);
 
 const getFirestoreErrorMessage = (error: { code?: string }) => {
   if (error.code === "failed-precondition") {
@@ -77,24 +74,48 @@ export function useContactsOptions({
   searchTerm = "",
 }: UseContactsOptionsParams = {}) {
   const { user } = useAuth();
+  const normalizedSearchTerm = normalizeSearchText(searchTerm);
+  const canLoad = Boolean(user && enabled);
+  const queryKey = [user?.uid ?? "", connectionId ?? "all", normalizedSearchTerm].join(
+    ":",
+  );
+  const paginationQueryKey = [queryKey, pageSize, canLoad].join(":");
   const [error, setError] = useState("");
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(() => Boolean(user && enabled));
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [loadedQueryKey, setLoadedQueryKey] = useState("");
-  const [lastDocument, setLastDocument] =
-    useState<QueryDocumentSnapshot<DocumentData> | null>(null);
-
-  const normalizedSearchTerm = normalizeSearchText(searchTerm);
-  const queryKey = [user?.uid ?? "", connectionId ?? "all", normalizedSearchTerm].join(
-    ":",
-  );
-  const canLoad = Boolean(user && enabled);
+  const [paginationState, setPaginationState] = useState({
+    queryKey: paginationQueryKey,
+    visibleLimit: pageSize,
+  });
+  const visibleLimit =
+    paginationState.queryKey === paginationQueryKey
+      ? paginationState.visibleLimit
+      : pageSize;
+  const previousPaginationQueryKey = useRef(paginationQueryKey);
 
   useEffect(() => {
+    const isNewQuery =
+      previousPaginationQueryKey.current !== paginationQueryKey;
+    previousPaginationQueryKey.current = paginationQueryKey;
+
+    if (isNewQuery) {
+      setPaginationState({
+        queryKey: paginationQueryKey,
+        visibleLimit: pageSize,
+      });
+    }
+
     if (!canLoad || !user) {
       return;
+    }
+
+    if (isNewQuery) {
+      setIsLoading(true);
+      setIsLoadingMore(false);
+      setHasMore(false);
+      setError("");
     }
 
     let isActive = true;
@@ -103,9 +124,9 @@ export function useContactsOptions({
     const handleFallbackError = (error: { code?: string }) => {
       if (!isActive) return;
 
-      setLoadedQueryKey(queryKey);
       setError(getFirestoreErrorMessage(error));
       setIsLoading(false);
+      setIsLoadingMore(false);
     };
 
     const constraints: QueryConstraint[] = [
@@ -124,20 +145,19 @@ export function useContactsOptions({
       );
     }
 
-    constraints.push(limit(pageSize + 1));
+    constraints.push(limit(visibleLimit + 1));
 
     const contactsQuery = query(collection(db, "contacts"), ...constraints);
 
     const unsubscribe = onSnapshot(
       contactsQuery,
       (snapshot) => {
-        const contactsData = mapContactSnapshot(snapshot.docs.slice(0, pageSize));
+        const contactsData = mapContactSnapshot(snapshot.docs.slice(0, visibleLimit));
 
         setContacts(contactsData);
-        setHasMore(snapshot.docs.length > pageSize);
-        setLastDocument(snapshot.docs.slice(0, pageSize).at(-1) ?? null);
-        setLoadedQueryKey(queryKey);
+        setHasMore(snapshot.docs.length > visibleLimit);
         setIsLoading(false);
+        setIsLoadingMore(false);
         setError("");
       },
       (error) => {
@@ -153,14 +173,13 @@ export function useContactsOptions({
                 contacts: mapContactSnapshot(snapshot.docs),
                 connectionId,
                 normalizedSearchTerm,
-                pageSize,
+                visibleLimit,
               });
 
               setContacts(nextContacts);
               setHasMore(false);
-              setLastDocument(null);
-              setLoadedQueryKey(queryKey);
               setIsLoading(false);
+              setIsLoadingMore(false);
               setError("");
             },
             handleFallbackError,
@@ -168,9 +187,9 @@ export function useContactsOptions({
           return;
         }
 
-        setLoadedQueryKey(queryKey);
         setError(getFirestoreErrorMessage(error));
         setIsLoading(false);
+        setIsLoadingMore(false);
       },
     );
 
@@ -179,58 +198,38 @@ export function useContactsOptions({
       unsubscribe();
       unsubscribeFallback?.();
     };
-  }, [canLoad, connectionId, normalizedSearchTerm, pageSize, queryKey, user]);
+  }, [
+    canLoad,
+    connectionId,
+    normalizedSearchTerm,
+    pageSize,
+    paginationQueryKey,
+    queryKey,
+    user,
+    visibleLimit,
+  ]);
 
-  const loadMore = useCallback(async () => {
-    if (!canLoad || !user || !lastDocument || isLoadingMore) {
+  const loadMore = useCallback(() => {
+    if (!canLoad || !hasMore || isLoadingMore) {
       return;
     }
 
     setIsLoadingMore(true);
 
-    const constraints: QueryConstraint[] = [
-      where("userId", "==", user.uid),
-      orderBy(normalizedSearchTerm ? "nameNormalized" : "name", "asc"),
-    ];
-
-    if (connectionId) {
-      constraints.splice(1, 0, where("connectionId", "==", connectionId));
-    }
-
-    if (normalizedSearchTerm) {
-      constraints.push(endAt(`${normalizedSearchTerm}\uf8ff`));
-    }
-
-    constraints.push(startAfter(lastDocument), limit(pageSize + 1));
-
-    try {
-      const snapshot = await getDocs(query(collection(db, "contacts"), ...constraints));
-      const nextContacts = mapContactSnapshot(snapshot.docs.slice(0, pageSize));
-
-      setContacts((currentContacts) => [...currentContacts, ...nextContacts]);
-      setHasMore(snapshot.docs.length > pageSize);
-      setLastDocument(snapshot.docs.slice(0, pageSize).at(-1) ?? null);
-      setError("");
-    } catch (error) {
-      setError(getFirestoreErrorMessage(error as { code?: string }));
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }, [
-    canLoad,
-    connectionId,
-    isLoadingMore,
-    lastDocument,
-    normalizedSearchTerm,
-    pageSize,
-    user,
-  ]);
+    setPaginationState((currentState) => ({
+      queryKey: paginationQueryKey,
+      visibleLimit:
+        (currentState.queryKey === paginationQueryKey
+          ? currentState.visibleLimit
+          : pageSize) + pageSize,
+    }));
+  }, [canLoad, hasMore, isLoadingMore, pageSize, paginationQueryKey]);
 
   return {
     contacts: canLoad ? contacts : [],
     error: canLoad ? error : "",
     hasMore: canLoad ? hasMore : false,
-    isLoading: canLoad ? isLoading && !loadedQueryKey : false,
+    isLoading: canLoad ? isLoading : false,
     isLoadingMore,
     loadMore,
   };

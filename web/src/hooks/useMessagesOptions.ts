@@ -1,17 +1,13 @@
 import {
   collection,
-  getDocs,
   limit,
   onSnapshot,
   orderBy,
   query,
-  startAfter,
   where,
-  type DocumentData,
   type QueryConstraint,
-  type QueryDocumentSnapshot,
 } from "firebase/firestore";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Message, MessageStatus } from "../features/messages/types";
 import { db } from "../lib/firebase";
 import { useAuth } from "./useAuth";
@@ -56,18 +52,18 @@ const getFallbackMessageDate = (message: Message) => {
 const getVisibleMessages = ({
   messages,
   status,
-  pageSize,
+  visibleLimit,
 }: {
   messages: Message[];
   status: MessageStatus | "all";
-  pageSize: number;
+  visibleLimit: number;
 }) =>
   messages
     .filter((message) => (status === "all" ? true : message.status === status))
     .sort(
       (current, next) => getFallbackMessageDate(next) - getFallbackMessageDate(current),
     )
-    .slice(0, pageSize);
+    .slice(0, visibleLimit);
 
 export function useMessagesOptions({
   enabled = true,
@@ -79,16 +75,41 @@ export function useMessagesOptions({
   const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(() => Boolean(user && enabled));
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [lastDocument, setLastDocument] =
-    useState<QueryDocumentSnapshot<DocumentData> | null>(null);
-  const [loadedQueryKey, setLoadedQueryKey] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
-  const queryKey = [user?.uid ?? "", status].join(":");
   const canLoad = Boolean(user && enabled);
+  const queryKey = [user?.uid ?? "", status].join(":");
+  const paginationQueryKey = [queryKey, pageSize, canLoad].join(":");
+  const [paginationState, setPaginationState] = useState({
+    queryKey: paginationQueryKey,
+    visibleLimit: pageSize,
+  });
+  const visibleLimit =
+    paginationState.queryKey === paginationQueryKey
+      ? paginationState.visibleLimit
+      : pageSize;
+  const previousPaginationQueryKey = useRef(paginationQueryKey);
 
   useEffect(() => {
+    const isNewQuery =
+      previousPaginationQueryKey.current !== paginationQueryKey;
+    previousPaginationQueryKey.current = paginationQueryKey;
+
+    if (isNewQuery) {
+      setPaginationState({
+        queryKey: paginationQueryKey,
+        visibleLimit: pageSize,
+      });
+    }
+
     if (!canLoad || !user) {
       return;
+    }
+
+    if (isNewQuery) {
+      setIsLoading(true);
+      setIsLoadingMore(false);
+      setHasMore(false);
+      setError("");
     }
 
     let isActive = true;
@@ -97,15 +118,15 @@ export function useMessagesOptions({
     const handleFallbackError = (error: { code?: string }) => {
       if (!isActive) return;
 
-      setLoadedQueryKey(queryKey);
       setError(getFirestoreErrorMessage(error));
       setIsLoading(false);
+      setIsLoadingMore(false);
     };
 
     const constraints: QueryConstraint[] = [
       where("userId", "==", user.uid),
       orderBy("createdAt", "desc"),
-      limit(pageSize + 1),
+      limit(visibleLimit + 1),
     ];
 
     if (status !== "all") {
@@ -117,13 +138,12 @@ export function useMessagesOptions({
     const unsubscribe = onSnapshot(
       messagesQuery,
       (snapshot) => {
-        const nextMessages = mapMessageDocuments(snapshot.docs.slice(0, pageSize));
+        const nextMessages = mapMessageDocuments(snapshot.docs.slice(0, visibleLimit));
 
         setMessages(nextMessages);
-        setHasMore(snapshot.docs.length > pageSize);
-        setLastDocument(snapshot.docs.slice(0, pageSize).at(-1) ?? null);
-        setLoadedQueryKey(queryKey);
+        setHasMore(snapshot.docs.length > visibleLimit);
         setIsLoading(false);
+        setIsLoadingMore(false);
         setError("");
       },
       (error) => {
@@ -138,14 +158,13 @@ export function useMessagesOptions({
               const nextMessages = getVisibleMessages({
                 messages: mapMessageDocuments(snapshot.docs),
                 status,
-                pageSize,
+                visibleLimit,
               });
 
               setMessages(nextMessages);
               setHasMore(false);
-              setLastDocument(null);
-              setLoadedQueryKey(queryKey);
               setIsLoading(false);
+              setIsLoadingMore(false);
               setError("");
             },
             handleFallbackError,
@@ -153,9 +172,9 @@ export function useMessagesOptions({
           return;
         }
 
-        setLoadedQueryKey(queryKey);
         setError(getFirestoreErrorMessage(error));
         setIsLoading(false);
+        setIsLoadingMore(false);
       },
     );
 
@@ -164,45 +183,28 @@ export function useMessagesOptions({
       unsubscribe();
       unsubscribeFallback?.();
     };
-  }, [canLoad, pageSize, queryKey, status, user]);
+  }, [canLoad, pageSize, paginationQueryKey, queryKey, status, user, visibleLimit]);
 
-  const loadMore = useCallback(async () => {
-    if (!canLoad || !user || !lastDocument || isLoadingMore) {
+  const loadMore = useCallback(() => {
+    if (!canLoad || !hasMore || isLoadingMore) {
       return;
     }
 
     setIsLoadingMore(true);
 
-    const constraints: QueryConstraint[] = [
-      where("userId", "==", user.uid),
-      orderBy("createdAt", "desc"),
-    ];
-
-    if (status !== "all") {
-      constraints.splice(1, 0, where("status", "==", status));
-    }
-
-    constraints.push(startAfter(lastDocument), limit(pageSize + 1));
-
-    try {
-      const snapshot = await getDocs(query(collection(db, "messages"), ...constraints));
-      const nextMessages = mapMessageDocuments(snapshot.docs.slice(0, pageSize));
-
-      setMessages((currentMessages) => [...currentMessages, ...nextMessages]);
-      setHasMore(snapshot.docs.length > pageSize);
-      setLastDocument(snapshot.docs.slice(0, pageSize).at(-1) ?? null);
-      setError("");
-    } catch (error) {
-      setError(getFirestoreErrorMessage(error as { code?: string }));
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }, [canLoad, isLoadingMore, lastDocument, pageSize, status, user]);
+    setPaginationState((currentState) => ({
+      queryKey: paginationQueryKey,
+      visibleLimit:
+        (currentState.queryKey === paginationQueryKey
+          ? currentState.visibleLimit
+          : pageSize) + pageSize,
+    }));
+  }, [canLoad, hasMore, isLoadingMore, pageSize, paginationQueryKey]);
 
   return {
     error: canLoad ? error : "",
     hasMore: canLoad ? hasMore : false,
-    isLoading: canLoad ? isLoading && !loadedQueryKey : false,
+    isLoading: canLoad ? isLoading : false,
     isLoadingMore,
     loadMore,
     messages: canLoad ? messages : [],
