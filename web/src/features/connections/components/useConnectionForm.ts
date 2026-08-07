@@ -25,6 +25,7 @@ export const useConnectionForm = ({
 }: UseConnectionFormParams) => {
   const { user } = useAuth();
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const hasReachedConnectionsLimit =
     !editingConnection && connectionsCount >= MAX_CONNECTIONS;
 
@@ -47,6 +48,8 @@ export const useConnectionForm = ({
   }, [editingConnection, reset]);
 
   const submitConnection = handleSubmit(async ({ name }) => {
+    setSuccess("");
+
     if (!user) {
       setError("Faça login para cadastrar uma conexão.");
       return;
@@ -72,6 +75,11 @@ export const useConnectionForm = ({
       }
 
       reset();
+      setSuccess(
+        editingConnection
+          ? "Conexão atualizada com sucesso."
+          : "Conexão criada com sucesso.",
+      );
       onSaved();
     } catch (error) {
       if (error instanceof Error && error.message === "connections-limit-reached") {
@@ -85,12 +93,19 @@ export const useConnectionForm = ({
     }
   });
 
+  const clearFeedback = () => {
+    setError("");
+    setSuccess("");
+  };
+
   return {
+    clearFeedback,
     control,
     error,
     errors,
     hasReachedConnectionsLimit,
     isSubmitting,
+    success,
     submitConnection,
   };
 };

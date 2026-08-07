@@ -17,7 +17,8 @@ export const useContactsList = ({
 }: UseContactsListParams) => {
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [error, setError] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deleteSuccess, setDeleteSuccess] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebouncedValue(searchTerm);
@@ -30,7 +31,7 @@ export const useContactsList = ({
     isLoadingMore,
     loadMore,
   } = useContactsOptions({ searchTerm: debouncedSearchTerm });
-  
+
   const { connections } = useConnectionsOptions();
 
   const connectionNameById = useMemo(
@@ -48,7 +49,8 @@ export const useContactsList = ({
   );
 
   const requestDeleteContact = (contact: Contact) => {
-    setError("");
+    setDeleteError("");
+    setDeleteSuccess("");
     setContactToDelete(contact);
     setIsDeleteDialogOpen(true);
   };
@@ -70,7 +72,8 @@ export const useContactsList = ({
       return;
     }
 
-    setError("");
+    setDeleteError("");
+    setDeleteSuccess("");
     setIsDeleting(true);
 
     try {
@@ -80,9 +83,10 @@ export const useContactsList = ({
         onDeletedEditingContact();
       }
 
+      setDeleteSuccess("Contato excluído com sucesso.");
       setIsDeleteDialogOpen(false);
     } catch (error) {
-      setError(
+      setDeleteError(
         getFirebaseErrorMessage(error, "Não foi possível excluir o contato."),
       );
     } finally {
@@ -90,13 +94,21 @@ export const useContactsList = ({
     }
   };
 
+  const clearDeleteFeedback = () => {
+    setDeleteError("");
+    setDeleteSuccess("");
+  };
+
   return {
+    clearDeleteFeedback,
     closeDeleteModal,
     clearDeleteModal,
     confirmDeleteContact,
     contactToDelete,
     contacts,
-    error: error || contactsError,
+    deleteError,
+    deleteSuccess,
+    error: contactsError,
     getConnectionName,
     hasMore,
     isDeleteDialogOpen,

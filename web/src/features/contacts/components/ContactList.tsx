@@ -10,6 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import { EmptyState } from "../../../components/EmptyState";
+import { FeedbackSnackbar } from "../../../components/FeedbackSnackbar";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Contact } from "../types";
 import { DeleteDialog } from "../../../components/DeleteDialog";
@@ -32,11 +33,14 @@ export const ContactsList = ({
   onDeletedEditingContact,
 }: ContactsListProps) => {
   const {
+    clearDeleteFeedback,
     closeDeleteModal,
     clearDeleteModal,
     confirmDeleteContact,
     contactToDelete,
     contacts,
+    deleteError,
+    deleteSuccess,
     error,
     getConnectionName,
     hasMore,
@@ -147,6 +151,12 @@ export const ContactsList = ({
         onConfirm={confirmDeleteContact}
         isLoading={isDeleting}
         message={`Tem certeza que deseja excluir o contato ${contactToDelete?.name}? Esta ação não pode ser desfeita.`}
+      />
+
+      <FeedbackSnackbar
+        message={deleteSuccess || deleteError}
+        onClose={clearDeleteFeedback}
+        severity={deleteSuccess ? "success" : "error"}
       />
     </section>
   );

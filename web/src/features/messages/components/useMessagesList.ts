@@ -27,7 +27,8 @@ export function useMessagesList({
       status: filter,
     });
   const [isDeleting, setIsDeleting] = useState(false);
-  const [listError, setListError] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deleteSuccess, setDeleteSuccess] = useState("");
   const [messageToDelete, setMessageToDelete] = useState<Message | null>(null);
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [selectedMessage, setSelectedMessage] =
@@ -46,7 +47,8 @@ export function useMessagesList({
   };
 
   const requestDeleteMessage = (message: Message) => {
-    setListError("");
+    setDeleteError("");
+    setDeleteSuccess("");
     setMessageToDelete(message);
   };
 
@@ -63,7 +65,8 @@ export function useMessagesList({
       return;
     }
 
-    setListError("");
+    setDeleteError("");
+    setDeleteSuccess("");
     setIsDeleting(true);
 
     try {
@@ -73,9 +76,10 @@ export function useMessagesList({
         onDeletedEditingMessage();
       }
 
+      setDeleteSuccess("Mensagem excluída com sucesso.");
       closeDeleteModal();
     } catch (error) {
-      setListError(
+      setDeleteError(
         getFirebaseErrorMessage(error, "Não foi possível excluir a mensagem."),
       );
     } finally {
@@ -114,9 +118,17 @@ export function useMessagesList({
     closeMenu();
   };
 
+  const clearDeleteFeedback = () => {
+    setDeleteError("");
+    setDeleteSuccess("");
+  };
+
   return {
+    clearDeleteFeedback,
     messages: formattedMessages,
-    error: listError || error,
+    deleteError,
+    deleteSuccess,
+    error,
     isLoading,
     handleFilterChange,
     filter,

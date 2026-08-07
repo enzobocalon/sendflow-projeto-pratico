@@ -2,7 +2,6 @@ import EventIcon from "@mui/icons-material/Event";
 import CloseIcon from "@mui/icons-material/Close";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import {
-  Alert,
   Button,
   Checkbox,
   CircularProgress,
@@ -13,6 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import { ConnectionSelectField } from "../../../components/ConnectionSelectField";
+import { FeedbackSnackbar } from "../../../components/FeedbackSnackbar";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import { Controller } from "react-hook-form";
 import { useMessageComposer } from "./useMessageComposer";
@@ -33,6 +33,7 @@ export const MessageComposer = ({
   const {
     availableContacts,
     cancelScheduledMode,
+    clearFeedback,
     clearSelectedContacts,
     connectionError,
     connections,
@@ -53,6 +54,7 @@ export const MessageComposer = ({
     setContactSearchTerm,
     submitNow,
     submitScheduled,
+    success,
   } = useMessageComposer({
     editingMessage,
     onSaved,
@@ -278,8 +280,6 @@ export const MessageComposer = ({
           </div>
         )}
 
-        {formError && <Alert severity="error">{formError}</Alert>}
-
         <Stack direction="row" spacing={1.5} className="flex-wrap">
           <Button
             variant="contained"
@@ -343,6 +343,12 @@ export const MessageComposer = ({
           )}
         </Stack>
       </Stack>
+
+      <FeedbackSnackbar
+        message={success || formError}
+        onClose={clearFeedback}
+        severity={success ? "success" : "error"}
+      />
     </section>
   );
 };

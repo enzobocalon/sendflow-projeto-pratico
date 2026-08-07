@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import { EmptyState } from "../../../components/EmptyState";
 import { DeleteDialog } from "../../../components/DeleteDialog";
+import { FeedbackSnackbar } from "../../../components/FeedbackSnackbar";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Message } from "../types";
 import { MessageFilters } from "./MessageFilters";
@@ -44,8 +45,11 @@ export const MessagesList = ({
   onEdit,
 }: MessagesListProps) => {
   const {
+    clearDeleteFeedback,
     closeDeleteModal,
     confirmDeleteMessage,
+    deleteError,
+    deleteSuccess,
     error,
     filter,
     handleFilterChange,
@@ -189,6 +193,12 @@ export const MessagesList = ({
         onConfirm={confirmDeleteMessage}
         isLoading={isDeleting}
         message={`Tem certeza que deseja excluir esta mensagem? Esta ação não pode ser desfeita.`}
+      />
+
+      <FeedbackSnackbar
+        message={deleteSuccess || deleteError}
+        onClose={clearDeleteFeedback}
+        severity={deleteSuccess ? "success" : "error"}
       />
     </section>
   );
