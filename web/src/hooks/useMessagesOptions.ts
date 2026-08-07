@@ -93,6 +93,8 @@ export function useMessagesOptions({
     const unsubscribe = onSnapshot(
       messagesQuery,
       (snapshot) => {
+        if (!isActive) return;
+
         const nextMessages = mapMessageDocuments(snapshot.docs.slice(0, visibleLimit));
 
         setMessages(nextMessages);
