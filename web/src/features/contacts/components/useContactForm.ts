@@ -19,6 +19,7 @@ export const useContactForm = ({
 }: UseContactFormParams) => {
   const { user } = useAuth();
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const {
     connections,
     error: connectionsError,
@@ -47,6 +48,8 @@ export const useContactForm = ({
   }, [editingContact, reset]);
 
   const submitContact = handleSubmit(async ({ connectionId, name, phone }) => {
+    setSuccess("");
+
     if (!user) {
       setError("Faça login para salvar um contato.");
       return;
@@ -71,6 +74,11 @@ export const useContactForm = ({
       }
 
       reset();
+      setSuccess(
+        editingContact
+          ? "Contato atualizado com sucesso."
+          : "Contato criado com sucesso.",
+      );
       onSaved();
     } catch (error) {
       setError(
@@ -79,7 +87,13 @@ export const useContactForm = ({
     }
   });
 
+  const clearFeedback = () => {
+    setError("");
+    setSuccess("");
+  };
+
   return {
+    clearFeedback,
     connections,
     connectionsError,
     control,
@@ -87,6 +101,7 @@ export const useContactForm = ({
     errors,
     isLoadingConnections,
     isSubmitting,
+    success,
     submitContact,
   };
 };

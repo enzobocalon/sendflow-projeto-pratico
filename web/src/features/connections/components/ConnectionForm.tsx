@@ -1,5 +1,6 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Alert, Button, Stack, TextField } from "@mui/material";
+import { FeedbackSnackbar } from "../../../components/FeedbackSnackbar";
 import { Controller } from "react-hook-form";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Connection } from "../types";
@@ -20,11 +21,13 @@ export const ConnectionForm = ({
 }: ConnectionFormProps) => {
   const isEditing = Boolean(editingConnection);
   const {
+    clearFeedback,
     control,
     error,
     errors,
     hasReachedConnectionsLimit,
     isSubmitting,
+    success,
     submitConnection,
   } =
     useConnectionForm({
@@ -61,7 +64,6 @@ export const ConnectionForm = ({
           )}
         />
 
-        {error && <Alert severity="error">{error}</Alert>}
         {hasReachedConnectionsLimit && (
           <Alert severity="warning">
             Limite de 100 conexões atingido. Exclua uma conexão para cadastrar outra.
@@ -84,6 +86,12 @@ export const ConnectionForm = ({
           )}
         </Stack>
       </Stack>
+
+      <FeedbackSnackbar
+        message={success || error}
+        onClose={clearFeedback}
+        severity={success ? "success" : "error"}
+      />
     </section>
   );
 };

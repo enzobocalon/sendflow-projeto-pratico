@@ -38,7 +38,8 @@ export const useConnectionsList = ({
   const [connectionToDelete, setConnectionToDelete] =
     useState<Connection | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [error, setError] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deleteSuccess, setDeleteSuccess] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebouncedValue(searchTerm);
@@ -56,7 +57,8 @@ export const useConnectionsList = ({
   }, [connections, debouncedSearchTerm]);
 
   const requestDeleteConnection = (connection: Connection) => {
-    setError("");
+    setDeleteError("");
+    setDeleteSuccess("");
     setConnectionToDelete(connection);
     setIsDeleteDialogOpen(true);
   };
@@ -78,12 +80,13 @@ export const useConnectionsList = ({
       return;
     }
 
-    setError("");
+    setDeleteError("");
+    setDeleteSuccess("");
     setIsDeleting(true);
 
     try {
       if (!user) {
-        setError("Faça login para excluir uma conexão.");
+        setDeleteError("Faça login para excluir uma conexão.");
         return;
       }
 
@@ -93,10 +96,11 @@ export const useConnectionsList = ({
         onDeletedEditingConnection();
       }
 
+      setDeleteSuccess("Conexão excluída com sucesso.");
       setIsDeleteDialogOpen(false);
     } catch (error) {
       const deleteErrorMessage = getDeleteConnectionErrorMessage(error);
-      setError(deleteErrorMessage);
+      setDeleteError(deleteErrorMessage);
 
       if (deleteErrorMessage !== "Não foi possível excluir a conexão.") {
         setIsDeleteDialogOpen(false);
@@ -106,13 +110,21 @@ export const useConnectionsList = ({
     }
   };
 
+  const clearDeleteFeedback = () => {
+      setDeleteError("");
+      setDeleteSuccess("");
+    }
+
   return {
+    clearDeleteFeedback,
     closeDeleteModal,
     clearDeleteModal,
     confirmDeleteConnection,
     connectionToDelete,
     connections: filteredConnections,
-    error: error || connectionsError,
+    deleteError,
+    deleteSuccess,
+    error: connectionsError,
     isDeleteDialogOpen,
     isDeleting,
     isLoading: isLoadingConnections,

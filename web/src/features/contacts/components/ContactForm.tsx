@@ -2,12 +2,12 @@ import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import {
-  Alert,
   Button,
   CircularProgress,
   Stack,
   TextField,
 } from "@mui/material";
+import { FeedbackSnackbar } from "../../../components/FeedbackSnackbar";
 import { Controller } from "react-hook-form";
 import { ConnectionSelectField } from "../../../components/ConnectionSelectField";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
@@ -28,6 +28,7 @@ export const ContactForm = ({
 }: ContactFormProps) => {
   const isEditing = Boolean(editingContact);
   const {
+    clearFeedback,
     connections,
     connectionsError,
     control,
@@ -35,6 +36,7 @@ export const ContactForm = ({
     errors,
     isLoadingConnections,
     isSubmitting,
+    success,
     submitContact,
   } = useContactForm({
     editingContact,
@@ -105,8 +107,6 @@ export const ContactForm = ({
           )}
         />
 
-        {error && <Alert severity="error">{error}</Alert>}
-
         <Stack direction="row" spacing={1.5} className="flex-wrap">
           <Button
             variant="contained"
@@ -142,6 +142,12 @@ export const ContactForm = ({
           )}
         </Stack>
       </Stack>
+
+      <FeedbackSnackbar
+        message={success || error}
+        onClose={clearFeedback}
+        severity={success ? "success" : "error"}
+      />
     </section>
   );
 };

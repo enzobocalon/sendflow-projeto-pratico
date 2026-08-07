@@ -49,6 +49,7 @@ export function useMessageComposer({
   const [contactSearchTerm, setContactSearchTerm] = useState("");
   const debouncedContactSearchTerm = useDebouncedValue(contactSearchTerm);
   const [formError, setFormError] = useState("");
+  const [success, setSuccess] = useState("");
   const {
     connections,
     error: connectionError,
@@ -105,6 +106,8 @@ export function useMessageComposer({
   }, [editingMessage, reset]);
 
   const submitMessage = handleSubmit(async (values) => {
+    setSuccess("");
+
     if (!user) {
       setFormError("Faça login para salvar uma mensagem.");
       return;
@@ -138,6 +141,13 @@ export function useMessageComposer({
       }
 
       reset();
+      setSuccess(
+        editingMessage
+          ? "Mensagem atualizada com sucesso."
+          : isScheduled
+            ? "Mensagem agendada com sucesso."
+            : "Mensagem enviada com sucesso.",
+      );
       onSaved();
     } catch (error) {
       setFormError(
@@ -184,8 +194,14 @@ export function useMessageComposer({
     clearSchedule();
   };
 
+  const clearFeedback = () => {
+    setFormError("");
+    setSuccess("");
+  };
+
   return {
     availableContacts,
+    clearFeedback,
     clearSelectedContacts,
     contactSearchTerm,
     contactsError,
@@ -203,6 +219,7 @@ export function useMessageComposer({
     selectedContactsCount: selectedContactIds.length,
     selectedConnectionId,
     sendMode,
+    success,
     cancelScheduledMode,
     enableScheduledMode,
     reset,
