@@ -30,28 +30,6 @@ const mapMessageDocuments = (documents: Array<{ data: () => unknown; id: string 
       }) as Message,
   );
 
-const getFallbackMessageDate = (message: Message) => {
-  const date = message.scheduledAt ?? message.sentAt ?? message.createdAt;
-
-  return date?.toMillis() ?? 0;
-};
-
-const getVisibleMessages = ({
-  messages,
-  status,
-  visibleLimit,
-}: {
-  messages: Message[];
-  status: MessageStatus | "all";
-  visibleLimit: number;
-}) =>
-  messages
-    .filter((message) => (status === "all" ? true : message.status === status))
-    .sort(
-      (current, next) => getFallbackMessageDate(next) - getFallbackMessageDate(current),
-    )
-    .slice(0, visibleLimit);
-
 export function useMessagesOptions({
   enabled = true,
   pageSize = DEFAULT_PAGE_SIZE,
@@ -100,16 +78,6 @@ export function useMessagesOptions({
     }
 
     let isActive = true;
-    let unsubscribeFallback: (() => void) | undefined;
-
-    const handleFallbackError = (error: { code?: string }) => {
-      if (!isActive) return;
-
-      setError(getFirestoreErrorMessage(error, "mensagens"));
-      setIsLoading(false);
-      setIsLoadingMore(false);
-    };
-
     const constraints: QueryConstraint[] = [
       where("userId", "==", user.uid),
       orderBy("createdAt", "desc"),
@@ -136,29 +104,6 @@ export function useMessagesOptions({
       (error) => {
         if (!isActive) return;
 
-        if (error.code === "failed-precondition") {
-          unsubscribeFallback = onSnapshot(
-            query(collection(db, "messages"), where("userId", "==", user.uid)),
-            (snapshot) => {
-              if (!isActive) return;
-
-              const nextMessages = getVisibleMessages({
-                messages: mapMessageDocuments(snapshot.docs),
-                status,
-                visibleLimit,
-              });
-
-              setMessages(nextMessages);
-              setHasMore(false);
-              setIsLoading(false);
-              setIsLoadingMore(false);
-              setError("");
-            },
-            handleFallbackError,
-          );
-          return;
-        }
-
         setError(getFirestoreErrorMessage(error, "mensagens"));
         setIsLoading(false);
         setIsLoadingMore(false);
@@ -168,7 +113,6 @@ export function useMessagesOptions({
     return () => {
       isActive = false;
       unsubscribe();
-      unsubscribeFallback?.();
     };
   }, [canLoad, pageSize, paginationQueryKey, queryKey, status, user, visibleLimit]);
 

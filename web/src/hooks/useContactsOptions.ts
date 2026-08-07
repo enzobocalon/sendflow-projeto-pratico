@@ -33,27 +33,6 @@ const mapContactSnapshot = (snapshot: QueryDocumentSnapshot[]) =>
     ...doc.data(),
   })) as Contact[];
 
-const filterContacts = ({
-  contacts,
-  connectionId,
-  normalizedSearchTerm,
-  visibleLimit,
-}: {
-  contacts: Contact[];
-  connectionId?: string;
-  normalizedSearchTerm: string;
-  visibleLimit: number;
-}) =>
-  contacts
-    .filter((contact) => (connectionId ? contact.connectionId === connectionId : true))
-    .filter((contact) =>
-      normalizedSearchTerm
-        ? contact.name.toLowerCase().startsWith(normalizedSearchTerm)
-        : true,
-    )
-    .sort((current, next) => current.name.localeCompare(next.name))
-    .slice(0, visibleLimit);
-
 export function useContactsOptions({
   connectionId,
   enabled = true,
@@ -106,16 +85,6 @@ export function useContactsOptions({
     }
 
     let isActive = true;
-    let unsubscribeFallback: (() => void) | undefined;
-
-    const handleFallbackError = (error: { code?: string }) => {
-      if (!isActive) return;
-
-      setError(getFirestoreErrorMessage(error, "contatos"));
-      setIsLoading(false);
-      setIsLoadingMore(false);
-    };
-
     const constraints: QueryConstraint[] = [
       where("userId", "==", user.uid),
       orderBy(normalizedSearchTerm ? "nameNormalized" : "name", "asc"),
@@ -150,30 +119,6 @@ export function useContactsOptions({
       (error) => {
         if (!isActive) return;
 
-        if (error.code === "failed-precondition") {
-          unsubscribeFallback = onSnapshot(
-            query(collection(db, "contacts"), where("userId", "==", user.uid)),
-            (snapshot) => {
-              if (!isActive) return;
-
-              const nextContacts = filterContacts({
-                contacts: mapContactSnapshot(snapshot.docs),
-                connectionId,
-                normalizedSearchTerm,
-                visibleLimit,
-              });
-
-              setContacts(nextContacts);
-              setHasMore(false);
-              setIsLoading(false);
-              setIsLoadingMore(false);
-              setError("");
-            },
-            handleFallbackError,
-          );
-          return;
-        }
-
         setError(getFirestoreErrorMessage(error, "contatos"));
         setIsLoading(false);
         setIsLoadingMore(false);
@@ -183,7 +128,6 @@ export function useContactsOptions({
     return () => {
       isActive = false;
       unsubscribe();
-      unsubscribeFallback?.();
     };
   }, [
     canLoad,

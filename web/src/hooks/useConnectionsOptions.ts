@@ -23,15 +23,6 @@ const normalizeSearchText = (value: string) => value.trim().toLowerCase();
 const mapConnectionSnapshot = (snapshot: QuerySnapshot): Connection[] =>
   snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Connection);
 
-const filterConnections = (connections: Connection[], normalizedSearchTerm: string) =>
-  connections
-    .filter(
-      (connection) =>
-        !normalizedSearchTerm ||
-        connection.name.toLowerCase().startsWith(normalizedSearchTerm),
-    )
-    .sort((current, next) => current.name.localeCompare(next.name));
-
 type UseConnectionsOptionsParams = {
   enabled?: boolean;
   searchTerm?: string;
@@ -53,25 +44,10 @@ export function useConnectionsOptions({
     if (!canLoad || !user) return;
 
     let isActive = true;
-    let unsubscribeFallback: (() => void) | undefined;
-
     const handleSnapshot = (snapshot: QuerySnapshot) => {
       if (!isActive) return;
 
       setConnections(mapConnectionSnapshot(snapshot));
-      setError("");
-      setIsLoading(false);
-    };
-
-    const handleFallbackSnapshot = (snapshot: QuerySnapshot) => {
-      if (!isActive) return;
-
-      const nextConnections = filterConnections(
-        mapConnectionSnapshot(snapshot),
-        normalizedSearchTerm,
-      );
-
-      setConnections(nextConnections);
       setError("");
       setIsLoading(false);
     };
@@ -98,24 +74,6 @@ export function useConnectionsOptions({
       (firestoreError) => {
         if (!isActive) return;
 
-        if (firestoreError.code === "failed-precondition") {
-          unsubscribeFallback = onSnapshot(
-            query(
-              collection(db, "connections"),
-              where("userId", "==", user.uid),
-              limit(MAX_CONNECTIONS),
-            ),
-            handleFallbackSnapshot,
-            (fallbackError) => {
-              if (!isActive) return;
-
-              setError(getFirestoreErrorMessage(fallbackError, "conexões"));
-              setIsLoading(false);
-            },
-          );
-          return;
-        }
-
         setError(getFirestoreErrorMessage(firestoreError, "conexões"));
         setIsLoading(false);
       },
@@ -124,7 +82,6 @@ export function useConnectionsOptions({
     return () => {
       isActive = false;
       unsubscribe();
-      unsubscribeFallback?.();
     };
   }, [canLoad, normalizedSearchTerm, user]);
 
