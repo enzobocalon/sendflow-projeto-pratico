@@ -14,10 +14,12 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { EmptyState } from "../../../components/EmptyState";
 import { DeleteDialog } from "../../../components/DeleteDialog";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Message } from "../types";
 import { MessageFilters } from "./MessageFilters";
+import { getMessagesListEmptyState } from "./message-list-copy";
 import { useMessagesList } from "./useMessagesList";
 
 const statusLabel = {
@@ -65,18 +67,7 @@ export const MessagesList = ({
     onDeletedEditingMessage,
     onEdit,
   });
-  const emptyMessage =
-    filter === "sent"
-      ? "Nenhuma mensagem enviada encontrada."
-      : filter === "scheduled"
-        ? "Nenhuma mensagem agendada encontrada."
-        : "Nenhuma mensagem encontrada";
-  const emptyDescription =
-    filter === "sent"
-      ? "Envie uma mensagem para que ela apareça neste filtro."
-      : filter === "scheduled"
-        ? "Agende uma mensagem para acompanhar os próximos disparos."
-        : "Envie ou agende uma mensagem para acompanhar o histórico.";
+  const emptyState = getMessagesListEmptyState(filter);
 
   return (
     <section>
@@ -101,14 +92,7 @@ export const MessagesList = ({
       ) : (
         <Stack spacing={1.5}>
           {messages.length === 0 && (
-            <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center">
-              <Typography className="font-medium text-slate-800">
-                {emptyMessage}
-              </Typography>
-              <Typography className="mt-1 text-sm text-slate-500">
-                {emptyDescription}
-              </Typography>
-            </div>
+            <EmptyState {...emptyState} />
           )}
 
           {messages.map((message) => (
@@ -202,7 +186,6 @@ export const MessagesList = ({
         title="Excluir mensagem?"
         open={Boolean(messageToDelete)}
         onClose={closeDeleteModal}
-        onCancel={closeDeleteModal}
         onConfirm={confirmDeleteMessage}
         isLoading={isDeleting}
         message={`Tem certeza que deseja excluir esta mensagem? Esta ação não pode ser desfeita.`}

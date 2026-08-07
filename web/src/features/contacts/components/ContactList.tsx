@@ -9,9 +9,14 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { EmptyState } from "../../../components/EmptyState";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Contact } from "../types";
 import { DeleteDialog } from "../../../components/DeleteDialog";
+import {
+  getContactsListEmptyState,
+  getContactsListSubtitle,
+} from "./contact-list-copy";
 import { useContactsList } from "./useContactsList";
 import { formatPhone } from "../../../utils/formatPhone";
 
@@ -49,12 +54,9 @@ export const ContactsList = ({
     onDeletedEditingContact,
   });
 
-  const subtitle =
-    totalContacts === 0
-      ? searchTerm.trim()
-        ? "Nenhum contato encontrado."
-        : "Nenhum contato cadastrado."
-      : `${totalContacts} contato${totalContacts === 1 ? "" : "s"} cadastrado${totalContacts === 1 ? "" : "s"}.`;
+  const hasSearch = Boolean(searchTerm.trim());
+  const subtitle = getContactsListSubtitle(totalContacts, hasSearch);
+  const emptyState = getContactsListEmptyState(hasSearch);
 
   return (
     <section>
@@ -83,16 +85,7 @@ export const ContactsList = ({
       ) : (
         <Stack spacing={1.5}>
           {contacts.length === 0 && (
-            <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center">
-              <Typography className="font-medium text-slate-800">
-                Nenhum contato encontrado
-              </Typography>
-              <Typography className="mt-1 text-sm text-slate-500">
-                {searchTerm.trim()
-                  ? "Tente buscar por outro nome."
-                  : "Use o cadastro ao lado para vincular contatos a uma conexão antes de enviar mensagens."}
-              </Typography>
-            </div>
+            <EmptyState {...emptyState} />
           )}
 
           {contacts.map((contact) => (

@@ -6,16 +6,13 @@ import {
   Button,
   Checkbox,
   CircularProgress,
-  FormControl,
   FormControlLabel,
   FormHelperText,
-  InputLabel,
-  MenuItem,
-  Select,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
+import { ConnectionSelectField } from "../../../components/ConnectionSelectField";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import { Controller } from "react-hook-form";
 import { useMessageComposer } from "./useMessageComposer";
@@ -87,51 +84,19 @@ export const MessageComposer = ({
           name="connectionId"
           control={control}
           render={({ field }) => (
-            <FormControl fullWidth error={Boolean(errors.connectionId)}>
-              <InputLabel id="message-connection-label">Conexão</InputLabel>
-
-              <Select
-                {...field}
-                onChange={(event) => {
-                  field.onChange(event);
-                  clearSelectedContacts();
-                }}
-                labelId="message-connection-label"
-                label="Conexão"
-                disabled={isLoadingConnections || !hasConnections}
-              >
-                {isLoadingConnections && (
-                  <MenuItem value="" disabled>
-                    Carregando conexões...
-                  </MenuItem>
-                )}
-                {!isLoadingConnections && !hasConnections && (
-                  <MenuItem value="" disabled>
-                    Nenhuma conexão cadastrada
-                  </MenuItem>
-                )}
-                {connections.map((connection) => (
-                  <MenuItem key={connection.id} value={connection.id}>
-                    {connection.name}
-                  </MenuItem>
-                ))}
-              </Select>
-
-              {errors.connectionId && (
-                <FormHelperText>{errors.connectionId.message}</FormHelperText>
-              )}
-              {!errors.connectionId && connectionError && (
-                <FormHelperText error>{connectionError}</FormHelperText>
-              )}
-              {!errors.connectionId &&
-                !connectionError &&
-                !isLoadingConnections &&
-                !hasConnections && (
-                  <FormHelperText>
-                    Cadastre uma conexão antes de preparar mensagens.
-                  </FormHelperText>
-                )}
-            </FormControl>
+            <ConnectionSelectField
+              connections={connections}
+              connectionsError={connectionError}
+              emptyMessage="Cadastre uma conexão antes de preparar mensagens."
+              field={field}
+              fieldError={errors.connectionId?.message}
+              labelId="message-connection-label"
+              isLoadingConnections={isLoadingConnections}
+              onChange={(event) => {
+                field.onChange(event);
+                clearSelectedContacts();
+              }}
+            />
           )}
         />
 
