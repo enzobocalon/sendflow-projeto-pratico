@@ -13,6 +13,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Contact } from "../features/contacts/types";
 import { db } from "../lib/firebase";
+import { getFirestoreErrorMessage } from "../utils/firestoreError";
 import { useAuth } from "./useAuth";
 
 type UseContactsOptionsParams = {
@@ -52,20 +53,6 @@ const filterContacts = ({
     )
     .sort((current, next) => current.name.localeCompare(next.name))
     .slice(0, visibleLimit);
-
-const getFirestoreErrorMessage = (error: { code?: string }) => {
-  if (error.code === "failed-precondition") {
-    return "Não foi possível carregar os contatos porque um índice do Firestore ainda está sendo preparado.";
-  }
-
-  if (error.code === "permission-denied") {
-    return "Você não tem permissão para carregar estes contatos.";
-  }
-
-  return error.code
-    ? `Não foi possível carregar os contatos. (${error.code})`
-    : "Não foi possível carregar os contatos.";
-};
 
 export function useContactsOptions({
   connectionId,
@@ -124,7 +111,7 @@ export function useContactsOptions({
     const handleFallbackError = (error: { code?: string }) => {
       if (!isActive) return;
 
-      setError(getFirestoreErrorMessage(error));
+      setError(getFirestoreErrorMessage(error, "contatos"));
       setIsLoading(false);
       setIsLoadingMore(false);
     };
@@ -187,7 +174,7 @@ export function useContactsOptions({
           return;
         }
 
-        setError(getFirestoreErrorMessage(error));
+        setError(getFirestoreErrorMessage(error, "contatos"));
         setIsLoading(false);
         setIsLoadingMore(false);
       },
