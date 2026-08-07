@@ -13,6 +13,7 @@ import {
 import { useEffect, useState } from "react";
 import type { Connection } from "../features/connections/types";
 import { db } from "../lib/firebase";
+import { getFirestoreErrorMessage } from "../utils/firestoreError";
 import { useAuth } from "./useAuth";
 
 const MAX_CONNECTIONS = 100;
@@ -30,16 +31,6 @@ const filterConnections = (connections: Connection[], normalizedSearchTerm: stri
         connection.name.toLowerCase().startsWith(normalizedSearchTerm),
     )
     .sort((current, next) => current.name.localeCompare(next.name));
-
-const getFirestoreErrorMessage = (code?: string) => {
-  if (code === "failed-precondition")
-    return "Não foi possível carregar as conexões porque um índice do Firestore ainda está sendo preparado.";
-  if (code === "permission-denied")
-    return "Você não tem permissão para carregar estas conexões.";
-  return code
-    ? `Não foi possível carregar as conexões. (${code})`
-    : "Não foi possível carregar as conexões.";
-};
 
 type UseConnectionsOptionsParams = {
   enabled?: boolean;
@@ -118,14 +109,14 @@ export function useConnectionsOptions({
             (fallbackError) => {
               if (!isActive) return;
 
-              setError(getFirestoreErrorMessage(fallbackError.code));
+              setError(getFirestoreErrorMessage(fallbackError, "conexões"));
               setIsLoading(false);
             },
           );
           return;
         }
 
-        setError(getFirestoreErrorMessage(firestoreError.code));
+        setError(getFirestoreErrorMessage(firestoreError, "conexões"));
         setIsLoading(false);
       },
     );

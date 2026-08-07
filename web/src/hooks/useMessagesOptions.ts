@@ -14,6 +14,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import type { Message, MessageStatus } from "../features/messages/types";
 import { db } from "../lib/firebase";
+import { getFirestoreErrorMessage } from "../utils/firestoreError";
 import { useAuth } from "./useAuth";
 
 type UseMessagesOptionsParams = {
@@ -23,20 +24,6 @@ type UseMessagesOptionsParams = {
 };
 
 const DEFAULT_PAGE_SIZE = 30;
-
-const getFirestoreErrorMessage = (error: { code?: string }) => {
-  if (error.code === "failed-precondition") {
-    return "Não foi possível carregar as mensagens porque um índice do Firestore ainda está sendo preparado.";
-  }
-
-  if (error.code === "permission-denied") {
-    return "Você não tem permissão para carregar estas mensagens.";
-  }
-
-  return error.code
-    ? `Não foi possível carregar as mensagens. (${error.code})`
-    : "Não foi possível carregar as mensagens.";
-};
 
 const mapMessageDocuments = (documents: Array<{ data: () => unknown; id: string }>) =>
   documents.map(
@@ -98,7 +85,7 @@ export function useMessagesOptions({
       if (!isActive) return;
 
       setLoadedQueryKey(queryKey);
-      setError(getFirestoreErrorMessage(error));
+      setError(getFirestoreErrorMessage(error, "mensagens"));
       setIsLoading(false);
     };
 
@@ -154,7 +141,7 @@ export function useMessagesOptions({
         }
 
         setLoadedQueryKey(queryKey);
-        setError(getFirestoreErrorMessage(error));
+        setError(getFirestoreErrorMessage(error, "mensagens"));
         setIsLoading(false);
       },
     );
