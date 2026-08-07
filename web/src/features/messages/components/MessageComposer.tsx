@@ -63,6 +63,7 @@ export const MessageComposer = ({
   const hasConnections = connections.length > 0;
   const hasContacts = availableContacts.length > 0;
   const hasSelectedContacts = selectedContactsCount > 0;
+  const selectedContactsPlural = selectedContactsCount === 1 ? "" : "s";
   const actionDisabled =
     isSubmitting ||
     isLoadingConnections ||
@@ -127,7 +128,7 @@ export const MessageComposer = ({
               </Typography>
               <Typography className="text-xs text-slate-500">
                 {hasSelectedContacts
-                  ? `${selectedContactsCount} contato${selectedContactsCount === 1 ? "" : "s"} selecionado${selectedContactsCount === 1 ? "" : "s"}`
+                  ? `${selectedContactsCount} contato${selectedContactsPlural} selecionado${selectedContactsPlural}`
                   : "Nenhum contato selecionado"}
               </Typography>
             </div>

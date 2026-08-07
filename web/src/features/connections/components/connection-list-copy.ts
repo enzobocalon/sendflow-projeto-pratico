@@ -1,7 +1,11 @@
-export const getConnectionsListSubtitle = (totalConnections: number) =>
-  totalConnections === 0
+export const getConnectionsListSubtitle = (totalConnections: number) => {
+  const plural = totalConnections === 1 ? "" : "s";
+  const connectionLabel = totalConnections === 1 ? "conexão" : "conexões";
+
+  return totalConnections === 0
     ? "Nenhuma conexão encontrada"
-    : `${totalConnections} conex${totalConnections === 1 ? "ão" : "ões"} cadastrada${totalConnections === 1 ? "" : "s"}.`;
+    : `${totalConnections} ${connectionLabel} cadastrada${plural}.`;
+};
 
 export const getConnectionsListEmptyState = (hasSearch: boolean) =>
   hasSearch

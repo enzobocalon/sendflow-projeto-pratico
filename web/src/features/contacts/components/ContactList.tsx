@@ -59,7 +59,7 @@ export const ContactsList = ({
   });
 
   const hasSearch = Boolean(searchTerm.trim());
-  const subtitle = getContactsListSubtitle(totalContacts, hasSearch);
+  const subtitle = getContactsListSubtitle(totalContacts, hasSearch, hasMore);
   const emptyState = getContactsListEmptyState(hasSearch);
 
   return (
