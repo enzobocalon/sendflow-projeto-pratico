@@ -87,6 +87,8 @@ export function useContactsOptions({
     const unsubscribe = onSnapshot(
       contactsQuery,
       (snapshot) => {
+        if (!isActive) return;
+
         const contactsData = mapContactSnapshot(snapshot.docs.slice(0, pageSize));
 
         setContacts(contactsData);
