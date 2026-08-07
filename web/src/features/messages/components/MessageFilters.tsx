@@ -7,7 +7,12 @@ type MessageFilterProps = {
 };
 
 export const MessageFilters = ({ filter, onFilterChange }: MessageFilterProps) => (
-  <ToggleButtonGroup exclusive value={filter} size="small">
+  <ToggleButtonGroup
+    aria-label="Filtrar mensagens"
+    exclusive
+    value={filter}
+    size="small"
+  >
     <ToggleButton value="all" onClick={() => onFilterChange('all')}>
       Todas
     </ToggleButton>

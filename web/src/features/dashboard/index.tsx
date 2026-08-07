@@ -30,6 +30,7 @@ export default function Dashboard() {
 
       <Paper elevation={0} className="overflow-hidden rounded-lg border border-slate-200 bg-white">
         <Tabs
+          aria-label="Seções do dashboard"
           value={activeTab}
           onChange={changeTab}
           variant="scrollable"
