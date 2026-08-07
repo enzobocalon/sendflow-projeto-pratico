@@ -28,12 +28,14 @@ export const ContactsList = ({
 }: ContactsListProps) => {
   const {
     closeDeleteModal,
+    clearDeleteModal,
     confirmDeleteContact,
     contactToDelete,
     contacts,
     error,
     getConnectionName,
     hasMore,
+    isDeleteDialogOpen,
     isDeleting,
     isLoading,
     isLoadingMore,
@@ -146,8 +148,9 @@ export const ContactsList = ({
 
       <DeleteDialog
         title="Excluir contato?"
-        open={Boolean(contactToDelete)}
+        open={isDeleteDialogOpen}
         onClose={closeDeleteModal}
+        onExited={clearDeleteModal}
         onConfirm={confirmDeleteContact}
         isLoading={isDeleting}
         message={`Tem certeza que deseja excluir o contato ${contactToDelete?.name}? Esta ação não pode ser desfeita.`}

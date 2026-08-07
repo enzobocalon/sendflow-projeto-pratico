@@ -16,6 +16,7 @@ export const useContactsList = ({
   onDeletedEditingContact,
 }: UseContactsListParams) => {
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [error, setError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -49,6 +50,7 @@ export const useContactsList = ({
   const requestDeleteContact = (contact: Contact) => {
     setError("");
     setContactToDelete(contact);
+    setIsDeleteDialogOpen(true);
   };
 
   const closeDeleteModal = () => {
@@ -56,6 +58,10 @@ export const useContactsList = ({
       return;
     }
 
+    setIsDeleteDialogOpen(false);
+  };
+
+  const clearDeleteModal = () => {
     setContactToDelete(null);
   };
 
@@ -74,7 +80,7 @@ export const useContactsList = ({
         onDeletedEditingContact();
       }
 
-      closeDeleteModal();
+      setIsDeleteDialogOpen(false);
     } catch (error) {
       setError(
         getFirebaseErrorMessage(error, "Não foi possível excluir o contato."),
@@ -86,12 +92,14 @@ export const useContactsList = ({
 
   return {
     closeDeleteModal,
+    clearDeleteModal,
     confirmDeleteContact,
     contactToDelete,
     contacts,
     error: error || contactsError,
     getConnectionName,
     hasMore,
+    isDeleteDialogOpen,
     isDeleting,
     isLoading: isLoadingContacts,
     isLoadingMore,

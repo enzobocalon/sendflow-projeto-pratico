@@ -37,6 +37,7 @@ export const useConnectionsList = ({
 }: UseConnectionsListParams) => {
   const [connectionToDelete, setConnectionToDelete] =
     useState<Connection | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [error, setError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -57,6 +58,7 @@ export const useConnectionsList = ({
   const requestDeleteConnection = (connection: Connection) => {
     setError("");
     setConnectionToDelete(connection);
+    setIsDeleteDialogOpen(true);
   };
 
   const closeDeleteModal = () => {
@@ -64,6 +66,10 @@ export const useConnectionsList = ({
       return;
     }
 
+    setIsDeleteDialogOpen(false);
+  };
+
+  const clearDeleteModal = () => {
     setConnectionToDelete(null);
   };
 
@@ -87,13 +93,13 @@ export const useConnectionsList = ({
         onDeletedEditingConnection();
       }
 
-      setConnectionToDelete(null);
+      setIsDeleteDialogOpen(false);
     } catch (error) {
       const deleteErrorMessage = getDeleteConnectionErrorMessage(error);
       setError(deleteErrorMessage);
 
       if (deleteErrorMessage !== "Não foi possível excluir a conexão.") {
-        setConnectionToDelete(null);
+        setIsDeleteDialogOpen(false);
       }
     } finally {
       setIsDeleting(false);
@@ -102,10 +108,12 @@ export const useConnectionsList = ({
 
   return {
     closeDeleteModal,
+    clearDeleteModal,
     confirmDeleteConnection,
     connectionToDelete,
     connections: filteredConnections,
     error: error || connectionsError,
+    isDeleteDialogOpen,
     isDeleting,
     isLoading: isLoadingConnections,
     requestDeleteConnection,
