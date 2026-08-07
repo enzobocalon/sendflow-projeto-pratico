@@ -5,16 +5,12 @@ import {
   Alert,
   Button,
   CircularProgress,
-  FormControl,
-  FormHelperText,
-  InputLabel,
-  MenuItem,
-  Select,
   Stack,
   TextField,
 } from "@mui/material";
-import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import { Controller } from "react-hook-form";
+import { ConnectionSelectField } from "../../../components/ConnectionSelectField";
+import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Contact } from "../types";
 import { useContactForm } from "./useContactForm";
 import { formatPhone, sanitizePhone } from "../../../utils/formatPhone";
@@ -45,13 +41,6 @@ export const ContactForm = ({
     onSaved,
   });
   const hasConnections = connections.length > 0;
-  const connectionHelperText =
-    errors.connectionId?.message ??
-    connectionsError ??
-    (!isLoadingConnections && !hasConnections
-      ? "Cadastre uma conexão antes de criar contatos."
-      : undefined);
-  const hasConnectionError = Boolean(errors.connectionId || connectionsError);
 
   return (
     <section className="rounded-lg border border-slate-200 p-5">
@@ -104,38 +93,15 @@ export const ContactForm = ({
           name="connectionId"
           control={control}
           render={({ field }) => (
-            <FormControl fullWidth error={Boolean(errors.connectionId)}>
-              <InputLabel id="contact-connection-label">Conexão</InputLabel>
-
-              <Select
-                {...field}
-                labelId="contact-connection-label"
-                label="Conexão"
-                disabled={isLoadingConnections || !hasConnections}
-              >
-                {isLoadingConnections && (
-                  <MenuItem value="" disabled>
-                    Carregando conexões...
-                  </MenuItem>
-                )}
-                {!isLoadingConnections && !hasConnections && (
-                  <MenuItem value="" disabled>
-                    Nenhuma conexão cadastrada
-                  </MenuItem>
-                )}
-                {connections.map((connection) => (
-                  <MenuItem key={connection.id} value={connection.id}>
-                    {connection.name}
-                  </MenuItem>
-                ))}
-              </Select>
-
-              {connectionHelperText && (
-                <FormHelperText error={hasConnectionError}>
-                  {connectionHelperText}
-                </FormHelperText>
-              )}
-            </FormControl>
+            <ConnectionSelectField
+              connections={connections}
+              connectionsError={connectionsError}
+              emptyMessage="Cadastre uma conexão antes de criar contatos."
+              field={field}
+              fieldError={errors.connectionId?.message}
+              labelId="contact-connection-label"
+              isLoadingConnections={isLoadingConnections}
+            />
           )}
         />
 

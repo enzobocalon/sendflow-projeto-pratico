@@ -9,9 +9,14 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { EmptyState } from "../../../components/EmptyState";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Connection } from "../types";
 import { DeleteDialog } from "../../../components/DeleteDialog";
+import {
+  getConnectionsListEmptyState,
+  getConnectionsListSubtitle,
+} from "./connection-list-copy";
 import { useConnectionsList } from "./useConnectionsList";
 
 type ConnectionsListProps = {
@@ -53,15 +58,14 @@ export const ConnectionsList = ({
     onDeletedEditingConnection,
   });
 
-  const subTitle =
-    totalConnections === 0
-      ? "Nenhuma conexão encontrada"
-      : `${totalConnections} conex${totalConnections === 1 ? "ão" : "ões"} cadastrada${totalConnections === 1 ? "" : "s"}.`;
+  const hasSearch = Boolean(searchTerm.trim());
+  const subtitle = getConnectionsListSubtitle(totalConnections);
+  const emptyState = getConnectionsListEmptyState(hasSearch);
 
   return (
     <section>
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <SectionTitle title="Lista de conexões" subtitle={subTitle} />
+        <SectionTitle title="Lista de conexões" subtitle={subtitle} />
         <TextField
           size="small"
           label="Buscar conexão"
@@ -85,18 +89,7 @@ export const ConnectionsList = ({
       ) : (
         <Stack spacing={1.5}>
           {connections.length === 0 && (
-            <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center">
-              <Typography className="font-medium text-slate-800">
-                {searchTerm.trim()
-                  ? "Nenhuma conexão encontrada"
-                  : "Nenhuma conexão cadastrada"}
-              </Typography>
-              <Typography className="mt-1 text-sm text-slate-500">
-                {searchTerm.trim()
-                  ? "Tente buscar por outro nome de conexão."
-                  : "Use o cadastro ao lado para criar a primeira conexão e começar a organizar contatos e mensagens."}
-              </Typography>
-            </div>
+            <EmptyState {...emptyState} />
           )}
 
           {connections.map((connection) => (
