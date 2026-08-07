@@ -45,6 +45,13 @@ export const ContactForm = ({
     onSaved,
   });
   const hasConnections = connections.length > 0;
+  const connectionHelperText =
+    errors.connectionId?.message ??
+    connectionsError ??
+    (!isLoadingConnections && !hasConnections
+      ? "Cadastre uma conexão antes de criar contatos."
+      : undefined);
+  const hasConnectionError = Boolean(errors.connectionId || connectionsError);
 
   return (
     <section className="rounded-lg border border-slate-200 p-5">
@@ -123,14 +130,10 @@ export const ContactForm = ({
                 ))}
               </Select>
 
-              {errors.connectionId && (
-                <FormHelperText>{errors.connectionId.message}</FormHelperText>
-              )}
-              {!errors.connectionId && connectionsError && (
-                <FormHelperText error>{connectionsError}</FormHelperText>
-              )}
-              {!errors.connectionId && !connectionsError && !isLoadingConnections && !hasConnections && (
-                <FormHelperText>Cadastre uma conexão antes de criar contatos.</FormHelperText>
+              {connectionHelperText && (
+                <FormHelperText error={hasConnectionError}>
+                  {connectionHelperText}
+                </FormHelperText>
               )}
             </FormControl>
           )}
