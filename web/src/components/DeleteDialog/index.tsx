@@ -16,6 +16,7 @@ export type DeleteDialogProps = {
   message: string;
   onConfirm: () => void;
   isLoading: boolean;
+  onExited?: () => void;
 };
 
 export const DeleteDialog = ({
@@ -25,6 +26,7 @@ export const DeleteDialog = ({
   onConfirm,
   isLoading,
   message,
+  onExited,
 }: DeleteDialogProps) => {
   const titleId = useId();
   const descriptionId = useId();
@@ -35,6 +37,11 @@ export const DeleteDialog = ({
       onClose={onClose}
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
+      slotProps={{
+        transition: {
+          onExited,
+        },
+      }}
     >
       <DialogTitle id={titleId}>{title}</DialogTitle>
       <DialogContent>

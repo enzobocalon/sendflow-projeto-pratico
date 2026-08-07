@@ -33,10 +33,12 @@ export const ConnectionsList = ({
 }: ConnectionsListProps) => {
   const {
     closeDeleteModal,
+    clearDeleteModal,
     confirmDeleteConnection,
     connectionToDelete,
     connections,
     error,
+    isDeleteDialogOpen,
     isDeleting,
     isLoading,
     requestDeleteConnection,
@@ -138,8 +140,9 @@ export const ConnectionsList = ({
 
       <DeleteDialog
         title="Excluir conexão?"
-        open={Boolean(connectionToDelete)}
+        open={isDeleteDialogOpen}
         onClose={closeDeleteModal}
+        onExited={clearDeleteModal}
         onConfirm={confirmDeleteConnection}
         isLoading={isDeleting}
         message={`Tem certeza que deseja excluir a conexão "${connectionToDelete?.name}"? Esta ação não pode ser desfeita.`}
