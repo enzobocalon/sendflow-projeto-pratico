@@ -133,7 +133,6 @@ export const ConnectionsList = ({
               </div>
             </Paper>
           ))}
-
         </Stack>
       )}
 
@@ -141,7 +140,6 @@ export const ConnectionsList = ({
         title="Excluir conexão?"
         open={Boolean(connectionToDelete)}
         onClose={closeDeleteModal}
-        onCancel={closeDeleteModal}
         onConfirm={confirmDeleteConnection}
         isLoading={isDeleting}
         message={`Tem certeza que deseja excluir a conexão "${connectionToDelete?.name}"? Esta ação não pode ser desfeita.`}

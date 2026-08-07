@@ -112,9 +112,7 @@ export const ContactsList = ({
                   aria-label="Editar contato"
                   size="small"
                   onClick={() => editContact(contact)}
-                  color={
-                    editingContact?.id === contact.id ? "primary" : "default"
-                  }
+                  color={editingContact?.id === contact.id ? "primary" : "default"}
                   disabled={isDeleting}
                 >
                   <EditOutlinedIcon fontSize="small" />
@@ -150,7 +148,6 @@ export const ContactsList = ({
         title="Excluir contato?"
         open={Boolean(contactToDelete)}
         onClose={closeDeleteModal}
-        onCancel={closeDeleteModal}
         onConfirm={confirmDeleteContact}
         isLoading={isDeleting}
         message={`Tem certeza que deseja excluir o contato ${contactToDelete?.name}? Esta ação não pode ser desfeita.`}

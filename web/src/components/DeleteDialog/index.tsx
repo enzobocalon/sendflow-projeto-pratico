@@ -1,12 +1,13 @@
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
   Button,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@mui/material";
+import { useId } from "react";
 
 export type DeleteDialogProps = {
   title: string;
@@ -14,28 +15,33 @@ export type DeleteDialogProps = {
   onClose: () => void;
   message: string;
   onConfirm: () => void;
-  onCancel: () => void;
   isLoading: boolean;
-}
+};
 
-export const DeleteDialog = ({ title, open, onCancel, onClose, onConfirm, isLoading, message }: DeleteDialogProps) => {
+export const DeleteDialog = ({
+  title,
+  open,
+  onClose,
+  onConfirm,
+  isLoading,
+  message,
+}: DeleteDialogProps) => {
+  const titleId = useId();
+  const descriptionId = useId();
+
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      aria-labelledby="delete-contact-title"
-      aria-describedby="delete-contact-description"
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
     >
-      <DialogTitle id="delete-contact-title">
-        {title}
-      </DialogTitle>
+      <DialogTitle id={titleId}>{title}</DialogTitle>
       <DialogContent>
-        <DialogContentText id="delete-contact-description">
-          {message}
-        </DialogContentText>
+        <DialogContentText id={descriptionId}>{message}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel} disabled={isLoading}>
+        <Button onClick={onClose} disabled={isLoading}>
           Cancelar
         </Button>
         <Button
@@ -43,9 +49,7 @@ export const DeleteDialog = ({ title, open, onCancel, onClose, onConfirm, isLoad
           variant="contained"
           onClick={onConfirm}
           disabled={isLoading}
-          startIcon={
-            isLoading ? <CircularProgress color="inherit" size={18} /> : null
-          }
+          startIcon={isLoading ? <CircularProgress color="inherit" size={18} /> : null}
         >
           {isLoading ? "Excluindo..." : "Excluir"}
         </Button>
