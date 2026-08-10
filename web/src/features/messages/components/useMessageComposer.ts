@@ -2,7 +2,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { useConnectionsOptions } from "../../../hooks/useConnectionsOptions";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { messageSchema } from "../schemas/messageSchema";
-import type { Message, MessageFormValues } from "../types";
+import type { Message, MessageFormValues, MessageStatus } from "../types";
 import { useContactsOptions } from "../../../hooks/useContactsOptions";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../../hooks/useAuth";
@@ -63,14 +63,7 @@ export function useMessageComposer({
     setValue,
     trigger,
   } = useForm<MessageFormValues>({
-    defaultValues: {
-      connectionId: "",
-      contactIds: [],
-      content: "",
-      scheduledDate: "",
-      scheduledTime: "",
-      sendMode: "now",
-    },
+    defaultValues: getMessageFormValues(null),
     resolver: zodResolver(messageSchema),
   });
 
@@ -124,24 +117,22 @@ export function useMessageComposer({
       const scheduledAt = isScheduled
         ? new Date(`${values.scheduledDate}T${values.scheduledTime}`)
         : undefined;
+      const status: MessageStatus = isScheduled ? "scheduled" : "sent";
+      const messageData = {
+        connectionId: values.connectionId,
+        contactIds: values.contactIds,
+        content: values.content,
+        scheduledAt,
+        status,
+      };
 
       if (editingMessage) {
         await updateMessage({
-          connectionId: values.connectionId,
-          contactIds: values.contactIds,
-          content: values.content,
+          ...messageData,
           messageId: editingMessage.id,
-          scheduledAt,
-          status: isScheduled ? "scheduled" : "sent",
         });
       } else {
-        await createMessage({
-          connectionId: values.connectionId,
-          contactIds: values.contactIds,
-          content: values.content,
-          scheduledAt,
-          status: isScheduled ? "scheduled" : "sent",
-        });
+        await createMessage(messageData);
       }
 
       reset();
@@ -223,14 +214,12 @@ export function useMessageComposer({
     errors,
     isSubmitting,
     formError,
-    selectedContactIds,
     selectedContactsCount: selectedContactIds.length,
     selectedConnectionId,
     sendMode,
     success,
     cancelScheduledMode,
     enableScheduledMode,
-    reset,
     setContactSearchTerm,
     submitScheduled,
     submitNow,
