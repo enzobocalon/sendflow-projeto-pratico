@@ -56,7 +56,9 @@ export const DeleteDialog = ({
           variant="contained"
           onClick={onConfirm}
           disabled={isLoading}
-          startIcon={isLoading ? <CircularProgress color="inherit" size={18} /> : null}
+          startIcon={
+            isLoading ? <CircularProgress color="inherit" size={18} /> : null
+          }
         >
           {isLoading ? "Excluindo..." : "Excluir"}
         </Button>

@@ -7,7 +7,8 @@ export const MAX_MESSAGE_CONTACTS = 100;
 
 type MessageStatus = "sent" | "scheduled";
 
-export const normalizeSearchText = (value: string) => value.trim().toLowerCase();
+export const normalizeSearchText = (value: string) =>
+  value.trim().toLowerCase();
 
 export const sanitizePhone = (value: string) => value.replace(/\D/g, "");
 

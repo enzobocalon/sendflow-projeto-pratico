@@ -1,0 +1,9 @@
+**/.env*
+.firebase
+.git
+**/dist
+functions/lib
+node_modules
+pnpm-lock.yaml
+firestore.rules
+.firebaserc

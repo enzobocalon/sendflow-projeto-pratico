@@ -116,12 +116,7 @@ export const AuthPage = () => {
 
           <Divider className="my-6" />
 
-          <Button
-            type="button"
-            variant="text"
-            fullWidth
-            onClick={switchMode}
-          >
+          <Button type="button" variant="text" fullWidth onClick={switchMode}>
             {isRegistering ? "Já tenho uma conta" : "Criar uma conta"}
           </Button>
         </Paper>

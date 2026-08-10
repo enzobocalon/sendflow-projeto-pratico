@@ -1,5 +1,8 @@
 import type { MessageStatus } from "../features/messages/types";
-import { callFirebaseFunction, type MutationResponse } from "./firebase-callable";
+import {
+  callFirebaseFunction,
+  type MutationResponse,
+} from "./firebase-callable";
 
 type SaveMessageBaseParams = {
   connectionId: string;
@@ -64,6 +67,9 @@ export const updateMessage = ({
   });
 
 export const deleteMessage = (messageId: string) =>
-  callFirebaseFunction<{ messageId: string }, MutationResponse>("deleteMessage", {
-    messageId,
-  });
+  callFirebaseFunction<{ messageId: string }, MutationResponse>(
+    "deleteMessage",
+    {
+      messageId,
+    },
+  );

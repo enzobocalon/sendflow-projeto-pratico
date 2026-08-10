@@ -29,12 +29,11 @@ export const ConnectionForm = ({
     isSubmitting,
     success,
     submitConnection,
-  } =
-    useConnectionForm({
-      connectionsCount,
-      editingConnection,
-      onSaved,
-    });
+  } = useConnectionForm({
+    connectionsCount,
+    editingConnection,
+    onSaved,
+  });
 
   return (
     <section className="rounded-lg border border-slate-200 p-5">
@@ -66,7 +65,8 @@ export const ConnectionForm = ({
 
         {hasReachedConnectionsLimit && (
           <Alert severity="warning">
-            Limite de 100 conexões atingido. Exclua uma conexão para cadastrar outra.
+            Limite de 100 conexões atingido. Exclua uma conexão para cadastrar
+            outra.
           </Alert>
         )}
 

@@ -1,4 +1,7 @@
-import { callFirebaseFunction, type MutationResponse } from "./firebase-callable";
+import {
+  callFirebaseFunction,
+  type MutationResponse,
+} from "./firebase-callable";
 
 type SaveContactParams = {
   connectionId: string;
@@ -13,7 +16,11 @@ type UpdateContactParams = {
   phone: string;
 };
 
-export const createContact = ({ connectionId, name, phone }: SaveContactParams) =>
+export const createContact = ({
+  connectionId,
+  name,
+  phone,
+}: SaveContactParams) =>
   callFirebaseFunction<SaveContactParams, MutationResponse>("createContact", {
     connectionId,
     name,
@@ -34,6 +41,9 @@ export const updateContact = ({
   });
 
 export const deleteContact = (contactId: string) =>
-  callFirebaseFunction<{ contactId: string }, MutationResponse>("deleteContact", {
-    contactId,
-  });
+  callFirebaseFunction<{ contactId: string }, MutationResponse>(
+    "deleteContact",
+    {
+      contactId,
+    },
+  );

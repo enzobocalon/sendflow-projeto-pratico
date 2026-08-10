@@ -1,4 +1,7 @@
-import { callFirebaseFunction, type MutationResponse } from "./firebase-callable";
+import {
+  callFirebaseFunction,
+  type MutationResponse,
+} from "./firebase-callable";
 
 type SaveConnectionParams = {
   name: string;
@@ -10,17 +13,29 @@ type UpdateConnectionParams = {
 };
 
 export const createConnection = ({ name }: SaveConnectionParams) =>
-  callFirebaseFunction<SaveConnectionParams, MutationResponse>("createConnection", {
-    name,
-  });
+  callFirebaseFunction<SaveConnectionParams, MutationResponse>(
+    "createConnection",
+    {
+      name,
+    },
+  );
 
-export const updateConnection = ({ connectionId, name }: UpdateConnectionParams) =>
-  callFirebaseFunction<UpdateConnectionParams, MutationResponse>("updateConnection", {
-    connectionId,
-    name,
-  });
+export const updateConnection = ({
+  connectionId,
+  name,
+}: UpdateConnectionParams) =>
+  callFirebaseFunction<UpdateConnectionParams, MutationResponse>(
+    "updateConnection",
+    {
+      connectionId,
+      name,
+    },
+  );
 
 export const deleteConnection = (connectionId: string) =>
-  callFirebaseFunction<{ connectionId: string }, MutationResponse>("deleteConnection", {
-    connectionId,
-  });
+  callFirebaseFunction<{ connectionId: string }, MutationResponse>(
+    "deleteConnection",
+    {
+      connectionId,
+    },
+  );

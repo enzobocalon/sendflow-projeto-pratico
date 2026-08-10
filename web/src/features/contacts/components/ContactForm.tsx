@@ -1,12 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
-import {
-  Button,
-  CircularProgress,
-  Stack,
-  TextField,
-} from "@mui/material";
+import { Button, CircularProgress, Stack, TextField } from "@mui/material";
 import { FeedbackSnackbar } from "../../../components/FeedbackSnackbar";
 import { Controller } from "react-hook-form";
 import { ConnectionSelectField } from "../../../components/ConnectionSelectField";
@@ -82,7 +77,9 @@ export const ContactForm = ({
             <TextField
               {...field}
               value={formatPhone(field.value)}
-              onChange={(event) => field.onChange(sanitizePhone(event.target.value))}
+              onChange={(event) =>
+                field.onChange(sanitizePhone(event.target.value))
+              }
               label="Telefone"
               error={Boolean(errors.phone)}
               helperText={errors.phone?.message}

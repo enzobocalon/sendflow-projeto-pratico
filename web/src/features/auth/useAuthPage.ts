@@ -36,7 +36,9 @@ const getErrorMessage = (error: unknown) => {
   if (typeof error === "object" && error && "code" in error) {
     const code = String(error.code);
 
-    return authErrorMessages[code] ?? "Não foi possível concluir a autenticação.";
+    return (
+      authErrorMessages[code] ?? "Não foi possível concluir a autenticação."
+    );
   }
 
   return "Não foi possível concluir a autenticação.";

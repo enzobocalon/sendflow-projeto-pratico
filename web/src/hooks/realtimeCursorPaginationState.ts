@@ -1,7 +1,4 @@
-import type {
-  DocumentData,
-  QueryDocumentSnapshot,
-} from "firebase/firestore";
+import type { DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
 
 export type Cursor = QueryDocumentSnapshot<DocumentData> | null;
 
@@ -47,13 +44,12 @@ export const createPaginationState = <Item>(
   scope,
 });
 
-export const getStateForScope = <Item,>(
+export const getStateForScope = <Item>(
   state: PaginationState<Item>,
   scope: PaginationScope,
-) =>
-  state.scope === scope ? state : createPaginationState<Item>(scope);
+) => (state.scope === scope ? state : createPaginationState<Item>(scope));
 
-export const readLoadedPage = <Item,>(
+export const readLoadedPage = <Item>(
   documents: QueryDocumentSnapshot<DocumentData>[],
   pageSize: number,
   mapDocument: (document: QueryDocumentSnapshot<DocumentData>) => Item,
@@ -67,7 +63,7 @@ export const readLoadedPage = <Item,>(
   };
 };
 
-export const applyLoadedPage = <Item,>(
+export const applyLoadedPage = <Item>(
   state: PaginationState<Item>,
   scope: PaginationScope,
   page: number,
@@ -100,7 +96,7 @@ export const applyLoadedPage = <Item,>(
   };
 };
 
-export const returnFromEmptyPage = <Item,>(
+export const returnFromEmptyPage = <Item>(
   state: PaginationState<Item>,
   scope: PaginationScope,
   emptyPage: number,
@@ -110,7 +106,7 @@ export const returnFromEmptyPage = <Item,>(
   requestedPage: Math.max(1, emptyPage - 1),
 });
 
-export const applyListenerError = <Item,>(
+export const applyListenerError = <Item>(
   state: PaginationState<Item>,
   scope: PaginationScope,
   requestedPage: number,
@@ -125,7 +121,7 @@ export const applyListenerError = <Item,>(
   };
 };
 
-export const requestPreviousPage = <Item,>(
+export const requestPreviousPage = <Item>(
   state: PaginationState<Item>,
   scope: PaginationScope,
 ): PaginationState<Item> => {
@@ -142,7 +138,7 @@ export const requestPreviousPage = <Item,>(
   };
 };
 
-export const requestNextPage = <Item,>(
+export const requestNextPage = <Item>(
   state: PaginationState<Item>,
   scope: PaginationScope,
 ): PaginationState<Item> => {

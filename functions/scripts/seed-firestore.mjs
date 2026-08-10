@@ -105,19 +105,17 @@ const assertSafeTarget = async (db, userId, prefix) => {
     ),
   );
 
-  const unexpectedDocuments = snapshots.flatMap(
-    (snapshot, collectionIndex) => {
-      const expectedIds = new Set(
-        Array.from({ length: ITEMS_PER_COLLECTION }, (_, index) =>
-          createSeedDocumentId(prefix, resources[collectionIndex], index + 1),
-        ),
-      );
+  const unexpectedDocuments = snapshots.flatMap((snapshot, collectionIndex) => {
+    const expectedIds = new Set(
+      Array.from({ length: ITEMS_PER_COLLECTION }, (_, index) =>
+        createSeedDocumentId(prefix, resources[collectionIndex], index + 1),
+      ),
+    );
 
-      return snapshot.docs
-        .filter((document) => !expectedIds.has(document.id))
-        .map((document) => `${collections[collectionIndex]}/${document.id}`);
-    },
-  );
+    return snapshot.docs
+      .filter((document) => !expectedIds.has(document.id))
+      .map((document) => `${collections[collectionIndex]}/${document.id}`);
+  });
 
   if (unexpectedDocuments.length > 0) {
     const examples = unexpectedDocuments.slice(0, 3).join(", ");
@@ -192,7 +190,9 @@ const writeSeedDocuments = async (db, userId, prefix) => {
       createdAt,
       recipientsCount: 1,
       scheduledAt: isScheduled
-        ? createTimestamp(now + 7 * DAY_IN_MILLISECONDS + index * MINUTE_IN_MILLISECONDS)
+        ? createTimestamp(
+            now + 7 * DAY_IN_MILLISECONDS + index * MINUTE_IN_MILLISECONDS,
+          )
         : null,
       sentAt: isScheduled ? null : createdAt,
       status: isScheduled ? "scheduled" : "sent",
@@ -212,7 +212,9 @@ const updateUsage = async (db, userId) => {
   await usageRef.set(
     {
       ...usage,
-      ...(usageSnapshot.exists ? {} : { createdAt: FieldValue.serverTimestamp() }),
+      ...(usageSnapshot.exists
+        ? {}
+        : { createdAt: FieldValue.serverTimestamp() }),
       updatedAt: FieldValue.serverTimestamp(),
       userId,
     },

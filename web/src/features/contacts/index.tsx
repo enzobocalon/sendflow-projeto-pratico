@@ -3,11 +3,7 @@ import { ContactsList } from "./components/ContactList";
 import { useContacts } from "./useContacts";
 
 export const ContactsPage = () => {
-  const {
-    editContact,
-    editingContact,
-    cancelEditContact,
-  } = useContacts();
+  const { editContact, editingContact, cancelEditContact } = useContacts();
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">

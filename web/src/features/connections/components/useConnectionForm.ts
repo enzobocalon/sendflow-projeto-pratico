@@ -82,7 +82,10 @@ export const useConnectionForm = ({
       );
       onSaved();
     } catch (error) {
-      if (error instanceof Error && error.message === "connections-limit-reached") {
+      if (
+        error instanceof Error &&
+        error.message === "connections-limit-reached"
+      ) {
         setError(`Limite de ${MAX_CONNECTIONS} conexões atingido.`);
         return;
       }

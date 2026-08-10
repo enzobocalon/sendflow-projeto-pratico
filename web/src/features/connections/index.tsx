@@ -1,6 +1,6 @@
-import { ConnectionForm } from './components/ConnectionForm'
-import { ConnectionsList } from './components/ConnectionsList'
-import { useConnections } from './useConnections'
+import { ConnectionForm } from "./components/ConnectionForm";
+import { ConnectionsList } from "./components/ConnectionsList";
+import { useConnections } from "./useConnections";
 
 export const ConnectionsPage = () => {
   const {
@@ -31,4 +31,4 @@ export const ConnectionsPage = () => {
       />
     </div>
   );
-}
+};

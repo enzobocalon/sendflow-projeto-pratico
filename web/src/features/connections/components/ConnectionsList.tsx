@@ -92,9 +92,7 @@ export const ConnectionsList = ({
         </div>
       ) : (
         <Stack spacing={1.5}>
-          {connections.length === 0 && (
-            <EmptyState {...emptyState} />
-          )}
+          {connections.length === 0 && <EmptyState {...emptyState} />}
 
           {connections.map((connection) => (
             <Paper

@@ -16,4 +16,4 @@ export type ContactFormValues = {
   name: string;
   phone: string;
   connectionId: string;
-}
+};

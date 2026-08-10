@@ -125,9 +125,7 @@ export const ContactsList = ({
                     size="small"
                     onClick={() => editContact(contact)}
                     color={
-                      editingContact?.id === contact.id
-                        ? "primary"
-                        : "default"
+                      editingContact?.id === contact.id ? "primary" : "default"
                     }
                     disabled={isDeleting || isPageChanging}
                   >

@@ -111,9 +111,9 @@ export const useConnectionsList = ({
   };
 
   const clearDeleteFeedback = () => {
-      setDeleteError("");
-      setDeleteSuccess("");
-    }
+    setDeleteError("");
+    setDeleteSuccess("");
+  };
 
   return {
     clearDeleteFeedback,

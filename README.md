@@ -37,11 +37,11 @@ sendflow/
 
 Todas as coleções ficam na raiz do Firestore, isoladas por `userId`:
 
-| Coleção       | Descrição                                              |
-| ------------- | ------------------------------------------------------ |
-| `connections` | Conexões do usuário                                    |
-| `contacts`    | Contatos vinculados a uma conexão                      |
-| `messages`    | Mensagens criadas e agendadas                          |
+| Coleção       | Descrição                                                            |
+| ------------- | -------------------------------------------------------------------- |
+| `connections` | Conexões do usuário                                                  |
+| `contacts`    | Contatos vinculados a uma conexão                                    |
+| `messages`    | Mensagens criadas e agendadas                                        |
 | `usage`       | Métricas pré-computadas por usuário para o dashboard (coleção extra) |
 
 ## Segurança

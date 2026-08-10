@@ -83,10 +83,7 @@ export function PaginatedContent({
         )}
       </div>
 
-      <PaginationTransition
-        isLoading={isLoading}
-        loadingLabel={loadingLabel}
-      >
+      <PaginationTransition isLoading={isLoading} loadingLabel={loadingLabel}>
         {children}
       </PaginationTransition>
 

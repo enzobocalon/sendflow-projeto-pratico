@@ -1,39 +1,50 @@
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
-import LogoutIcon from '@mui/icons-material/Logout'
-import { AppBar, Avatar, Box, Container, IconButton, Menu, MenuItem, Stack, Toolbar, Typography } from '@mui/material'
-import { useState } from 'react'
-import type { ReactNode } from 'react'
-import type { User } from 'firebase/auth'
-import { useAuth } from '../../hooks/useAuth'
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import LogoutIcon from "@mui/icons-material/Logout";
+import {
+  AppBar,
+  Avatar,
+  Box,
+  Container,
+  IconButton,
+  Menu,
+  MenuItem,
+  Stack,
+  Toolbar,
+  Typography,
+} from "@mui/material";
+import { useState } from "react";
+import type { ReactNode } from "react";
+import type { User } from "firebase/auth";
+import { useAuth } from "../../hooks/useAuth";
 
 type PrivateLayoutProps = {
-  children: ReactNode
-  user: User
-}
+  children: ReactNode;
+  user: User;
+};
 
 const getInitial = (user: User) => {
-  const label = user.displayName || user.email || 'S'
-  return label.slice(0, 1).toUpperCase()
-}
+  const label = user.displayName || user.email || "S";
+  return label.slice(0, 1).toUpperCase();
+};
 
 export const PrivateLayout = ({ children, user }: PrivateLayoutProps) => {
-  const { logout } = useAuth()
-  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
+  const { logout } = useAuth();
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
 
-  const menuOpen = Boolean(menuAnchor)
+  const menuOpen = Boolean(menuAnchor);
 
   const openMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setMenuAnchor(event.currentTarget)
-  }
+    setMenuAnchor(event.currentTarget);
+  };
 
   const closeMenu = () => {
-    setMenuAnchor(null)
-  }
+    setMenuAnchor(null);
+  };
 
   const handleLogout = async () => {
-    closeMenu()
-    await logout()
-  }
+    closeMenu();
+    await logout();
+  };
 
   return (
     <Box className="min-h-screen w-full bg-slate-100 text-slate-950">
@@ -45,7 +56,11 @@ export const PrivateLayout = ({ children, user }: PrivateLayoutProps) => {
       >
         <Toolbar className="gap-4">
           <div className="flex flex-1 items-center gap-2">
-            <Typography component="h1" variant="h6" className="font-semibold text-slate-900">
+            <Typography
+              component="h1"
+              variant="h6"
+              className="font-semibold text-slate-900"
+            >
               Sendflow
             </Typography>
           </div>
@@ -60,7 +75,7 @@ export const PrivateLayout = ({ children, user }: PrivateLayoutProps) => {
 
             <Box className="hidden text-left sm:block">
               <Typography className="text-sm font-medium leading-5 text-slate-800">
-                {user.displayName || 'Cliente'}
+                {user.displayName || "Cliente"}
               </Typography>
               <Typography className="text-xs leading-4 text-slate-500">
                 {user.email}
@@ -68,8 +83,8 @@ export const PrivateLayout = ({ children, user }: PrivateLayoutProps) => {
             </Box>
 
             <IconButton
-              aria-controls={menuOpen ? 'user-menu' : undefined}
-              aria-expanded={menuOpen ? 'true' : undefined}
+              aria-controls={menuOpen ? "user-menu" : undefined}
+              aria-expanded={menuOpen ? "true" : undefined}
               aria-haspopup="menu"
               aria-label="Abrir menu do usuário"
               onClick={openMenu}
@@ -86,8 +101,8 @@ export const PrivateLayout = ({ children, user }: PrivateLayoutProps) => {
             open={menuOpen}
             onClose={closeMenu}
             disableScrollLock
-            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+            transformOrigin={{ horizontal: "right", vertical: "top" }}
           >
             <MenuItem onClick={handleLogout}>
               <LogoutIcon className="mr-2 text-slate-500" fontSize="small" />
@@ -101,5 +116,5 @@ export const PrivateLayout = ({ children, user }: PrivateLayoutProps) => {
         {children}
       </Container>
     </Box>
-  )
-}
+  );
+};

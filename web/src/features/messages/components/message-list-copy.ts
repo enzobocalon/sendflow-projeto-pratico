@@ -13,7 +13,10 @@ const emptyStateByFilter = {
     title: "Nenhuma mensagem enviada encontrada.",
     description: "Envie uma mensagem para que ela apareça neste filtro.",
   },
-} satisfies Record<MessageStatus | "all", { title: string; description: string }>;
+} satisfies Record<
+  MessageStatus | "all",
+  { title: string; description: string }
+>;
 
 export const getMessagesListEmptyState = (filter: MessageStatus | "all") =>
   emptyStateByFilter[filter];

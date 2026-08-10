@@ -5,9 +5,14 @@
   "scripts": {
     "dev": "pnpm --filter web dev",
     "build": "pnpm --filter web build && pnpm --filter functions build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "lint": "pnpm --filter web lint",
     "preview": "pnpm --filter web preview",
     "functions:build": "pnpm --filter functions build",
     "seed:firestore": "node functions/scripts/seed-firestore.mjs"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.6"
   }
 }

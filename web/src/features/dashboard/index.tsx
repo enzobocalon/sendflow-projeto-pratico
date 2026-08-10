@@ -1,34 +1,37 @@
-import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined'
-import MailOutlineIcon from '@mui/icons-material/MailOutline'
-import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined'
-import { Paper, Stack, Tab, Tabs } from '@mui/material'
-import { useState } from 'react'
-import { ContactsPage } from '../contacts'
-import { ConnectionsPage } from '../connections'
-import { MessagesPage } from '../messages'
-import { PageHeader } from './components/PageHeader'
-import { WorkflowSummary } from './components/WorkflowSummary'
-import type { DashboardTab, TTabs } from './types'
+import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
+import { Paper, Stack, Tab, Tabs } from "@mui/material";
+import { useState } from "react";
+import { ContactsPage } from "../contacts";
+import { ConnectionsPage } from "../connections";
+import { MessagesPage } from "../messages";
+import { PageHeader } from "./components/PageHeader";
+import { WorkflowSummary } from "./components/WorkflowSummary";
+import type { DashboardTab, TTabs } from "./types";
 
 const tabs: TTabs[] = [
-  { icon: <GroupsOutlinedIcon />, label: 'Conexões', value: 'connections' },
-  { icon: <PhoneOutlinedIcon />, label: 'Contatos', value: 'contacts' },
-  { icon: <MailOutlineIcon />, label: 'Mensagens', value: 'messages' },
+  { icon: <GroupsOutlinedIcon />, label: "Conexões", value: "connections" },
+  { icon: <PhoneOutlinedIcon />, label: "Contatos", value: "contacts" },
+  { icon: <MailOutlineIcon />, label: "Mensagens", value: "messages" },
 ];
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<DashboardTab>('connections')
+  const [activeTab, setActiveTab] = useState<DashboardTab>("connections");
 
   const changeTab = (_event: unknown, value: DashboardTab) => {
-    setActiveTab(value)
-  }
+    setActiveTab(value);
+  };
 
   return (
     <Stack spacing={3}>
       <PageHeader />
       <WorkflowSummary />
 
-      <Paper elevation={0} className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+      <Paper
+        elevation={0}
+        className="overflow-hidden rounded-lg border border-slate-200 bg-white"
+      >
         <Tabs
           aria-label="Seções do dashboard"
           value={activeTab}
@@ -49,11 +52,11 @@ export default function Dashboard() {
         </Tabs>
 
         <div className="p-5">
-          {activeTab === 'connections' && <ConnectionsPage />}
-          {activeTab === 'contacts' && <ContactsPage />}
-          {activeTab === 'messages' && <MessagesPage />}
+          {activeTab === "connections" && <ConnectionsPage />}
+          {activeTab === "contacts" && <ContactsPage />}
+          {activeTab === "messages" && <MessagesPage />}
         </div>
       </Paper>
     </Stack>
-  )
+  );
 }

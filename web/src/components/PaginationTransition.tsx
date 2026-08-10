@@ -26,9 +26,7 @@ export function PaginationTransition({
       <div
         className={`transition-opacity duration-150 ${
           showLoadingIndicator ? "opacity-60" : "opacity-100"
-        } ${
-          isLoading ? "pointer-events-none" : ""
-        }`}
+        } ${isLoading ? "pointer-events-none" : ""}`}
       >
         {children}
       </div>
