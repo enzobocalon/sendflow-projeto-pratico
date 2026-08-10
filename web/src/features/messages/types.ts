@@ -1,6 +1,7 @@
 import type { Timestamp } from "firebase/firestore";
+import type { MessageStatus } from "@sendflow/shared";
 
-export type MessageStatus = "sent" | "scheduled";
+export type { MessageStatus } from "@sendflow/shared";
 
 export type Message = {
   connectionId: string;

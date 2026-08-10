@@ -5,6 +5,7 @@ import { Controller } from "react-hook-form";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Connection } from "../types";
 import { useConnectionForm } from "./useConnectionForm";
+import { MAX_CONNECTIONS_PER_USER } from "@sendflow/shared";
 
 type ConnectionFormProps = {
   connectionsCount: number;
@@ -65,8 +66,8 @@ export const ConnectionForm = ({
 
         {hasReachedConnectionsLimit && (
           <Alert severity="warning">
-            Limite de 100 conexões atingido. Exclua uma conexão para cadastrar
-            outra.
+            Limite de {MAX_CONNECTIONS_PER_USER} conexões atingido. Exclua uma
+            conexão para cadastrar outra.
           </Alert>
         )}
 

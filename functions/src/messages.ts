@@ -2,24 +2,36 @@ import { FieldValue } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { db } from "./firebase";
 import {
+  MESSAGE_CONTENT_MAX_LENGTH,
+  MESSAGE_CONTENT_MIN_LENGTH,
+  isValidMessageContent,
+  type CreateMessageRequest,
+  type DeleteMessageRequest,
+  type UpdateMessageRequest,
+} from "@sendflow/shared";
+import {
   getAuthenticatedUserId,
   getMessageScheduleFields,
   getOwnedConnection,
+  getRequiredStringField,
   getStringField,
   validateContactIds,
 } from "./utils";
 
-export const createMessage = onCall(
+export const createMessage = onCall<CreateMessageRequest>(
   { region: "southamerica-east1" },
   async (request) => {
     const userId = getAuthenticatedUserId(request.auth?.uid);
-    const connectionId = getStringField(request.data?.connectionId);
+    const connectionId = getRequiredStringField(
+      request.data?.connectionId,
+      "Informe uma conexão válida.",
+    );
     const content = getStringField(request.data?.content);
 
-    if (content.length < 2 || content.length > 500) {
+    if (!isValidMessageContent(content)) {
       throw new HttpsError(
         "invalid-argument",
-        "Informe uma mensagem com 2 a 500 caracteres.",
+        `Informe uma mensagem com ${MESSAGE_CONTENT_MIN_LENGTH} a ${MESSAGE_CONTENT_MAX_LENGTH} caracteres.`,
       );
     }
 
@@ -65,18 +77,24 @@ export const createMessage = onCall(
   },
 );
 
-export const updateMessage = onCall(
+export const updateMessage = onCall<UpdateMessageRequest>(
   { region: "southamerica-east1" },
   async (request) => {
     const userId = getAuthenticatedUserId(request.auth?.uid);
-    const messageId = getStringField(request.data?.messageId);
-    const connectionId = getStringField(request.data?.connectionId);
+    const messageId = getRequiredStringField(
+      request.data?.messageId,
+      "Informe uma mensagem válida.",
+    );
+    const connectionId = getRequiredStringField(
+      request.data?.connectionId,
+      "Informe uma conexão válida.",
+    );
     const content = getStringField(request.data?.content);
 
-    if (content.length < 2 || content.length > 500) {
+    if (!isValidMessageContent(content)) {
       throw new HttpsError(
         "invalid-argument",
-        "Informe uma mensagem com 2 a 500 caracteres.",
+        `Informe uma mensagem com ${MESSAGE_CONTENT_MIN_LENGTH} a ${MESSAGE_CONTENT_MAX_LENGTH} caracteres.`,
       );
     }
 
@@ -136,11 +154,14 @@ export const updateMessage = onCall(
   },
 );
 
-export const deleteMessage = onCall(
+export const deleteMessage = onCall<DeleteMessageRequest>(
   { region: "southamerica-east1" },
   async (request) => {
     const userId = getAuthenticatedUserId(request.auth?.uid);
-    const messageId = getStringField(request.data?.messageId);
+    const messageId = getRequiredStringField(
+      request.data?.messageId,
+      "Informe uma mensagem válida.",
+    );
     const messageRef = db.collection("messages").doc(messageId);
     const messageSnapshot = await messageRef.get();
 

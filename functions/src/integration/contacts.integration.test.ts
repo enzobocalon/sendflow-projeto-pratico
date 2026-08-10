@@ -19,6 +19,7 @@ describe("Contact Functions", () => {
     const userId = createUserId();
 
     const invalidNameRequest = call(createContact, userId, {
+      connectionId: createMissingId(),
       name: "A",
       phone: "11999999999",
     });
@@ -28,6 +29,7 @@ describe("Contact Functions", () => {
     });
 
     const invalidPhoneRequest = call(createContact, userId, {
+      connectionId: createMissingId(),
       name: "Contato válido",
       phone: "123",
     });

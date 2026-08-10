@@ -1,19 +1,13 @@
-import {
-  callFirebaseFunction,
-  type MutationResponse,
-} from "./firebase-callable";
+import type {
+  CreateConnectionRequest,
+  DeleteConnectionRequest,
+  MutationResponse,
+  UpdateConnectionRequest,
+} from "@sendflow/shared";
+import { callFirebaseFunction } from "./firebase-callable";
 
-type SaveConnectionParams = {
-  name: string;
-};
-
-type UpdateConnectionParams = {
-  connectionId: string;
-  name: string;
-};
-
-export const createConnection = ({ name }: SaveConnectionParams) =>
-  callFirebaseFunction<SaveConnectionParams, MutationResponse>(
+export const createConnection = ({ name }: CreateConnectionRequest) =>
+  callFirebaseFunction<CreateConnectionRequest, MutationResponse>(
     "createConnection",
     {
       name,
@@ -23,8 +17,8 @@ export const createConnection = ({ name }: SaveConnectionParams) =>
 export const updateConnection = ({
   connectionId,
   name,
-}: UpdateConnectionParams) =>
-  callFirebaseFunction<UpdateConnectionParams, MutationResponse>(
+}: UpdateConnectionRequest) =>
+  callFirebaseFunction<UpdateConnectionRequest, MutationResponse>(
     "updateConnection",
     {
       connectionId,
@@ -33,7 +27,7 @@ export const updateConnection = ({
   );
 
 export const deleteConnection = (connectionId: string) =>
-  callFirebaseFunction<{ connectionId: string }, MutationResponse>(
+  callFirebaseFunction<DeleteConnectionRequest, MutationResponse>(
     "deleteConnection",
     {
       connectionId,

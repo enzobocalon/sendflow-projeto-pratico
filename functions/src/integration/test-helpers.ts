@@ -6,7 +6,7 @@ import type {
   ConnectionDocument,
   ConnectionUpdateEvent,
 } from "./types.ts";
-import type { MutationResponse } from "../types.ts";
+import type { MutationResponse } from "@sendflow/shared";
 
 const createTestId = (prefix: string) => `${prefix}-${randomUUID()}`;
 
@@ -28,6 +28,13 @@ export const call = async <Data>(
   uid: string,
   data: Data,
 ): Promise<MutationResponse> => callable.run(createCallableRequest(data, uid));
+
+export const callWithInvalidData = async <Data>(
+  callable: Callable<Data>,
+  uid: string,
+  data: unknown,
+): Promise<MutationResponse> =>
+  callable.run(createCallableRequest(data as Data, uid));
 
 const createConnectionSnapshot = (
   data: ConnectionDocument,

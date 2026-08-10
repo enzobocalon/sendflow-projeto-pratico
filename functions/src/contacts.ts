@@ -2,29 +2,40 @@ import { FieldValue } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { db } from "./firebase";
 import {
-  getAuthenticatedUserId,
-  getOwnedConnection,
-  getStringField,
+  isValidName,
+  isValidPhone,
   normalizeSearchText,
   sanitizePhone,
+  type CreateContactRequest,
+  type DeleteContactRequest,
+  type UpdateContactRequest,
+} from "@sendflow/shared";
+import {
+  getAuthenticatedUserId,
+  getOwnedConnection,
+  getRequiredStringField,
+  getStringField,
 } from "./utils";
 
-export const createContact = onCall(
+export const createContact = onCall<CreateContactRequest>(
   { region: "southamerica-east1" },
   async (request) => {
     const userId = getAuthenticatedUserId(request.auth?.uid);
-    const connectionId = getStringField(request.data?.connectionId);
+    const connectionId = getRequiredStringField(
+      request.data?.connectionId,
+      "Informe uma conexão válida.",
+    );
     const name = getStringField(request.data?.name);
     const phone = sanitizePhone(getStringField(request.data?.phone));
 
-    if (name.length < 2 || name.length > 80) {
+    if (!isValidName(name)) {
       throw new HttpsError(
         "invalid-argument",
         "Informe um nome com 2 a 80 caracteres.",
       );
     }
 
-    if (phone.length < 10 || phone.length > 20) {
+    if (!isValidPhone(phone)) {
       throw new HttpsError("invalid-argument", "Informe um telefone válido.");
     }
 
@@ -56,12 +67,18 @@ export const createContact = onCall(
   },
 );
 
-export const updateContact = onCall(
+export const updateContact = onCall<UpdateContactRequest>(
   { region: "southamerica-east1" },
   async (request) => {
     const userId = getAuthenticatedUserId(request.auth?.uid);
-    const contactId = getStringField(request.data?.contactId);
-    const connectionId = getStringField(request.data?.connectionId);
+    const contactId = getRequiredStringField(
+      request.data?.contactId,
+      "Informe um contato válido.",
+    );
+    const connectionId = getRequiredStringField(
+      request.data?.connectionId,
+      "Informe uma conexão válida.",
+    );
     const name = getStringField(request.data?.name);
     const phone = sanitizePhone(getStringField(request.data?.phone));
     const contactRef = db.collection("contacts").doc(contactId);
@@ -71,14 +88,14 @@ export const updateContact = onCall(
       throw new HttpsError("permission-denied", "Contato inválido.");
     }
 
-    if (name.length < 2 || name.length > 80) {
+    if (!isValidName(name)) {
       throw new HttpsError(
         "invalid-argument",
         "Informe um nome com 2 a 80 caracteres.",
       );
     }
 
-    if (phone.length < 10 || phone.length > 20) {
+    if (!isValidPhone(phone)) {
       throw new HttpsError("invalid-argument", "Informe um telefone válido.");
     }
 
@@ -97,11 +114,14 @@ export const updateContact = onCall(
   },
 );
 
-export const deleteContact = onCall(
+export const deleteContact = onCall<DeleteContactRequest>(
   { region: "southamerica-east1" },
   async (request) => {
     const userId = getAuthenticatedUserId(request.auth?.uid);
-    const contactId = getStringField(request.data?.contactId);
+    const contactId = getRequiredStringField(
+      request.data?.contactId,
+      "Informe um contato válido.",
+    );
     const contactRef = db.collection("contacts").doc(contactId);
     const contactSnapshot = await contactRef.get();
 

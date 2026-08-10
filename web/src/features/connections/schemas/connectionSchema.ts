@@ -1,9 +1,13 @@
 import { z } from "zod";
+import { NAME_MAX_LENGTH, NAME_MIN_LENGTH } from "@sendflow/shared";
 
 export const connectionSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(2, "Informe um nome com pelo menos 2 caracteres.")
-    .max(80, "Use no máximo 80 caracteres."),
+    .min(
+      NAME_MIN_LENGTH,
+      `Informe um nome com pelo menos ${NAME_MIN_LENGTH} caracteres.`,
+    )
+    .max(NAME_MAX_LENGTH, `Use no máximo ${NAME_MAX_LENGTH} caracteres.`),
 });

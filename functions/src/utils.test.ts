@@ -45,6 +45,7 @@ import {
   getAuthenticatedUserId,
   getMessageScheduleFields,
   getOwnedConnection,
+  getRequiredStringField,
   getStringField,
   normalizeSearchText,
   sanitizePhone,
@@ -113,6 +114,20 @@ describe("getStringField", () => {
     const results = values.map((value) => getStringField(value));
 
     expect(results).toEqual(["", ""]);
+  });
+});
+
+describe("getRequiredStringField", () => {
+  it("returns a trimmed required string", () => {
+    expect(getRequiredStringField("  resource-1  ", "Campo inválido.")).toBe(
+      "resource-1",
+    );
+  });
+
+  it.each([undefined, "   "])("rejects an empty value", (value) => {
+    const act = () => getRequiredStringField(value, "Campo inválido.");
+
+    expect(act).toThrowError("Campo inválido.");
   });
 });
 

@@ -1,16 +1,22 @@
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
 import { db } from "./firebase";
+import {
+  MAX_MESSAGE_CONTACTS,
+  hasUniqueValues,
+  isFutureDate,
+  isMessageStatus,
+  isRequiredString,
+  parseDate,
+  type MessageStatus,
+} from "@sendflow/shared";
 
-export const MAX_CONNECTIONS_PER_USER = 100;
-export const MAX_MESSAGE_CONTACTS = 100;
-
-type MessageStatus = "sent" | "scheduled";
-
-export const normalizeSearchText = (value: string) =>
-  value.trim().toLowerCase();
-
-export const sanitizePhone = (value: string) => value.replace(/\D/g, "");
+export {
+  MAX_CONNECTIONS_PER_USER,
+  MAX_MESSAGE_CONTACTS,
+  normalizeSearchText,
+  sanitizePhone,
+} from "@sendflow/shared";
 
 export const getAuthenticatedUserId = (userId?: string) => {
   if (!userId) {
@@ -22,6 +28,17 @@ export const getAuthenticatedUserId = (userId?: string) => {
 
 export const getStringField = (value: unknown) =>
   typeof value === "string" ? value.trim() : "";
+
+export const getRequiredStringField = (
+  value: unknown,
+  errorMessage: string,
+) => {
+  if (!isRequiredString(value)) {
+    throw new HttpsError("invalid-argument", errorMessage);
+  }
+
+  return value.trim();
+};
 
 export const getOwnedConnection = async (
   connectionId: string,
@@ -52,7 +69,7 @@ export const validateContactIds = async ({
     !Array.isArray(contactIds) ||
     contactIds.length === 0 ||
     contactIds.length > MAX_MESSAGE_CONTACTS ||
-    !contactIds.every((contactId) => typeof contactId === "string")
+    !contactIds.every(isRequiredString)
   ) {
     throw new HttpsError(
       "invalid-argument",
@@ -60,13 +77,13 @@ export const validateContactIds = async ({
     );
   }
 
-  const uniqueContactIds = [...new Set(contactIds)] as string[];
+  const normalizedContactIds = contactIds.map((contactId) => contactId.trim());
 
-  if (uniqueContactIds.length !== contactIds.length) {
+  if (!hasUniqueValues(normalizedContactIds)) {
     throw new HttpsError("invalid-argument", "Existem contatos duplicados.");
   }
 
-  const contactRefs = uniqueContactIds.map((contactId) =>
+  const contactRefs = normalizedContactIds.map((contactId) =>
     db.collection("contacts").doc(contactId),
   );
   const contactSnapshots = await db.getAll(...contactRefs);
@@ -88,7 +105,7 @@ export const validateContactIds = async ({
     );
   }
 
-  return uniqueContactIds;
+  return normalizedContactIds;
 };
 
 export const getMessageScheduleFields = (
@@ -99,7 +116,7 @@ export const getMessageScheduleFields = (
   sentAt: FieldValue | null;
   status: MessageStatus;
 } => {
-  if (status !== "sent" && status !== "scheduled") {
+  if (!isMessageStatus(status)) {
     throw new HttpsError("invalid-argument", "Status de mensagem inválido.");
   }
 
@@ -111,19 +128,16 @@ export const getMessageScheduleFields = (
     };
   }
 
-  const scheduledDate =
-    typeof scheduledAt === "string" || typeof scheduledAt === "number"
-      ? new Date(scheduledAt)
-      : null;
+  const scheduledDate = parseDate(scheduledAt);
 
-  if (!scheduledDate || Number.isNaN(scheduledDate.getTime())) {
+  if (!scheduledDate) {
     throw new HttpsError(
       "invalid-argument",
       "Informe uma data de agendamento válida.",
     );
   }
 
-  if (scheduledDate <= new Date()) {
+  if (!isFutureDate(scheduledDate)) {
     throw new HttpsError(
       "invalid-argument",
       "Agende a mensagem para uma data futura.",

@@ -7,7 +7,11 @@
     "node": "22"
   },
   "scripts": {
+    "build:shared": "pnpm --dir shared build",
+    "prebuild": "pnpm build:shared",
     "build": "tsc",
+    "pretest:integration": "pnpm build:shared",
+    "pretest:typecheck": "pnpm build:shared",
     "test": "pnpm test:typecheck && vitest run --configLoader runner --pool=threads --maxWorkers=1 --no-file-parallelism --exclude src/integration/**",
     "test:integration": "vitest run src/integration --configLoader runner --pool=threads --maxWorkers=1 --no-file-parallelism",
     "test:coverage": "pnpm test:typecheck && vitest run --configLoader runner --coverage --coverage.provider=v8 --coverage.reporter=text --coverage.reporter=html --pool=threads --maxWorkers=1 --no-file-parallelism",
@@ -17,6 +21,7 @@
     "logs": "firebase functions:log"
   },
   "dependencies": {
+    "@sendflow/shared": "file:./shared",
     "firebase-admin": "^13.6.0",
     "firebase-functions": "^7.0.1"
   },

@@ -9,7 +9,7 @@ import type {
   UpdateConnectionRequest,
   UpdateContactRequest,
   UpdateMessageRequest,
-} from "../types.ts";
+} from "@sendflow/shared";
 import { call } from "./test-helpers.ts";
 import type {
   Callable,

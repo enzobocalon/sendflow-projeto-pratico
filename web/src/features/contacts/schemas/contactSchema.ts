@@ -1,19 +1,26 @@
 import { z } from "zod";
+import {
+  NAME_MAX_LENGTH,
+  NAME_MIN_LENGTH,
+  PHONE_MAX_LENGTH,
+  PHONE_MIN_LENGTH,
+  isValidPhone,
+} from "@sendflow/shared";
 
 export const contactSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(2, "Informe um nome com pelo menos 2 caracteres.")
-    .max(80, "Use no máximo 80 caracteres."),
+    .min(
+      NAME_MIN_LENGTH,
+      `Informe um nome com pelo menos ${NAME_MIN_LENGTH} caracteres.`,
+    )
+    .max(NAME_MAX_LENGTH, `Use no máximo ${NAME_MAX_LENGTH} caracteres.`),
   phone: z
     .string()
     .trim()
-    .refine((value) => value.replace(/\D/g, "").length >= 10, {
-      message: "Informe um telefone válido.",
-    })
-    .refine((value) => value.replace(/\D/g, "").length <= 13, {
-      message: "Informe um telefone válido.",
+    .refine(isValidPhone, {
+      message: `Informe um telefone com ${PHONE_MIN_LENGTH} a ${PHONE_MAX_LENGTH} dígitos.`,
     }),
   connectionId: z.string().trim().min(1, "Informe uma conexão."),
 });

@@ -1,6 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { MAX_CONNECTIONS_PER_USER } from "@sendflow/shared";
 import {
   call,
+  callWithInvalidData,
   createCallableRequest,
   createConnectionUpdateEvent,
   createMissingId,
@@ -42,9 +44,13 @@ describe("Connection Functions", () => {
       code: "invalid-argument",
     });
 
-    const invalidTypeRequest = call(createConnection, createUserId(), {
-      name: 123,
-    });
+    const invalidTypeRequest = callWithInvalidData(
+      createConnection,
+      createUserId(),
+      {
+        name: 123,
+      },
+    );
 
     await expect(invalidTypeRequest).rejects.toMatchObject({
       code: "invalid-argument",
@@ -119,7 +125,7 @@ describe("Connection Functions", () => {
     const userId = createUserId();
     const batch = db.batch();
 
-    for (let index = 0; index < 100; index += 1) {
+    for (let index = 0; index < MAX_CONNECTIONS_PER_USER; index += 1) {
       batch.set(db.collection("connections").doc(), {
         name: `Conexão ${index}`,
         userId,
@@ -128,7 +134,7 @@ describe("Connection Functions", () => {
 
     await batch.commit();
     await db.collection("usage").doc(userId).set({
-      connectionsCount: 100,
+      connectionsCount: MAX_CONNECTIONS_PER_USER,
       userId,
     });
 

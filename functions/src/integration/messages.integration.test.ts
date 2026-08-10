@@ -61,6 +61,8 @@ describe("Message Functions", () => {
     const userId = createUserId();
 
     const request = call(createMessage, userId, {
+      connectionId: createMissingId(),
+      contactIds: [],
       content: "A",
       status: "sent",
     });

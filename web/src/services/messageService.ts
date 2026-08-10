@@ -1,24 +1,17 @@
-import type { MessageStatus } from "../features/messages/types";
-import {
-  callFirebaseFunction,
-  type MutationResponse,
-} from "./firebase-callable";
+import type {
+  CreateMessageRequest,
+  DeleteMessageRequest,
+  MutationResponse,
+  UpdateMessageRequest,
+} from "@sendflow/shared";
+import { callFirebaseFunction } from "./firebase-callable";
 
-type SaveMessageBaseParams = {
-  connectionId: string;
-  contactIds: string[];
-  content: string;
+type CreateMessageParams = Omit<CreateMessageRequest, "scheduledAt"> & {
+  scheduledAt?: Date;
 };
 
-type CreateMessageParams = SaveMessageBaseParams & {
+type UpdateMessageParams = Omit<UpdateMessageRequest, "scheduledAt"> & {
   scheduledAt?: Date;
-  status: MessageStatus;
-};
-
-type UpdateMessageParams = SaveMessageBaseParams & {
-  messageId: string;
-  scheduledAt?: Date;
-  status: MessageStatus;
 };
 
 export const createMessage = ({
@@ -28,19 +21,16 @@ export const createMessage = ({
   scheduledAt,
   status,
 }: CreateMessageParams) =>
-  callFirebaseFunction<
-    SaveMessageBaseParams & {
-      scheduledAt?: string;
-      status: MessageStatus;
+  callFirebaseFunction<CreateMessageRequest, MutationResponse>(
+    "createMessage",
+    {
+      connectionId,
+      contactIds,
+      content,
+      scheduledAt: scheduledAt?.toISOString(),
+      status,
     },
-    MutationResponse
-  >("createMessage", {
-    connectionId,
-    contactIds,
-    content,
-    scheduledAt: scheduledAt?.toISOString(),
-    status,
-  });
+  );
 
 export const updateMessage = ({
   connectionId,
@@ -50,24 +40,20 @@ export const updateMessage = ({
   scheduledAt,
   status,
 }: UpdateMessageParams) =>
-  callFirebaseFunction<
-    SaveMessageBaseParams & {
-      messageId: string;
-      scheduledAt?: string;
-      status: MessageStatus;
+  callFirebaseFunction<UpdateMessageRequest, MutationResponse>(
+    "updateMessage",
+    {
+      connectionId,
+      contactIds,
+      content,
+      messageId,
+      scheduledAt: scheduledAt?.toISOString(),
+      status,
     },
-    MutationResponse
-  >("updateMessage", {
-    connectionId,
-    contactIds,
-    content,
-    messageId,
-    scheduledAt: scheduledAt?.toISOString(),
-    status,
-  });
+  );
 
 export const deleteMessage = (messageId: string) =>
-  callFirebaseFunction<{ messageId: string }, MutationResponse>(
+  callFirebaseFunction<DeleteMessageRequest, MutationResponse>(
     "deleteMessage",
     {
       messageId,

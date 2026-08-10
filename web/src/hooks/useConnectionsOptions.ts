@@ -15,10 +15,10 @@ import type { Connection } from "../features/connections/types";
 import { db } from "../lib/firebase";
 import { getFirestoreErrorMessage } from "../utils/firestoreError";
 import { useAuth } from "./useAuth";
-
-const MAX_CONNECTIONS = 100;
-
-const normalizeSearchText = (value: string) => value.trim().toLowerCase();
+import {
+  MAX_CONNECTIONS_PER_USER,
+  normalizeSearchText,
+} from "@sendflow/shared";
 
 const mapConnectionSnapshot = (snapshot: QuerySnapshot): Connection[] =>
   snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Connection);
@@ -64,7 +64,7 @@ export function useConnectionsOptions({
       );
     }
 
-    constraints.push(limit(MAX_CONNECTIONS));
+    constraints.push(limit(MAX_CONNECTIONS_PER_USER));
 
     const unsubscribe = onSnapshot(
       query(collection(db, "connections"), ...constraints),

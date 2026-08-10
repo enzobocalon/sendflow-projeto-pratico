@@ -4,7 +4,7 @@ import type {
   QueryDocumentSnapshot,
 } from "firebase-functions/v2/firestore";
 import type { CallableFunction } from "firebase-functions/v2/https";
-import type { MutationResponse } from "../types.ts";
+import type { MutationResponse } from "@sendflow/shared";
 
 export type Callable<Data> = CallableFunction<Data, Promise<MutationResponse>>;
 

@@ -4,12 +4,19 @@ import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { db } from "./firebase";
 import {
   MAX_CONNECTIONS_PER_USER,
-  getAuthenticatedUserId,
-  getStringField,
+  isValidName,
   normalizeSearchText,
+  type CreateConnectionRequest,
+  type DeleteConnectionRequest,
+  type UpdateConnectionRequest,
+} from "@sendflow/shared";
+import {
+  getAuthenticatedUserId,
+  getRequiredStringField,
+  getStringField,
 } from "./utils";
 
-export const createConnection = onCall(
+export const createConnection = onCall<CreateConnectionRequest>(
   { region: "southamerica-east1" },
   async (request) => {
     const userId = request.auth?.uid;
@@ -23,7 +30,7 @@ export const createConnection = onCall(
       );
     }
 
-    if (name.length < 2 || name.length > 80) {
+    if (!isValidName(name)) {
       throw new HttpsError(
         "invalid-argument",
         "Informe um nome com 2 a 80 caracteres.",
@@ -82,11 +89,14 @@ export const createConnection = onCall(
   },
 );
 
-export const updateConnection = onCall(
+export const updateConnection = onCall<UpdateConnectionRequest>(
   { region: "southamerica-east1" },
   async (request) => {
     const userId = getAuthenticatedUserId(request.auth?.uid);
-    const connectionId = getStringField(request.data?.connectionId);
+    const connectionId = getRequiredStringField(
+      request.data?.connectionId,
+      "Informe uma conexão válida.",
+    );
     const name = getStringField(request.data?.name);
     const connectionRef = db.collection("connections").doc(connectionId);
     const connectionSnapshot = await connectionRef.get();
@@ -98,7 +108,7 @@ export const updateConnection = onCall(
       throw new HttpsError("permission-denied", "Conexão inválida.");
     }
 
-    if (name.length < 2 || name.length > 80) {
+    if (!isValidName(name)) {
       throw new HttpsError(
         "invalid-argument",
         "Informe um nome com 2 a 80 caracteres.",
@@ -115,11 +125,14 @@ export const updateConnection = onCall(
   },
 );
 
-export const deleteConnection = onCall(
+export const deleteConnection = onCall<DeleteConnectionRequest>(
   { region: "southamerica-east1" },
   async (request) => {
     const userId = getAuthenticatedUserId(request.auth?.uid);
-    const connectionId = getStringField(request.data?.connectionId);
+    const connectionId = getRequiredStringField(
+      request.data?.connectionId,
+      "Informe uma conexão válida.",
+    );
     const connectionRef = db.collection("connections").doc(connectionId);
     const connectionSnapshot = await connectionRef.get();
 

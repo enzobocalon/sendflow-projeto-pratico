@@ -9,14 +9,13 @@ import {
 import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
 import { connectionSchema } from "../schemas/connectionSchema";
 import type { Connection, ConnectionFormValues } from "../types";
+import { MAX_CONNECTIONS_PER_USER } from "@sendflow/shared";
 
 type UseConnectionFormParams = {
   connectionsCount: number;
   editingConnection: Connection | null;
   onSaved: () => void;
 };
-
-const MAX_CONNECTIONS = 100;
 
 export const useConnectionForm = ({
   connectionsCount,
@@ -27,7 +26,7 @@ export const useConnectionForm = ({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const hasReachedConnectionsLimit =
-    !editingConnection && connectionsCount >= MAX_CONNECTIONS;
+    !editingConnection && connectionsCount >= MAX_CONNECTIONS_PER_USER;
 
   const {
     control,
@@ -56,7 +55,7 @@ export const useConnectionForm = ({
     }
 
     if (hasReachedConnectionsLimit) {
-      setError(`Limite de ${MAX_CONNECTIONS} conexões atingido.`);
+      setError(`Limite de ${MAX_CONNECTIONS_PER_USER} conexões atingido.`);
       return;
     }
 
@@ -86,7 +85,7 @@ export const useConnectionForm = ({
         error instanceof Error &&
         error.message === "connections-limit-reached"
       ) {
-        setError(`Limite de ${MAX_CONNECTIONS} conexões atingido.`);
+        setError(`Limite de ${MAX_CONNECTIONS_PER_USER} conexões atingido.`);
         return;
       }
 

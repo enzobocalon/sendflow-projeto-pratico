@@ -1,4 +1,12 @@
 import { z } from "zod";
+import {
+  MAX_MESSAGE_CONTACTS,
+  MESSAGE_CONTENT_MAX_LENGTH,
+  MESSAGE_CONTENT_MIN_LENGTH,
+  hasUniqueValues,
+  isFutureDate,
+  parseDate,
+} from "@sendflow/shared";
 
 export const messageSchema = z
   .object({
@@ -6,12 +14,22 @@ export const messageSchema = z
     contactIds: z
       .array(z.string().trim().min(1))
       .min(1, "Selecione pelo menos um contato.")
-      .max(100, "Selecione no máximo 100 contatos por mensagem."),
+      .max(
+        MAX_MESSAGE_CONTACTS,
+        `Selecione no máximo ${MAX_MESSAGE_CONTACTS} contatos por mensagem.`,
+      )
+      .refine(hasUniqueValues, "Existem contatos duplicados."),
     content: z
       .string()
       .trim()
-      .min(2, "Informe uma mensagem com pelo menos 2 caracteres.")
-      .max(500, "Use no máximo 500 caracteres."),
+      .min(
+        MESSAGE_CONTENT_MIN_LENGTH,
+        `Informe uma mensagem com pelo menos ${MESSAGE_CONTENT_MIN_LENGTH} caracteres.`,
+      )
+      .max(
+        MESSAGE_CONTENT_MAX_LENGTH,
+        `Use no máximo ${MESSAGE_CONTENT_MAX_LENGTH} caracteres.`,
+      ),
     scheduledDate: z.string().trim(),
     scheduledTime: z.string().trim(),
     sendMode: z.enum(["now", "scheduled"]),
@@ -41,9 +59,9 @@ export const messageSchema = z
       return;
     }
 
-    const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`);
+    const scheduledAt = parseDate(`${scheduledDate}T${scheduledTime}`);
 
-    if (Number.isNaN(scheduledAt.getTime())) {
+    if (!scheduledAt) {
       context.addIssue({
         code: "custom",
         message: "Informe uma data e horário válidos.",
@@ -52,7 +70,7 @@ export const messageSchema = z
       return;
     }
 
-    if (scheduledAt <= new Date()) {
+    if (!isFutureDate(scheduledAt)) {
       context.addIssue({
         code: "custom",
         message: "Agende a mensagem para uma data futura.",

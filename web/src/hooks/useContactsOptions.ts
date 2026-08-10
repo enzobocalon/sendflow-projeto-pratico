@@ -16,6 +16,7 @@ import type { Contact } from "../features/contacts/types";
 import { db } from "../lib/firebase";
 import { useAuth } from "./useAuth";
 import { useRealtimeCursorPagination } from "./useRealtimeCursorPagination";
+import { normalizeSearchText } from "@sendflow/shared";
 
 type UseContactsOptionsParams = {
   connectionId?: string;
@@ -25,8 +26,6 @@ type UseContactsOptionsParams = {
 };
 
 const DEFAULT_PAGE_SIZE = 30;
-
-const normalizeSearchText = (value: string) => value.trim().toLowerCase();
 
 const mapContactDocument = (
   document: QueryDocumentSnapshot<DocumentData>,
