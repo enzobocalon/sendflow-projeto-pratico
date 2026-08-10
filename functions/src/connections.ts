@@ -18,6 +18,52 @@ import {
 
 const FIRESTORE_BATCH_WRITE_LIMIT = 500;
 
+const synchronizeCurrentConnectionName = async (
+  connectionId: string,
+  userId: string,
+) => {
+  const contacts = await db
+    .collection("contacts")
+    .where("userId", "==", userId)
+    .where("connectionId", "==", connectionId)
+    .get();
+
+  if (contacts.empty) return;
+
+  const connectionRef = db.collection("connections").doc(connectionId);
+
+  for (
+    let offset = 0;
+    offset < contacts.size;
+    offset += FIRESTORE_BATCH_WRITE_LIMIT
+  ) {
+    const contactBatch = contacts.docs.slice(
+      offset,
+      offset + FIRESTORE_BATCH_WRITE_LIMIT,
+    );
+
+    await db.runTransaction(async (transaction) => {
+      const connectionSnapshot = await transaction.get(connectionRef);
+      const currentConnection = connectionSnapshot.data();
+
+      if (
+        !connectionSnapshot.exists ||
+        typeof currentConnection?.name !== "string" ||
+        currentConnection.userId !== userId
+      ) {
+        return;
+      }
+
+      contactBatch.forEach((contact) => {
+        transaction.update(contact.ref, {
+          connectionName: currentConnection.name,
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      });
+    });
+  }
+};
+
 export const createConnection = onCall<CreateConnectionRequest>(
   { region: "southamerica-east1" },
   async (request) => {
@@ -209,35 +255,6 @@ export const syncConnectionNameInContacts = onDocumentUpdated(
       return;
     }
 
-    const contacts = await db
-      .collection("contacts")
-      .where("userId", "==", userId)
-      .where("connectionId", "==", event.params.connectionId)
-      .get();
-
-    if (contacts.empty) {
-      return;
-    }
-
-    for (
-      let offset = 0;
-      offset < contacts.size;
-      offset += FIRESTORE_BATCH_WRITE_LIMIT
-    ) {
-      const batch = db.batch();
-      const contactBatch = contacts.docs.slice(
-        offset,
-        offset + FIRESTORE_BATCH_WRITE_LIMIT,
-      );
-
-      contactBatch.forEach((contact) => {
-        batch.update(contact.ref, {
-          connectionName: afterName,
-          updatedAt: FieldValue.serverTimestamp(),
-        });
-      });
-
-      await batch.commit();
-    }
+    await synchronizeCurrentConnectionName(event.params.connectionId, userId);
   },
 );

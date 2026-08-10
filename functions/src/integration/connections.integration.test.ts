@@ -308,9 +308,51 @@ describe("Connection Functions", () => {
     });
   });
 
+  it("keeps the latest connection name when events arrive out of order", async () => {
+    const userId = createUserId();
+    const connection = await createConnectionFixture(userId, "Nome Inicial");
+    const contact = await createContactFixture(userId, connection.id);
+    const initialConnection = await getConnectionDocument(connection.id);
+
+    await call(updateConnection, userId, {
+      connectionId: connection.id,
+      name: "Nome Intermediário",
+    });
+    const intermediateConnection = await getConnectionDocument(connection.id);
+
+    await call(updateConnection, userId, {
+      connectionId: connection.id,
+      name: "Nome Atual",
+    });
+    const currentConnection = await getConnectionDocument(connection.id);
+
+    await syncConnectionNameInContacts.run(
+      createConnectionUpdateEvent(
+        intermediateConnection,
+        currentConnection,
+        connection.id,
+      ),
+    );
+    await syncConnectionNameInContacts.run(
+      createConnectionUpdateEvent(
+        initialConnection,
+        intermediateConnection,
+        connection.id,
+      ),
+    );
+
+    const contactSnapshot = await db
+      .collection("contacts")
+      .doc(contact.id)
+      .get();
+
+    expect(contactSnapshot.data()?.connectionName).toBe("Nome Atual");
+  });
+
   it("syncs contact names across more than one Firestore batch", async () => {
     const userId = createUserId();
     const connection = await createConnectionFixture(userId, "Nome em Lote");
+    const before = await getConnectionDocument(connection.id);
     const contactsCount = 501;
 
     for (let offset = 0; offset < contactsCount; offset += 500) {
@@ -332,12 +374,14 @@ describe("Connection Functions", () => {
       await batch.commit();
     }
 
+    await call(updateConnection, userId, {
+      connectionId: connection.id,
+      name: "Nome Atualizado em Lote",
+    });
+    const after = await getConnectionDocument(connection.id);
+
     await syncConnectionNameInContacts.run(
-      createConnectionUpdateEvent(
-        { name: "Nome em Lote", userId },
-        { name: "Nome Atualizado em Lote", userId },
-        connection.id,
-      ),
+      createConnectionUpdateEvent(before, after, connection.id),
     );
 
     const updatedContacts = await db
@@ -399,5 +443,30 @@ describe("Connection Functions", () => {
     );
 
     expect(result).toBeUndefined();
+  });
+
+  it("does not update contacts when the connection no longer exists", async () => {
+    const userId = createUserId();
+    const connectionId = createMissingId();
+    const contactRef = db.collection("contacts").doc();
+
+    await contactRef.set({
+      connectionId,
+      connectionName: "Nome Antigo",
+      name: "Contato Órfão",
+      userId,
+    });
+
+    await syncConnectionNameInContacts.run(
+      createConnectionUpdateEvent(
+        { name: "Nome Antigo", userId },
+        { name: "Nome Novo", userId },
+        connectionId,
+      ),
+    );
+
+    const contactSnapshot = await contactRef.get();
+
+    expect(contactSnapshot.data()?.connectionName).toBe("Nome Antigo");
   });
 });
