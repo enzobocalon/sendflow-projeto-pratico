@@ -203,4 +203,39 @@ describe("Message Functions", () => {
       code: "permission-denied",
     });
   });
+
+  it("decrements message counters only once during concurrent deletion", async () => {
+    const userId = createUserId();
+    const connection = await createConnectionFixture(
+      userId,
+      "Conexão Concorrente",
+    );
+    const contact = await createContactFixture(userId, connection.id);
+    const message = await createMessageFixture(
+      userId,
+      connection.id,
+      [contact.id],
+      {
+        scheduledAt: createFutureDate(),
+        status: "scheduled",
+      },
+    );
+
+    const results = await Promise.allSettled([
+      call(deleteMessage, userId, { messageId: message.id }),
+      call(deleteMessage, userId, { messageId: message.id }),
+    ]);
+    const usageSnapshot = await db.collection("usage").doc(userId).get();
+
+    expect(results.filter(({ status }) => status === "fulfilled")).toHaveLength(
+      1,
+    );
+    expect(results.filter(({ status }) => status === "rejected")).toHaveLength(
+      1,
+    );
+    expect(usageSnapshot.data()).toMatchObject({
+      messagesCount: 0,
+      scheduledMessagesCount: 0,
+    });
+  });
 });

@@ -233,6 +233,56 @@ describe("Connection Functions", () => {
     });
   });
 
+  it("decrements the connection counter only once during concurrent deletion", async () => {
+    const userId = createUserId();
+    const connection = await createConnectionFixture(
+      userId,
+      "Conexão Concorrente",
+    );
+
+    const results = await Promise.allSettled([
+      call(deleteConnection, userId, { connectionId: connection.id }),
+      call(deleteConnection, userId, { connectionId: connection.id }),
+    ]);
+    const usageSnapshot = await db.collection("usage").doc(userId).get();
+
+    expect(results.filter(({ status }) => status === "fulfilled")).toHaveLength(
+      1,
+    );
+    expect(results.filter(({ status }) => status === "rejected")).toHaveLength(
+      1,
+    );
+    expect(usageSnapshot.data()?.connectionsCount).toBe(0);
+  });
+
+  it("never creates an orphan contact during concurrent connection deletion", async () => {
+    const userId = createUserId();
+    const connection = await createConnectionFixture(
+      userId,
+      "Conexão em Disputa",
+    );
+
+    const results = await Promise.allSettled([
+      call(deleteConnection, userId, { connectionId: connection.id }),
+      createContactFixture(userId, connection.id, {
+        name: "Contato Concorrente",
+      }),
+    ]);
+    const connectionSnapshot = await db
+      .collection("connections")
+      .doc(connection.id)
+      .get();
+    const contactsSnapshot = await db
+      .collection("contacts")
+      .where("connectionId", "==", connection.id)
+      .get();
+
+    expect(results.filter(({ status }) => status === "fulfilled")).toHaveLength(
+      1,
+    );
+    expect(connectionSnapshot.exists).toBe(!contactsSnapshot.empty);
+  });
+
   it("syncs a connection name change to its contacts", async () => {
     const userId = createUserId();
     const connection = await createConnectionFixture(userId, "Nome Antigo");
@@ -256,6 +306,52 @@ describe("Connection Functions", () => {
     expect(contactSnapshot.data()).toMatchObject({
       connectionName: "Nome Novo",
     });
+  });
+
+  it("syncs contact names across more than one Firestore batch", async () => {
+    const userId = createUserId();
+    const connection = await createConnectionFixture(userId, "Nome em Lote");
+    const contactsCount = 501;
+
+    for (let offset = 0; offset < contactsCount; offset += 500) {
+      const batch = db.batch();
+
+      for (
+        let index = offset;
+        index < Math.min(offset + 500, contactsCount);
+        index += 1
+      ) {
+        batch.set(db.collection("contacts").doc(), {
+          connectionId: connection.id,
+          connectionName: "Nome em Lote",
+          name: `Contato ${index}`,
+          userId,
+        });
+      }
+
+      await batch.commit();
+    }
+
+    await syncConnectionNameInContacts.run(
+      createConnectionUpdateEvent(
+        { name: "Nome em Lote", userId },
+        { name: "Nome Atualizado em Lote", userId },
+        connection.id,
+      ),
+    );
+
+    const updatedContacts = await db
+      .collection("contacts")
+      .where("connectionId", "==", connection.id)
+      .get();
+
+    expect(updatedContacts.size).toBe(contactsCount);
+    expect(
+      updatedContacts.docs.every(
+        (contact) =>
+          contact.data().connectionName === "Nome Atualizado em Lote",
+      ),
+    ).toBe(true);
   });
 
   it.each([

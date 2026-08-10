@@ -130,4 +130,27 @@ describe("Contact Functions", () => {
       code: "permission-denied",
     });
   });
+
+  it("decrements the contact counter only once during concurrent deletion", async () => {
+    const userId = createUserId();
+    const connection = await createConnectionFixture(
+      userId,
+      "Conexão Concorrente",
+    );
+    const contact = await createContactFixture(userId, connection.id);
+
+    const results = await Promise.allSettled([
+      call(deleteContact, userId, { contactId: contact.id }),
+      call(deleteContact, userId, { contactId: contact.id }),
+    ]);
+    const usageSnapshot = await db.collection("usage").doc(userId).get();
+
+    expect(results.filter(({ status }) => status === "fulfilled")).toHaveLength(
+      1,
+    );
+    expect(results.filter(({ status }) => status === "rejected")).toHaveLength(
+      1,
+    );
+    expect(usageSnapshot.data()?.contactsCount).toBe(0);
+  });
 });

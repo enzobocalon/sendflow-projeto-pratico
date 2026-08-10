@@ -1,4 +1,8 @@
-import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import {
+  FieldValue,
+  Timestamp,
+  type Transaction,
+} from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
 import { db } from "./firebase";
 import {
@@ -43,8 +47,12 @@ export const getRequiredStringField = (
 export const getOwnedConnection = async (
   connectionId: string,
   userId: string,
+  transaction?: Transaction,
 ) => {
-  const connection = await db.collection("connections").doc(connectionId).get();
+  const connectionRef = db.collection("connections").doc(connectionId);
+  const connection = transaction
+    ? await transaction.get(connectionRef)
+    : await connectionRef.get();
 
   if (!connection.exists || connection.data()?.userId !== userId) {
     throw new HttpsError("permission-denied", "Conexão inválida.");
@@ -59,10 +67,12 @@ export const getOwnedConnection = async (
 export const validateContactIds = async ({
   connectionId,
   contactIds,
+  transaction,
   userId,
 }: {
   connectionId: string;
   contactIds: unknown;
+  transaction?: Transaction;
   userId: string;
 }) => {
   if (
@@ -86,7 +96,9 @@ export const validateContactIds = async ({
   const contactRefs = normalizedContactIds.map((contactId) =>
     db.collection("contacts").doc(contactId),
   );
-  const contactSnapshots = await db.getAll(...contactRefs);
+  const contactSnapshots = transaction
+    ? await transaction.getAll(...contactRefs)
+    : await db.getAll(...contactRefs);
 
   const allContactsAreValid = contactSnapshots.every((snapshot) => {
     const contact = snapshot.data();

@@ -39,29 +39,33 @@ export const createContact = onCall<CreateContactRequest>(
       throw new HttpsError("invalid-argument", "Informe um telefone válido.");
     }
 
-    const connection = await getOwnedConnection(connectionId, userId);
     const now = FieldValue.serverTimestamp();
     const contactRef = db.collection("contacts").doc();
     const usageRef = db.collection("usage").doc(userId);
 
-    const batch = db.batch();
-    batch.set(contactRef, {
-      connectionId: connection.id,
-      connectionName: connection.name,
-      createdAt: now,
-      name,
-      nameNormalized: normalizeSearchText(name),
-      phone,
-      updatedAt: now,
-      userId,
-    });
-    batch.set(
-      usageRef,
-      { contactsCount: FieldValue.increment(1) },
-      { merge: true },
-    );
+    await db.runTransaction(async (transaction) => {
+      const connection = await getOwnedConnection(
+        connectionId,
+        userId,
+        transaction,
+      );
 
-    await batch.commit();
+      transaction.create(contactRef, {
+        connectionId: connection.id,
+        connectionName: connection.name,
+        createdAt: now,
+        name,
+        nameNormalized: normalizeSearchText(name),
+        phone,
+        updatedAt: now,
+        userId,
+      });
+      transaction.set(
+        usageRef,
+        { contactsCount: FieldValue.increment(1) },
+        { merge: true },
+      );
+    });
 
     return { id: contactRef.id };
   },
@@ -82,12 +86,6 @@ export const updateContact = onCall<UpdateContactRequest>(
     const name = getStringField(request.data?.name);
     const phone = sanitizePhone(getStringField(request.data?.phone));
     const contactRef = db.collection("contacts").doc(contactId);
-    const contactSnapshot = await contactRef.get();
-
-    if (!contactSnapshot.exists || contactSnapshot.data()?.userId !== userId) {
-      throw new HttpsError("permission-denied", "Contato inválido.");
-    }
-
     if (!isValidName(name)) {
       throw new HttpsError(
         "invalid-argument",
@@ -99,15 +97,30 @@ export const updateContact = onCall<UpdateContactRequest>(
       throw new HttpsError("invalid-argument", "Informe um telefone válido.");
     }
 
-    const connection = await getOwnedConnection(connectionId, userId);
+    await db.runTransaction(async (transaction) => {
+      const contactSnapshot = await transaction.get(contactRef);
 
-    await contactRef.update({
-      connectionId: connection.id,
-      connectionName: connection.name,
-      name,
-      nameNormalized: normalizeSearchText(name),
-      phone,
-      updatedAt: FieldValue.serverTimestamp(),
+      if (
+        !contactSnapshot.exists ||
+        contactSnapshot.data()?.userId !== userId
+      ) {
+        throw new HttpsError("permission-denied", "Contato inválido.");
+      }
+
+      const connection = await getOwnedConnection(
+        connectionId,
+        userId,
+        transaction,
+      );
+
+      transaction.update(contactRef, {
+        connectionId: connection.id,
+        connectionName: connection.name,
+        name,
+        nameNormalized: normalizeSearchText(name),
+        phone,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
     });
 
     return { id: contactId };
@@ -123,22 +136,25 @@ export const deleteContact = onCall<DeleteContactRequest>(
       "Informe um contato válido.",
     );
     const contactRef = db.collection("contacts").doc(contactId);
-    const contactSnapshot = await contactRef.get();
-
-    if (!contactSnapshot.exists || contactSnapshot.data()?.userId !== userId) {
-      throw new HttpsError("permission-denied", "Contato inválido.");
-    }
-
     const usageRef = db.collection("usage").doc(userId);
 
-    const batch = db.batch();
-    batch.delete(contactRef);
-    batch.set(
-      usageRef,
-      { contactsCount: FieldValue.increment(-1) },
-      { merge: true },
-    );
-    await batch.commit();
+    await db.runTransaction(async (transaction) => {
+      const contactSnapshot = await transaction.get(contactRef);
+
+      if (
+        !contactSnapshot.exists ||
+        contactSnapshot.data()?.userId !== userId
+      ) {
+        throw new HttpsError("permission-denied", "Contato inválido.");
+      }
+
+      transaction.delete(contactRef);
+      transaction.set(
+        usageRef,
+        { contactsCount: FieldValue.increment(-1) },
+        { merge: true },
+      );
+    });
 
     return { id: contactId };
   },

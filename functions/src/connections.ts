@@ -16,6 +16,8 @@ import {
   getStringField,
 } from "./utils";
 
+const FIRESTORE_BATCH_WRITE_LIMIT = 500;
+
 export const createConnection = onCall<CreateConnectionRequest>(
   { region: "southamerica-east1" },
   async (request) => {
@@ -99,15 +101,6 @@ export const updateConnection = onCall<UpdateConnectionRequest>(
     );
     const name = getStringField(request.data?.name);
     const connectionRef = db.collection("connections").doc(connectionId);
-    const connectionSnapshot = await connectionRef.get();
-
-    if (
-      !connectionSnapshot.exists ||
-      connectionSnapshot.data()?.userId !== userId
-    ) {
-      throw new HttpsError("permission-denied", "Conexão inválida.");
-    }
-
     if (!isValidName(name)) {
       throw new HttpsError(
         "invalid-argument",
@@ -115,10 +108,21 @@ export const updateConnection = onCall<UpdateConnectionRequest>(
       );
     }
 
-    await connectionRef.update({
-      name,
-      nameNormalized: normalizeSearchText(name),
-      updatedAt: FieldValue.serverTimestamp(),
+    await db.runTransaction(async (transaction) => {
+      const connectionSnapshot = await transaction.get(connectionRef);
+
+      if (
+        !connectionSnapshot.exists ||
+        connectionSnapshot.data()?.userId !== userId
+      ) {
+        throw new HttpsError("permission-denied", "Conexão inválida.");
+      }
+
+      transaction.update(connectionRef, {
+        name,
+        nameNormalized: normalizeSearchText(name),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
     });
 
     return { id: connectionId };
@@ -134,53 +138,52 @@ export const deleteConnection = onCall<DeleteConnectionRequest>(
       "Informe uma conexão válida.",
     );
     const connectionRef = db.collection("connections").doc(connectionId);
-    const connectionSnapshot = await connectionRef.get();
-
-    if (
-      !connectionSnapshot.exists ||
-      connectionSnapshot.data()?.userId !== userId
-    ) {
-      throw new HttpsError("permission-denied", "Conexão inválida.");
-    }
-
-    const linkedContacts = await db
+    const linkedContactsQuery = db
       .collection("contacts")
       .where("connectionId", "==", connectionId)
       .where("userId", "==", userId)
-      .limit(1)
-      .get();
-
-    if (!linkedContacts.empty) {
-      throw new HttpsError(
-        "failed-precondition",
-        "Não é possível excluir uma conexão com contatos vinculados.",
-      );
-    }
-
-    const linkedMessages = await db
+      .limit(1);
+    const linkedMessagesQuery = db
       .collection("messages")
       .where("connectionId", "==", connectionId)
       .where("userId", "==", userId)
-      .limit(1)
-      .get();
-
-    if (!linkedMessages.empty) {
-      throw new HttpsError(
-        "failed-precondition",
-        "Não é possível excluir uma conexão com mensagens vinculadas.",
-      );
-    }
-
+      .limit(1);
     const usageRef = db.collection("usage").doc(userId);
 
-    const batch = db.batch();
-    batch.delete(connectionRef);
-    batch.set(
-      usageRef,
-      { connectionsCount: FieldValue.increment(-1) },
-      { merge: true },
-    );
-    await batch.commit();
+    await db.runTransaction(async (transaction) => {
+      const connectionSnapshot = await transaction.get(connectionRef);
+
+      if (
+        !connectionSnapshot.exists ||
+        connectionSnapshot.data()?.userId !== userId
+      ) {
+        throw new HttpsError("permission-denied", "Conexão inválida.");
+      }
+
+      const linkedContacts = await transaction.get(linkedContactsQuery);
+      const linkedMessages = await transaction.get(linkedMessagesQuery);
+
+      if (!linkedContacts.empty) {
+        throw new HttpsError(
+          "failed-precondition",
+          "Não é possível excluir uma conexão com contatos vinculados.",
+        );
+      }
+
+      if (!linkedMessages.empty) {
+        throw new HttpsError(
+          "failed-precondition",
+          "Não é possível excluir uma conexão com mensagens vinculadas.",
+        );
+      }
+
+      transaction.delete(connectionRef);
+      transaction.set(
+        usageRef,
+        { connectionsCount: FieldValue.increment(-1) },
+        { merge: true },
+      );
+    });
 
     return { id: connectionId };
   },
@@ -216,15 +219,25 @@ export const syncConnectionNameInContacts = onDocumentUpdated(
       return;
     }
 
-    const batch = db.batch();
+    for (
+      let offset = 0;
+      offset < contacts.size;
+      offset += FIRESTORE_BATCH_WRITE_LIMIT
+    ) {
+      const batch = db.batch();
+      const contactBatch = contacts.docs.slice(
+        offset,
+        offset + FIRESTORE_BATCH_WRITE_LIMIT,
+      );
 
-    contacts.docs.forEach((contact) => {
-      batch.update(contact.ref, {
-        connectionName: afterName,
-        updatedAt: FieldValue.serverTimestamp(),
+      contactBatch.forEach((contact) => {
+        batch.update(contact.ref, {
+          connectionName: afterName,
+          updatedAt: FieldValue.serverTimestamp(),
+        });
       });
-    });
 
-    await batch.commit();
+      await batch.commit();
+    }
   },
 );
