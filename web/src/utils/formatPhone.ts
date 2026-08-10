@@ -1,4 +1,21 @@
 import { PHONE_MAX_LENGTH, sanitizePhone } from "@sendflow/shared";
+import {
+  formatIncompletePhoneNumber,
+  parsePhoneNumberFromString,
+} from "libphonenumber-js/min";
+
+const BRAZIL_PHONE_LENGTH = 11;
+
+const formatInternationalPhone = (digits: string) => {
+  const internationalPhone = `+${digits}`;
+  const parsedPhone = parsePhoneNumberFromString(internationalPhone);
+
+  if (parsedPhone?.country === "BR") {
+    return `+${parsedPhone.countryCallingCode} ${parsedPhone.formatNational()}`;
+  }
+
+  return formatIncompletePhoneNumber(internationalPhone);
+};
 
 export const normalizePhoneInput = (value: string) =>
   sanitizePhone(value).slice(0, PHONE_MAX_LENGTH);
@@ -6,9 +23,13 @@ export const normalizePhoneInput = (value: string) =>
 export const formatPhone = (value: string) => {
   const digits = sanitizePhone(value);
 
-  if (digits.length !== 11) {
-    return digits ? `+${digits}` : "";
+  if (!digits) {
+    return "";
   }
 
-  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  if (digits.length === BRAZIL_PHONE_LENGTH) {
+    return formatIncompletePhoneNumber(digits, "BR");
+  }
+
+  return formatInternationalPhone(digits);
 };
