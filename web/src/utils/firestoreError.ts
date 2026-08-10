@@ -1,4 +1,4 @@
-type FirestoreListResource = "conexões" | "contatos" | "mensagens";
+export type FirestoreListResource = "conexões" | "contatos" | "mensagens";
 
 type FirestoreError = {
   code?: string;

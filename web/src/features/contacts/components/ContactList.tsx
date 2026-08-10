@@ -2,7 +2,6 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import {
   Alert,
-  Button,
   CircularProgress,
   IconButton,
   Stack,
@@ -11,6 +10,7 @@ import {
 } from "@mui/material";
 import { EmptyState } from "../../../components/EmptyState";
 import { FeedbackSnackbar } from "../../../components/FeedbackSnackbar";
+import { PaginatedContent } from "../../../components/PaginatedContent";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Contact } from "../types";
 import { DeleteDialog } from "../../../components/DeleteDialog";
@@ -39,16 +39,19 @@ export const ContactsList = ({
     confirmDeleteContact,
     contactToDelete,
     contacts,
+    currentPage,
     deleteError,
     deleteSuccess,
     error,
     getConnectionName,
-    hasMore,
+    goToNextPage,
+    goToPreviousPage,
+    hasNextPage,
+    hasPreviousPage,
     isDeleteDialogOpen,
     isDeleting,
     isLoading,
-    isLoadingMore,
-    loadMore,
+    isPageChanging,
     requestDeleteContact,
     searchTerm,
     setSearchTerm,
@@ -59,7 +62,7 @@ export const ContactsList = ({
   });
 
   const hasSearch = Boolean(searchTerm.trim());
-  const subtitle = getContactsListSubtitle(totalContacts, hasSearch, hasMore);
+  const subtitle = getContactsListSubtitle(totalContacts, hasSearch);
   const emptyState = getContactsListEmptyState(hasSearch);
 
   return (
@@ -87,60 +90,62 @@ export const ContactsList = ({
           <CircularProgress aria-label="Carregando contatos" />
         </div>
       ) : (
-        <Stack spacing={1.5}>
-          {contacts.length === 0 && (
-            <EmptyState {...emptyState} />
-          )}
+        <PaginatedContent
+          contentLabel="contatos"
+          currentPage={currentPage}
+          disabled={isDeleting}
+          hasNextPage={hasNextPage}
+          hasPreviousPage={hasPreviousPage}
+          isLoading={isPageChanging}
+          loadingLabel="Carregando contatos da próxima página"
+          onNextPage={goToNextPage}
+          onPreviousPage={goToPreviousPage}
+        >
+          <Stack spacing={1.5}>
+            {contacts.length === 0 && <EmptyState {...emptyState} />}
 
-          {contacts.map((contact) => (
-            <div
-              key={contact.id}
-              className="flex items-center justify-between rounded-lg border border-slate-200 p-4"
-            >
-              <div>
-                <Typography className="font-medium text-slate-900">
-                  {contact.name}
-                </Typography>
-                <Typography className="text-sm text-slate-500">
-                  {formatPhone(contact.phone)} ·{" "}
-                  {contact.connectionName ?? getConnectionName(contact.connectionId)}
-                </Typography>
-              </div>
-              <Stack direction="row" spacing={0.5}>
-                <IconButton
-                  aria-label="Editar contato"
-                  size="small"
-                  onClick={() => editContact(contact)}
-                  color={editingContact?.id === contact.id ? "primary" : "default"}
-                  disabled={isDeleting}
-                >
-                  <EditOutlinedIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                  aria-label="Excluir contato"
-                  size="small"
-                  onClick={() => requestDeleteContact(contact)}
-                  disabled={isDeleting}
-                >
-                  <DeleteOutlineIcon fontSize="small" />
-                </IconButton>
-              </Stack>
-            </div>
-          ))}
-
-          {hasMore && (
-            <div className="flex justify-center pt-2">
-              <Button
-                type="button"
-                variant="outlined"
-                onClick={loadMore}
-                disabled={isDeleting || isLoadingMore}
+            {contacts.map((contact) => (
+              <div
+                key={contact.id}
+                className="flex items-center justify-between rounded-lg border border-slate-200 p-4"
               >
-                {isLoadingMore ? "Carregando..." : "Carregar mais contatos"}
-              </Button>
-            </div>
-          )}
-        </Stack>
+                <div>
+                  <Typography className="font-medium text-slate-900">
+                    {contact.name}
+                  </Typography>
+                  <Typography className="text-sm text-slate-500">
+                    {formatPhone(contact.phone)} ·{" "}
+                    {contact.connectionName ??
+                      getConnectionName(contact.connectionId)}
+                  </Typography>
+                </div>
+                <Stack direction="row" spacing={0.5}>
+                  <IconButton
+                    aria-label="Editar contato"
+                    size="small"
+                    onClick={() => editContact(contact)}
+                    color={
+                      editingContact?.id === contact.id
+                        ? "primary"
+                        : "default"
+                    }
+                    disabled={isDeleting || isPageChanging}
+                  >
+                    <EditOutlinedIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    aria-label="Excluir contato"
+                    size="small"
+                    onClick={() => requestDeleteContact(contact)}
+                    disabled={isDeleting || isPageChanging}
+                  >
+                    <DeleteOutlineIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+              </div>
+            ))}
+          </Stack>
+        </PaginatedContent>
       )}
 
       <DeleteDialog

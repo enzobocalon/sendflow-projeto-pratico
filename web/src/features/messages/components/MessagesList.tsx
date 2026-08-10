@@ -3,7 +3,6 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {
   Alert,
-  Button,
   Chip,
   CircularProgress,
   IconButton,
@@ -17,6 +16,7 @@ import {
 import { EmptyState } from "../../../components/EmptyState";
 import { DeleteDialog } from "../../../components/DeleteDialog";
 import { FeedbackSnackbar } from "../../../components/FeedbackSnackbar";
+import { PaginatedContent } from "../../../components/PaginatedContent";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Message } from "../types";
 import { MessageFilters } from "./MessageFilters";
@@ -48,16 +48,19 @@ export const MessagesList = ({
     clearDeleteFeedback,
     closeDeleteModal,
     confirmDeleteMessage,
+    currentPage,
     deleteError,
     deleteSuccess,
     error,
     filter,
+    goToNextPage,
+    goToPreviousPage,
     handleFilterChange,
-    hasMore,
+    hasNextPage,
+    hasPreviousPage,
     isDeleting,
     isLoading,
-    isLoadingMore,
-    loadMore,
+    isPageChanging,
     messageToDelete,
     messages,
     handleDelete,
@@ -94,71 +97,72 @@ export const MessagesList = ({
           <CircularProgress aria-label="Carregando mensagens" />
         </div>
       ) : (
-        <Stack spacing={1.5}>
-          {messages.length === 0 && (
-            <EmptyState {...emptyState} />
-          )}
+        <PaginatedContent
+          contentLabel="mensagens"
+          currentPage={currentPage}
+          disabled={isDeleting}
+          hasNextPage={hasNextPage}
+          hasPreviousPage={hasPreviousPage}
+          isLoading={isPageChanging}
+          loadingLabel="Carregando mensagens da próxima página"
+          onNextPage={goToNextPage}
+          onPreviousPage={goToPreviousPage}
+        >
+          <Stack spacing={1.5}>
+            {messages.length === 0 && <EmptyState {...emptyState} />}
 
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className="rounded-lg border border-slate-200 p-4"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                    className="mb-2"
-                  >
-                    <Chip
-                      size="small"
-                      color={
-                        statusColor[message.status as keyof typeof statusColor]
-                      }
-                      label={
-                        statusLabel[message.status as keyof typeof statusLabel]
-                      }
-                    />
-                    <Typography className="text-xs text-slate-500">
-                      {message.date} ·{" "}
-                      {!message.recipients
-                        ? 0
-                        : message.recipients <= 1
-                          ? `${message.recipients} contato`
-                          : `${message.recipients} contatos`}
-                    </Typography>
-                  </Stack>
-                  <Typography className="text-sm text-slate-700">
-                    {message.content}
-                  </Typography>
-                </div>
-                <IconButton
-                  aria-label="Mais ações"
-                  size="small"
-                  onClick={(event) => openMenu(event, message)}
-                  disabled={isDeleting}
-                >
-                  <MoreVertIcon fontSize="small" />
-                </IconButton>
-              </div>
-            </div>
-          ))}
-
-          {hasMore && (
-            <div className="flex justify-center pt-2">
-              <Button
-                type="button"
-                variant="outlined"
-                onClick={loadMore}
-                disabled={isDeleting || isLoadingMore}
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className="rounded-lg border border-slate-200 p-4"
               >
-                {isLoadingMore ? "Carregando..." : "Carregar mais mensagens"}
-              </Button>
-            </div>
-          )}
-        </Stack>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      alignItems="center"
+                      className="mb-2"
+                    >
+                      <Chip
+                        size="small"
+                        color={
+                          statusColor[
+                            message.status as keyof typeof statusColor
+                          ]
+                        }
+                        label={
+                          statusLabel[
+                            message.status as keyof typeof statusLabel
+                          ]
+                        }
+                      />
+                      <Typography className="text-xs text-slate-500">
+                        {message.date} ·{" "}
+                        {!message.recipients
+                          ? 0
+                          : message.recipients <= 1
+                            ? `${message.recipients} contato`
+                            : `${message.recipients} contatos`}
+                      </Typography>
+                    </Stack>
+                    <Typography className="text-sm text-slate-700">
+                      {message.content}
+                    </Typography>
+                  </div>
+                  <IconButton
+                    aria-label="Mais ações"
+                    size="small"
+                    onClick={(event) => openMenu(event, message)}
+                    disabled={isDeleting || isPageChanging}
+                  >
+                    <MoreVertIcon fontSize="small" />
+                  </IconButton>
+                </div>
+              </div>
+            ))}
+          </Stack>
+        </PaginatedContent>
       )}
 
       <Menu

@@ -1,8 +1,6 @@
 import {
   collection,
-  getDocs,
   limit,
-  onSnapshot,
   orderBy,
   query,
   startAfter,
@@ -11,11 +9,11 @@ import {
   type QueryConstraint,
   type QueryDocumentSnapshot,
 } from "firebase/firestore";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import type { Message, MessageStatus } from "../features/messages/types";
 import { db } from "../lib/firebase";
-import { getFirestoreErrorMessage } from "../utils/firestoreError";
 import { useAuth } from "./useAuth";
+import { useRealtimeCursorPagination } from "./useRealtimeCursorPagination";
 
 type UseMessagesOptionsParams = {
   enabled?: boolean;
@@ -25,14 +23,12 @@ type UseMessagesOptionsParams = {
 
 const DEFAULT_PAGE_SIZE = 30;
 
-const mapMessageDocuments = (documents: Array<{ data: () => unknown; id: string }>) =>
-  documents.map(
-    (document) =>
-      ({
-        id: document.id,
-        ...(document.data() as Omit<Message, "id">),
-      }) as Message,
-  );
+const mapMessageDocument = (
+  document: QueryDocumentSnapshot<DocumentData>,
+): Message => ({
+  id: document.id,
+  ...(document.data() as Omit<Message, "id">),
+});
 
 export function useMessagesOptions({
   enabled = true,
@@ -40,103 +36,60 @@ export function useMessagesOptions({
   status = "all",
 }: UseMessagesOptionsParams = {}) {
   const { user } = useAuth();
-  const [error, setError] = useState("");
-  const [hasMore, setHasMore] = useState(false);
-  const [isLoading, setIsLoading] = useState(() => Boolean(user && enabled));
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [lastDocument, setLastDocument] =
-    useState<QueryDocumentSnapshot<DocumentData> | null>(null);
-  const [loadedQueryKey, setLoadedQueryKey] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
-  const queryKey = [user?.uid ?? "", status].join(":");
+  const userId = user?.uid ?? "";
   const canLoad = Boolean(user && enabled);
+  const queryKey = [userId, status].join(":");
 
-  useEffect(() => {
-    if (!canLoad || !user) {
-      return;
-    }
+  const createQuery = useCallback(
+    (
+      cursor: QueryDocumentSnapshot<DocumentData> | null,
+      resultLimit: number,
+    ) => {
+      const constraints: QueryConstraint[] = [
+        where("userId", "==", userId),
+        orderBy("createdAt", "desc"),
+      ];
 
-    let isActive = true;
-    const constraints: QueryConstraint[] = [
-      where("userId", "==", user.uid),
-      orderBy("createdAt", "desc"),
-      limit(pageSize + 1),
-    ];
+      if (status !== "all") {
+        constraints.splice(1, 0, where("status", "==", status));
+      }
 
-    if (status !== "all") {
-      constraints.splice(1, 0, where("status", "==", status));
-    }
+      if (cursor) constraints.push(startAfter(cursor));
+      constraints.push(limit(resultLimit));
 
-    const messagesQuery = query(collection(db, "messages"), ...constraints);
+      return query(collection(db, "messages"), ...constraints);
+    },
+    [status, userId],
+  );
 
-    const unsubscribe = onSnapshot(
-      messagesQuery,
-      (snapshot) => {
-        if (!isActive) return;
-
-        const nextMessages = mapMessageDocuments(snapshot.docs.slice(0, pageSize));
-
-        setMessages(nextMessages);
-        setHasMore(snapshot.docs.length > pageSize);
-        setLastDocument(snapshot.docs.slice(0, pageSize).at(-1) ?? null);
-        setLoadedQueryKey(queryKey);
-        setIsLoading(false);
-        setError("");
-      },
-      (error) => {
-        if (!isActive) return;
-
-        setLoadedQueryKey(queryKey);
-        setError(getFirestoreErrorMessage(error, "mensagens"));
-        setIsLoading(false);
-      },
-    );
-
-    return () => {
-      isActive = false;
-      unsubscribe();
-    };
-  }, [canLoad, pageSize, queryKey, status, user]);
-
-  const loadMore = useCallback(async () => {
-    if (!canLoad || !user || !lastDocument || isLoadingMore) {
-      return;
-    }
-
-    setIsLoadingMore(true);
-
-    const constraints: QueryConstraint[] = [
-      where("userId", "==", user.uid),
-      orderBy("createdAt", "desc"),
-    ];
-
-    if (status !== "all") {
-      constraints.splice(1, 0, where("status", "==", status));
-    }
-
-    constraints.push(startAfter(lastDocument), limit(pageSize + 1));
-
-    try {
-      const snapshot = await getDocs(query(collection(db, "messages"), ...constraints));
-      const nextMessages = mapMessageDocuments(snapshot.docs.slice(0, pageSize));
-
-      setMessages((currentMessages) => [...currentMessages, ...nextMessages]);
-      setHasMore(snapshot.docs.length > pageSize);
-      setLastDocument(snapshot.docs.slice(0, pageSize).at(-1) ?? null);
-      setError("");
-    } catch (error) {
-      setError(getFirestoreErrorMessage(error as { code?: string }));
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }, [canLoad, isLoadingMore, lastDocument, pageSize, status, user]);
+  const {
+    currentPage,
+    error,
+    goToNextPage,
+    goToPreviousPage,
+    hasNextPage,
+    hasPreviousPage,
+    isLoading,
+    isPageChanging,
+    items: messages,
+  } = useRealtimeCursorPagination({
+    createQuery,
+    enabled: canLoad,
+    mapDocument: mapMessageDocument,
+    pageSize,
+    queryKey,
+    resourceLabel: "mensagens",
+  });
 
   return {
-    error: canLoad ? error : "",
-    hasMore: canLoad ? hasMore : false,
-    isLoading: canLoad ? isLoading && !loadedQueryKey : false,
-    isLoadingMore,
-    loadMore,
-    messages: canLoad ? messages : [],
+    currentPage,
+    error,
+    goToNextPage,
+    goToPreviousPage,
+    hasNextPage,
+    hasPreviousPage,
+    isLoading,
+    isPageChanging,
+    messages,
   };
 }

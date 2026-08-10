@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { ConnectionSelectField } from "../../../components/ConnectionSelectField";
 import { FeedbackSnackbar } from "../../../components/FeedbackSnackbar";
+import { PaginatedContent } from "../../../components/PaginatedContent";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import { Controller } from "react-hook-form";
 import { useMessageComposer } from "./useMessageComposer";
@@ -38,16 +39,20 @@ export const MessageComposer = ({
     connectionError,
     connections,
     contactSearchTerm,
+    contactsCurrentPage,
     contactsError,
     control,
     enableScheduledMode,
     errors,
     formError,
-    hasMoreContacts,
+    goToNextContactsPage,
+    goToPreviousContactsPage,
+    hasNextContactsPage,
+    hasPreviousContactsPage,
     isLoadingConnections,
     isLoadingContacts,
+    isChangingContactsPage,
     isSubmitting,
-    loadMoreContacts,
     selectedContactsCount,
     selectedConnectionId,
     sendMode,
@@ -159,70 +164,71 @@ export const MessageComposer = ({
             control={control}
             render={({ field }) => (
               <>
-                <div className="grid gap-1">
-                  {isLoadingContacts && (
-                    <Typography className="text-sm text-slate-500">
-                      Carregando contatos...
-                    </Typography>
-                  )}
+                <PaginatedContent
+                  contentLabel="contatos disponíveis"
+                  currentPage={contactsCurrentPage}
+                  disabled={isSubmitting || isLoadingContacts}
+                  hasNextPage={hasNextContactsPage}
+                  hasPreviousPage={hasPreviousContactsPage}
+                  isLoading={isChangingContactsPage}
+                  loadingLabel="Carregando contatos da próxima página"
+                  onNextPage={goToNextContactsPage}
+                  onPreviousPage={goToPreviousContactsPage}
+                  size="small"
+                >
+                  <div className="grid gap-1">
+                    {isLoadingContacts && (
+                      <Typography className="text-sm text-slate-500">
+                        Carregando contatos...
+                      </Typography>
+                    )}
 
-                  {!isLoadingContacts && !hasContacts && (
-                    <Typography className="text-sm text-slate-500">
-                      {selectedConnectionId
-                        ? contactSearchTerm.trim()
-                          ? "Nenhum contato encontrado para esta busca."
-                          : "Esta conexão ainda não possui contatos cadastrados."
-                        : "Selecione uma conexão para listar os contatos."}
-                    </Typography>
-                  )}
+                    {!isLoadingContacts && !hasContacts && (
+                      <Typography className="text-sm text-slate-500">
+                        {selectedConnectionId
+                          ? contactSearchTerm.trim()
+                            ? "Nenhum contato encontrado para esta busca."
+                            : "Esta conexão ainda não possui contatos cadastrados."
+                          : "Selecione uma conexão para listar os contatos."}
+                      </Typography>
+                    )}
 
-                  {availableContacts.map((contact) => (
-                    <FormControlLabel
-                      key={contact.id}
-                      control={
-                        <Checkbox
-                          checked={field.value.includes(contact.id)}
-                          onChange={(event) => {
-                            const nextValue = event.target.checked
-                              ? [...field.value, contact.id]
-                              : field.value.filter(
-                                  (contactId) => contactId !== contact.id,
-                                );
+                    {availableContacts.map((contact) => (
+                      <FormControlLabel
+                        key={contact.id}
+                        control={
+                          <Checkbox
+                            checked={field.value.includes(contact.id)}
+                            onChange={(event) => {
+                              const nextValue = event.target.checked
+                                ? [...field.value, contact.id]
+                                : field.value.filter(
+                                    (contactId) => contactId !== contact.id,
+                                  );
 
-                            field.onChange(nextValue);
-                          }}
-                          disabled={isSubmitting}
-                        />
-                      }
-                      label={`${contact.name} · ${formatPhone(contact.phone)}`}
-                    />
-                  ))}
-
-                  {hasMoreContacts && (
-                    <div className="pt-2">
-                      <Button
-                        type="button"
-                        size="small"
-                        variant="outlined"
-                        onClick={loadMoreContacts}
-                        disabled={isSubmitting}
-                      >
-                        Carregar mais contatos
-                      </Button>
-                    </div>
-                  )}
-                </div>
+                              field.onChange(nextValue);
+                            }}
+                            disabled={isSubmitting || isChangingContactsPage}
+                          />
+                        }
+                        label={`${contact.name} · ${formatPhone(contact.phone)}`}
+                      />
+                    ))}
+                  </div>
+                </PaginatedContent>
 
                 {errors.contactIds && (
                   <FormHelperText error>
                     {errors.contactIds.message}
                   </FormHelperText>
                 )}
-                {!errors.contactIds && hasContacts && field.value.length === 0 && (
-                  <FormHelperText>
-                    Selecione pelo menos um contato para enviar ou agendar.
-                  </FormHelperText>
-                )}
+                {!errors.contactIds &&
+                  hasContacts &&
+                  field.value.length === 0 && (
+                    <FormHelperText>
+                      Selecione pelo menos um contato para enviar ou agendar.
+                    </FormHelperText>
+                  )}
                 {!errors.contactIds && contactsError && (
                   <FormHelperText error>{contactsError}</FormHelperText>
                 )}

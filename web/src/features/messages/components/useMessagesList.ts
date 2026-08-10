@@ -22,10 +22,19 @@ export function useMessagesList({
   onEdit,
 }: UseMessagesListParams) {
   const [filter, setFilter] = useState<MessageStatus | "all">("all");
-  const { messages, error, hasMore, isLoading, isLoadingMore, loadMore } =
-    useMessagesOptions({
-      status: filter,
-    });
+  const {
+    currentPage,
+    error,
+    goToNextPage,
+    goToPreviousPage,
+    hasNextPage,
+    hasPreviousPage,
+    isLoading,
+    isPageChanging,
+    messages,
+  } = useMessagesOptions({
+    status: filter,
+  });
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [deleteSuccess, setDeleteSuccess] = useState("");
@@ -125,16 +134,19 @@ export function useMessagesList({
 
   return {
     clearDeleteFeedback,
+    currentPage,
     messages: formattedMessages,
     deleteError,
     deleteSuccess,
     error,
     isLoading,
+    isPageChanging,
     handleFilterChange,
     filter,
-    hasMore,
-    isLoadingMore,
-    loadMore,
+    goToNextPage,
+    goToPreviousPage,
+    hasNextPage,
+    hasPreviousPage,
     closeDeleteModal,
     confirmDeleteMessage,
     isDeleting,
