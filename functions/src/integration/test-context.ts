@@ -51,7 +51,7 @@ export const terminateIntegrationContext = async () => {
 };
 
 const DEFAULT_PHONE = "11999999999";
-const SCHEDULE_OFFSET_MS = 60_000;
+const SCHEDULE_OFFSET_MS = 24 * 60 * 60 * 1_000;
 
 type ContactFixtureOptions = Partial<
   Pick<CreateContactRequest, "name" | "phone">
