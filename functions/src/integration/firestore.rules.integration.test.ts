@@ -7,7 +7,13 @@ import {
   type RulesTestContext,
   type RulesTestEnvironment,
 } from "@firebase/rules-unit-testing";
-import { deleteDoc, doc, getDoc, setDoc } from "firebase/firestore";
+import {
+  deleteDoc,
+  doc,
+  getDoc,
+  setDoc,
+  setLogLevel,
+} from "firebase/firestore";
 import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
 
 const PROJECT_ID = "sendflow-dev-prova";
@@ -16,6 +22,21 @@ const OTHER_USER_ID = "rules-other-user";
 const RESOURCE_COLLECTIONS = ["connections", "contacts", "messages"];
 
 let testEnvironment: RulesTestEnvironment;
+
+type RulesAssertion = (operation: () => Promise<unknown>) => Promise<unknown>;
+
+const assertAllowed: RulesAssertion = (operation) =>
+  assertSucceeds(operation());
+
+const assertDenied: RulesAssertion = async (operation) => {
+  setLogLevel("silent");
+
+  try {
+    return await assertFails(operation());
+  } finally {
+    setLogLevel("error");
+  }
+};
 
 const seedOwnedResources = () =>
   testEnvironment.withSecurityRulesDisabled(async (context) => {
@@ -33,10 +54,10 @@ const seedOwnedResources = () =>
 
 const assertResourceReads = async (
   context: RulesTestContext,
-  assertion: typeof assertFails | typeof assertSucceeds,
+  assertion: RulesAssertion,
 ) => {
   for (const collectionName of RESOURCE_COLLECTIONS) {
-    await assertion(
+    await assertion(() =>
       getDoc(doc(context.firestore(), collectionName, "owned-resource")),
     );
   }
@@ -64,7 +85,7 @@ describe("Firestore rules", () => {
   it("allows users to read their own resources", async () => {
     const ownerContext = testEnvironment.authenticatedContext(OWNER_ID);
 
-    await assertResourceReads(ownerContext, assertSucceeds);
+    await assertResourceReads(ownerContext, assertAllowed);
     await assertSucceeds(
       getDoc(doc(ownerContext.firestore(), "usage", OWNER_ID)),
     );
@@ -73,11 +94,11 @@ describe("Firestore rules", () => {
   it("rejects unauthenticated and foreign resource reads", async () => {
     await assertResourceReads(
       testEnvironment.unauthenticatedContext(),
-      assertFails,
+      assertDenied,
     );
     await assertResourceReads(
       testEnvironment.authenticatedContext(OTHER_USER_ID),
-      assertFails,
+      assertDenied,
     );
   });
 
@@ -87,17 +108,17 @@ describe("Firestore rules", () => {
       .firestore();
 
     for (const collectionName of RESOURCE_COLLECTIONS) {
-      await assertFails(
+      await assertDenied(() =>
         setDoc(doc(firestore, collectionName, "new-resource"), {
           userId: OWNER_ID,
         }),
       );
-      await assertFails(
+      await assertDenied(() =>
         setDoc(doc(firestore, collectionName, "owned-resource"), {
           userId: OWNER_ID,
         }),
       );
-      await assertFails(
+      await assertDenied(() =>
         deleteDoc(doc(firestore, collectionName, "owned-resource")),
       );
     }
@@ -111,8 +132,8 @@ describe("Firestore rules", () => {
       .authenticatedContext(OTHER_USER_ID)
       .firestore();
 
-    await assertFails(getDoc(doc(foreignFirestore, "usage", OWNER_ID)));
-    await assertFails(
+    await assertDenied(() => getDoc(doc(foreignFirestore, "usage", OWNER_ID)));
+    await assertDenied(() =>
       setDoc(doc(ownerFirestore, "usage", OWNER_ID), { userId: OWNER_ID }),
     );
   });
