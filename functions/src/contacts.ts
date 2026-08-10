@@ -4,8 +4,8 @@ import { db } from "./firebase";
 import {
   isValidName,
   isValidPhone,
+  normalizePhone,
   normalizeSearchText,
-  sanitizePhone,
   type CreateContactRequest,
   type DeleteContactRequest,
   type UpdateContactRequest,
@@ -26,7 +26,7 @@ export const createContact = onCall<CreateContactRequest>(
       "Informe uma conexão válida.",
     );
     const name = getStringField(request.data?.name);
-    const phone = sanitizePhone(getStringField(request.data?.phone));
+    const phone = normalizePhone(getStringField(request.data?.phone));
 
     if (!isValidName(name)) {
       throw new HttpsError(
@@ -84,7 +84,7 @@ export const updateContact = onCall<UpdateContactRequest>(
       "Informe uma conexão válida.",
     );
     const name = getStringField(request.data?.name);
-    const phone = sanitizePhone(getStringField(request.data?.phone));
+    const phone = normalizePhone(getStringField(request.data?.phone));
     const contactRef = db.collection("contacts").doc(contactId);
     if (!isValidName(name)) {
       throw new HttpsError(

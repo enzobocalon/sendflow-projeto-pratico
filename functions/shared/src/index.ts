@@ -5,6 +5,7 @@ export const NAME_MIN_LENGTH = 2;
 export const NAME_MAX_LENGTH = 80;
 export const PHONE_MIN_LENGTH = 10;
 export const PHONE_MAX_LENGTH = 15;
+export const BRAZIL_NATIONAL_PHONE_MAX_LENGTH = 11;
 export const MESSAGE_CONTENT_MIN_LENGTH = 2;
 export const MESSAGE_CONTENT_MAX_LENGTH = 500;
 
@@ -62,6 +63,19 @@ export const normalizeSearchText = (value: string) =>
   value.trim().toLowerCase();
 
 export const sanitizePhone = (value: string) => value.replace(/\D/g, "");
+
+export const normalizePhone = (value: string) => {
+  const digits = sanitizePhone(value);
+  const isInternational =
+    value.trimStart().startsWith("+") ||
+    digits.length > BRAZIL_NATIONAL_PHONE_MAX_LENGTH;
+
+  if (!digits) {
+    return isInternational ? "+" : "";
+  }
+
+  return isInternational ? `+${digits}` : digits;
+};
 
 export const isRequiredString = (value: unknown): value is string =>
   typeof value === "string" && value.trim().length > 0;

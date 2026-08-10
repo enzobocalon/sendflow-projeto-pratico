@@ -166,7 +166,7 @@ describe("Connection Functions", () => {
       connectionId: connection.id,
       connectionName: "Conexão de Contatos",
       name: "Ana",
-      phone: "5511999999999",
+      phone: "+5511999999999",
       userId,
     });
 

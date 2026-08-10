@@ -66,7 +66,7 @@ describe("Contact Functions", () => {
       connectionName: "Conexão de Atualização",
       name: "Nome Atualizado",
       nameNormalized: "nome atualizado",
-      phone: "5511988888888",
+      phone: "+5511988888888",
       userId,
     });
 

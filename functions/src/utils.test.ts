@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PHONE_MAX_LENGTH, isValidPhone } from "@sendflow/shared";
+import {
+  PHONE_MAX_LENGTH,
+  isValidPhone,
+  normalizePhone,
+} from "@sendflow/shared";
 
 const { dbMock } = vi.hoisted(() => ({
   dbMock: {
@@ -103,6 +107,17 @@ describe("sanitizePhone", () => {
     const value = "+44 20 7946 0958";
 
     expect(sanitizePhone(value)).toBe("442079460958");
+  });
+});
+
+describe("normalizePhone", () => {
+  it.each([
+    ["(11) 99999-9999", "11999999999"],
+    ["+1 (415) 555-2671", "+14155552671"],
+    ["5511999999999", "+5511999999999"],
+    ["+", "+"],
+  ])("normalizes %s as %s", (value, expected) => {
+    expect(normalizePhone(value)).toBe(expected);
   });
 });
 

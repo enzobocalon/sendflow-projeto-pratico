@@ -1,10 +1,12 @@
-import { PHONE_MAX_LENGTH, sanitizePhone } from "@sendflow/shared";
+import {
+  PHONE_MAX_LENGTH,
+  normalizePhone,
+  sanitizePhone,
+} from "@sendflow/shared";
 import {
   formatIncompletePhoneNumber,
   parsePhoneNumberFromString,
 } from "libphonenumber-js/min";
-
-const BRAZIL_PHONE_LENGTH = 11;
 
 const formatInternationalPhone = (digits: string) => {
   const internationalPhone = `+${digits}`;
@@ -17,19 +19,28 @@ const formatInternationalPhone = (digits: string) => {
   return formatIncompletePhoneNumber(internationalPhone);
 };
 
-export const normalizePhoneInput = (value: string) =>
-  sanitizePhone(value).slice(0, PHONE_MAX_LENGTH);
-
-export const formatPhone = (value: string) => {
-  const digits = sanitizePhone(value);
+export const normalizePhoneInput = (value: string) => {
+  const normalizedPhone = normalizePhone(value);
+  const digits = sanitizePhone(normalizedPhone).slice(0, PHONE_MAX_LENGTH);
 
   if (!digits) {
-    return "";
+    return normalizedPhone.startsWith("+") ? "+" : "";
   }
 
-  if (digits.length === BRAZIL_PHONE_LENGTH) {
-    return formatIncompletePhoneNumber(digits, "BR");
+  return normalizedPhone.startsWith("+") ? `+${digits}` : digits;
+};
+
+export const formatPhone = (value: string) => {
+  const normalizedPhone = normalizePhone(value);
+  const digits = sanitizePhone(normalizedPhone);
+
+  if (!digits) {
+    return normalizedPhone.startsWith("+") ? "+" : "";
   }
 
-  return formatInternationalPhone(digits);
+  if (normalizedPhone.startsWith("+")) {
+    return formatInternationalPhone(digits);
+  }
+
+  return formatIncompletePhoneNumber(digits, "BR");
 };
