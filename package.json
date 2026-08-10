@@ -7,6 +7,7 @@
     "build": "pnpm --filter web build && pnpm --filter functions build",
     "lint": "pnpm --filter web lint",
     "preview": "pnpm --filter web preview",
-    "functions:build": "pnpm --filter functions build"
+    "functions:build": "pnpm --filter functions build",
+    "seed:firestore": "node functions/scripts/seed-firestore.mjs"
   }
 }

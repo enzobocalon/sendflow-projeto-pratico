@@ -117,6 +117,40 @@ Compila o frontend e as Cloud Functions.
 pnpm lint
 ```
 
+## Popular o Firestore para desenvolvimento
+
+O seed cria ou atualiza 100 conexões, 100 contatos e 100 mensagens para um
+usuário. Informe explicitamente o projeto Firebase e o UID encontrado no
+Firebase Authentication. Prefira um usuário dedicado a testes, pois o limite
+normal da aplicação é de 100 conexões por usuário:
+
+```bash
+pnpm seed:firestore -- --project-id sendflow-dev-prova --user-id SEU_USER_ID
+```
+
+Para usar o Firestore Emulator:
+
+```bash
+pnpm seed:firestore -- --project-id sendflow-dev-prova --user-id SEU_USER_ID --emulator-host 127.0.0.1:8080
+```
+
+No Firebase real, o Admin SDK precisa de Application Default Credentials ou da
+variável `GOOGLE_APPLICATION_CREDENTIALS` apontando para uma service account.
+Os IDs do seed são determinísticos, então repetir o comando para o mesmo usuário
+atualiza os documentos criados anteriormente sem duplicá-los. Os contatos e as
+mensagens ficam vinculados à primeira conexão de seed para também exercitar a
+paginação do seletor de contatos no composer de mensagens. Por segurança, o
+comando é interrompido se o usuário já possuir documentos que não sejam desse
+seed.
+
+Para manter dados já existentes de um usuário de testes, acrescente a opção
+`--allow-existing`. Nenhum documento existente será apagado e o `usage` será
+recalculado com os totais reais:
+
+```bash
+pnpm seed:firestore -- --project-id sendflow-dev-prova --user-id SEU_USER_ID --allow-existing
+```
+
 ## Deploy
 
 ```bash
