@@ -120,7 +120,7 @@ export function MessageContactsField({
         name="contactIds"
         control={control}
         render={({ field }) => (
-          <>
+          <div className="mt-4">
             <PaginatedContent
               contentLabel="contatos disponíveis"
               currentPage={contactsCurrentPage}
@@ -180,7 +180,7 @@ export function MessageContactsField({
             {!contactIdsError && (
               <FormFieldFeedback error message={contactsError} />
             )}
-          </>
+          </div>
         )}
       />
     </div>
