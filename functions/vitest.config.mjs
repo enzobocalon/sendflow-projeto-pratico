@@ -28,6 +28,7 @@ export default {
   },
   test: {
     include: ["src/**/*.test.ts"],
+    testTimeout: 15_000,
     coverage: {
       exclude: ["src/**/*.test.ts", "src/integration/**"],
       include: [

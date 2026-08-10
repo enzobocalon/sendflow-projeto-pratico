@@ -1,4 +1,8 @@
-import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import {
+  FieldValue,
+  Timestamp,
+  type Transaction,
+} from "firebase-admin/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { db } from "./firebase";
 
@@ -6,36 +10,36 @@ const DUE_MESSAGES_LIMIT = 250;
 
 type MessageDocument = FirebaseFirestore.QueryDocumentSnapshot;
 
-const getDueScheduledMessages = (now: Timestamp) => {
-  return db
+const getDueScheduledMessagesQuery = (now: Timestamp) =>
+  db
     .collection("messages")
     .where("status", "==", "scheduled")
     .where("scheduledAt", "<=", now)
-    .limit(DUE_MESSAGES_LIMIT)
-    .get();
-};
+    .limit(DUE_MESSAGES_LIMIT);
 
-const markMessagesAsSent = async (
+const markMessagesAsSent = (
+  transaction: Transaction,
   messages: MessageDocument[],
   sentAt: Timestamp,
 ) => {
   const countByUser = countMessagesByUser(messages);
-  const batch = db.batch();
 
   messages.forEach((message) => {
-    batch.update(message.ref, { sentAt, status: "sent", updatedAt: sentAt });
+    transaction.update(message.ref, {
+      sentAt,
+      status: "sent",
+      updatedAt: sentAt,
+    });
   });
 
   countByUser.forEach((count, userId) => {
     const usageRef = db.collection("usage").doc(userId);
-    batch.set(
+    transaction.set(
       usageRef,
       { scheduledMessagesCount: FieldValue.increment(-count) },
       { merge: true },
     );
   });
-
-  await batch.commit();
 };
 
 const countMessagesByUser = (messages: MessageDocument[]) => {
@@ -50,6 +54,18 @@ const countMessagesByUser = (messages: MessageDocument[]) => {
   }, new Map<string, number>());
 };
 
+export const processDueScheduledMessages = async (
+  now: Timestamp = Timestamp.now(),
+) => {
+  await db.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(getDueScheduledMessagesQuery(now));
+
+    if (snapshot.empty) return;
+
+    markMessagesAsSent(transaction, snapshot.docs, now);
+  });
+};
+
 export const markScheduledMessagesAsSent = onSchedule(
   {
     region: "southamerica-east1",
@@ -57,11 +73,6 @@ export const markScheduledMessagesAsSent = onSchedule(
     timeZone: "America/Sao_Paulo",
   },
   async () => {
-    const now = Timestamp.now();
-    const snapshot = await getDueScheduledMessages(now);
-
-    if (snapshot.empty) return;
-
-    await markMessagesAsSent(snapshot.docs, now);
+    await processDueScheduledMessages();
   },
 );
