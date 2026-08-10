@@ -43,7 +43,6 @@ export const ContactsList = ({
     deleteError,
     deleteSuccess,
     error,
-    getConnectionName,
     goToNextPage,
     goToPreviousPage,
     hasNextPage,
@@ -115,8 +114,7 @@ export const ContactsList = ({
                   </Typography>
                   <Typography className="text-sm text-slate-500">
                     {formatPhone(contact.phone)} ·{" "}
-                    {contact.connectionName ??
-                      getConnectionName(contact.connectionId)}
+                    {contact.connectionName ?? "Conexão não encontrada"}
                   </Typography>
                 </div>
                 <Stack direction="row" spacing={0.5}>

@@ -1,5 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
-import { useConnectionsOptions } from "../../../hooks/useConnectionsOptions";
+import { useState } from "react";
 import { useContactsOptions } from "../../../hooks/useContactsOptions";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import { useDelete } from "../../../hooks/useDelete";
@@ -53,22 +52,6 @@ export const useContactsList = ({
     isPageChanging,
   } = useContactsOptions({ searchTerm: debouncedSearchTerm });
 
-  const { connections } = useConnectionsOptions();
-
-  const connectionNameById = useMemo(
-    () =>
-      new Map(
-        connections.map((connection) => [connection.id, connection.name]),
-      ),
-    [connections],
-  );
-
-  const getConnectionName = useCallback(
-    (connectionId: string) =>
-      connectionNameById.get(connectionId) ?? "Conexão não encontrada",
-    [connectionNameById],
-  );
-
   return {
     clearDeleteFeedback,
     closeDeleteModal,
@@ -80,7 +63,6 @@ export const useContactsList = ({
     deleteError,
     deleteSuccess,
     error: contactsError,
-    getConnectionName,
     goToNextPage,
     goToPreviousPage,
     hasNextPage,
