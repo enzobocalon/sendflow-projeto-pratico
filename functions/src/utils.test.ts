@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { PHONE_MAX_LENGTH, isValidPhone } from "@sendflow/shared";
 
 const { dbMock } = vi.hoisted(() => ({
   dbMock: {
@@ -96,6 +97,25 @@ describe("sanitizePhone", () => {
     const result = sanitizePhone(value);
 
     expect(result).toBe("5511999999999");
+  });
+
+  it("preserves all digits of an international number", () => {
+    const value = "+44 20 7946 0958";
+
+    expect(sanitizePhone(value)).toBe("442079460958");
+  });
+});
+
+describe("isValidPhone", () => {
+  it.each(["11999999999", "442079460958", "1".repeat(PHONE_MAX_LENGTH)])(
+    "accepts a supported national or international number: %s",
+    (phone) => {
+      expect(isValidPhone(phone)).toBe(true);
+    },
+  );
+
+  it("rejects a number above the E.164 length limit", () => {
+    expect(isValidPhone("1".repeat(PHONE_MAX_LENGTH + 1))).toBe(false);
   });
 });
 

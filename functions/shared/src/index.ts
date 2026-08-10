@@ -4,7 +4,7 @@ export const MAX_MESSAGE_CONTACTS = 100;
 export const NAME_MIN_LENGTH = 2;
 export const NAME_MAX_LENGTH = 80;
 export const PHONE_MIN_LENGTH = 10;
-export const PHONE_MAX_LENGTH = 13;
+export const PHONE_MAX_LENGTH = 15;
 export const MESSAGE_CONTENT_MIN_LENGTH = 2;
 export const MESSAGE_CONTENT_MAX_LENGTH = 500;
 

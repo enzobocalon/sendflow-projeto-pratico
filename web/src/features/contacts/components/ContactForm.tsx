@@ -8,7 +8,7 @@ import { ConnectionSelectField } from "../../../components/ConnectionSelectField
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Contact } from "../types";
 import { useContactForm } from "./useContactForm";
-import { formatPhone, sanitizePhone } from "../../../utils/formatPhone";
+import { formatPhone, normalizePhoneInput } from "../../../utils/formatPhone";
 
 type ContactFormProps = {
   editingContact: Contact | null;
@@ -78,9 +78,10 @@ export const ContactForm = ({
               {...field}
               value={formatPhone(field.value)}
               onChange={(event) =>
-                field.onChange(sanitizePhone(event.target.value))
+                field.onChange(normalizePhoneInput(event.target.value))
               }
               label="Telefone"
+              type="tel"
               error={Boolean(errors.phone)}
               helperText={errors.phone?.message}
               placeholder="(00) 00000-0000"
