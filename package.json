@@ -9,7 +9,10 @@
     "format:check": "prettier --check .",
     "lint": "pnpm --filter web lint",
     "preview": "pnpm --filter web preview",
+    "test": "pnpm --filter functions test && pnpm functions:test:integration",
+    "test:coverage": "firebase emulators:exec --only firestore --project sendflow-dev-prova \"pnpm --filter functions test:coverage\"",
     "functions:build": "pnpm --filter functions build",
+    "functions:test:integration": "firebase emulators:exec --only firestore --project sendflow-dev-prova \"pnpm --filter functions test:integration\"",
     "seed:firestore": "node functions/scripts/seed-firestore.mjs"
   },
   "devDependencies": {

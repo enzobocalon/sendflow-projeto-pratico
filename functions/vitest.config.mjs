@@ -29,6 +29,13 @@ export default {
   test: {
     include: ["src/**/*.test.ts"],
     coverage: {
+      exclude: ["src/**/*.test.ts", "src/integration/**"],
+      include: [
+        "src/connections.ts",
+        "src/contacts.ts",
+        "src/messages.ts",
+        "src/utils.ts",
+      ],
       thresholds: {
         branches: 95,
         functions: 95,

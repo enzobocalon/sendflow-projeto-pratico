@@ -57,7 +57,8 @@ O Firestore bloqueia escritas diretas em `connections`, `contacts` e `messages` 
 
 ## Requisitos
 
-- Node.js compatível com o projeto
+- Node.js 22
+- JDK 21 ou superior para executar o Firestore Emulator
 - pnpm instalado globalmente
 - Firebase CLI instalado
 - Projeto Firebase com Auth, Firestore, Functions e Hosting configurados
@@ -115,6 +116,21 @@ Compila o frontend e as Cloud Functions.
 
 ```bash
 pnpm lint
+```
+
+## Testes
+
+Os testes unitários rodam diretamente com Vitest. Os testes de integração e de
+regras usam o Firestore Emulator e, por isso, precisam do JDK 21 ou superior:
+
+```bash
+pnpm test
+```
+
+Para gerar o relatório de cobertura das Functions:
+
+```bash
+pnpm test:coverage
 ```
 
 ## Popular o Firestore para desenvolvimento

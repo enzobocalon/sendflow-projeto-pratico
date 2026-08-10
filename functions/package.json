@@ -8,9 +8,10 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "vitest run --configLoader runner --pool=threads --maxWorkers=1 --no-file-parallelism --exclude src/integration/**",
+    "test": "pnpm test:typecheck && vitest run --configLoader runner --pool=threads --maxWorkers=1 --no-file-parallelism --exclude src/integration/**",
     "test:integration": "vitest run src/integration --configLoader runner --pool=threads --maxWorkers=1 --no-file-parallelism",
-    "test:coverage": "vitest run --configLoader runner --coverage --coverage.provider=v8 --coverage.reporter=text --coverage.reporter=html --pool=threads --maxWorkers=1 --no-file-parallelism",
+    "test:coverage": "pnpm test:typecheck && vitest run --configLoader runner --coverage --coverage.provider=v8 --coverage.reporter=text --coverage.reporter=html --pool=threads --maxWorkers=1 --no-file-parallelism",
+    "test:typecheck": "tsc -p tsconfig.test.json",
     "serve": "pnpm build && firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log"
@@ -20,7 +21,9 @@
     "firebase-functions": "^7.0.1"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.1",
     "@vitest/coverage-v8": "^4.1.10",
+    "firebase": "12.6.0",
     "typescript": "~6.0.2",
     "vitest": "^4.1.10"
   }
