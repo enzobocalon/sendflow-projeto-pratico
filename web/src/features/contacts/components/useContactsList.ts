@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useConnectionsOptions } from "../../../hooks/useConnectionsOptions";
 import { useContactsOptions } from "../../../hooks/useContactsOptions";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
+import { useDelete } from "../../../hooks/useDelete";
 import { deleteContact } from "../../../services/contactService";
 import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
 import type { Contact } from "../types";
@@ -15,13 +16,30 @@ export const useContactsList = ({
   editingContact,
   onDeletedEditingContact,
 }: UseContactsListParams) => {
-  const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
-  const [deleteSuccess, setDeleteSuccess] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebouncedValue(searchTerm);
+  const {
+    clearDeleteDialog: clearDeleteModal,
+    clearDeleteFeedback,
+    closeDeleteDialog: closeDeleteModal,
+    confirmDelete: confirmDeleteContact,
+    deleteError,
+    deleteSuccess,
+    isDeleteDialogOpen,
+    isDeleting,
+    itemToDelete: contactToDelete,
+    requestDelete: requestDeleteContact,
+  } = useDelete<Contact>({
+    deleteItem: (contact) => deleteContact(contact.id),
+    getErrorMessage: (error) =>
+      getFirebaseErrorMessage(error, "Não foi possível excluir o contato."),
+    onDeleted: (contact) => {
+      if (editingContact?.id === contact.id) {
+        onDeletedEditingContact();
+      }
+    },
+    successMessage: "Contato excluído com sucesso.",
+  });
 
   const {
     contacts,
@@ -50,57 +68,6 @@ export const useContactsList = ({
       connectionNameById.get(connectionId) ?? "Conexão não encontrada",
     [connectionNameById],
   );
-
-  const requestDeleteContact = (contact: Contact) => {
-    setDeleteError("");
-    setDeleteSuccess("");
-    setContactToDelete(contact);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const closeDeleteModal = () => {
-    if (isDeleting) {
-      return;
-    }
-
-    setIsDeleteDialogOpen(false);
-  };
-
-  const clearDeleteModal = () => {
-    setContactToDelete(null);
-  };
-
-  const confirmDeleteContact = async () => {
-    if (!contactToDelete) {
-      return;
-    }
-
-    setDeleteError("");
-    setDeleteSuccess("");
-    setIsDeleting(true);
-
-    try {
-      await deleteContact(contactToDelete.id);
-
-      if (editingContact?.id === contactToDelete.id) {
-        onDeletedEditingContact();
-      }
-
-      setDeleteSuccess("Contato excluído com sucesso.");
-      setIsDeleteDialogOpen(false);
-    } catch (error) {
-      setDeleteError(
-        getFirebaseErrorMessage(error, "Não foi possível excluir o contato."),
-      );
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const clearDeleteFeedback = () => {
-    setDeleteError("");
-    setDeleteSuccess("");
-  };
 
   return {
     clearDeleteFeedback,

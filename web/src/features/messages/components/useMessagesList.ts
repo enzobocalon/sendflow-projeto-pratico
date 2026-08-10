@@ -1,4 +1,5 @@
 import { useMemo, useState, type MouseEvent } from "react";
+import { useDelete } from "../../../hooks/useDelete";
 import { useMessagesOptions } from "../../../hooks/useMessagesOptions";
 import type { Message, MessageStatus } from "../types";
 import { formatMessageDate } from "../../../utils/dates";
@@ -35,10 +36,27 @@ export function useMessagesList({
   } = useMessagesOptions({
     status: filter,
   });
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
-  const [deleteSuccess, setDeleteSuccess] = useState("");
-  const [messageToDelete, setMessageToDelete] = useState<Message | null>(null);
+  const {
+    clearDeleteDialog: clearDeleteModal,
+    clearDeleteFeedback,
+    closeDeleteDialog: closeDeleteModal,
+    confirmDelete: confirmDeleteMessage,
+    deleteError,
+    deleteSuccess,
+    isDeleteDialogOpen,
+    isDeleting,
+    requestDelete: requestDeleteMessage,
+  } = useDelete<Message>({
+    deleteItem: (message) => deleteMessage(message.id),
+    getErrorMessage: (error) =>
+      getFirebaseErrorMessage(error, "Não foi possível excluir a mensagem."),
+    onDeleted: (message) => {
+      if (editingMessage?.id === message.id) {
+        onDeletedEditingMessage();
+      }
+    },
+    successMessage: "Mensagem excluída com sucesso.",
+  });
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [selectedMessage, setSelectedMessage] =
     useState<MessageListItem | null>(null);
@@ -53,47 +71,6 @@ export function useMessagesList({
 
   const handleFilterChange = (status: MessageStatus | "all") => {
     setFilter(status);
-  };
-
-  const requestDeleteMessage = (message: Message) => {
-    setDeleteError("");
-    setDeleteSuccess("");
-    setMessageToDelete(message);
-  };
-
-  const closeDeleteModal = () => {
-    if (isDeleting) {
-      return;
-    }
-
-    setMessageToDelete(null);
-  };
-
-  const confirmDeleteMessage = async () => {
-    if (!messageToDelete) {
-      return;
-    }
-
-    setDeleteError("");
-    setDeleteSuccess("");
-    setIsDeleting(true);
-
-    try {
-      await deleteMessage(messageToDelete.id);
-
-      if (editingMessage?.id === messageToDelete.id) {
-        onDeletedEditingMessage();
-      }
-
-      setDeleteSuccess("Mensagem excluída com sucesso.");
-      closeDeleteModal();
-    } catch (error) {
-      setDeleteError(
-        getFirebaseErrorMessage(error, "Não foi possível excluir a mensagem."),
-      );
-    } finally {
-      setIsDeleting(false);
-    }
   };
 
   const openMenu = (
@@ -127,12 +104,8 @@ export function useMessagesList({
     closeMenu();
   };
 
-  const clearDeleteFeedback = () => {
-    setDeleteError("");
-    setDeleteSuccess("");
-  };
-
   return {
+    clearDeleteModal,
     clearDeleteFeedback,
     currentPage,
     messages: formattedMessages,
@@ -150,7 +123,7 @@ export function useMessagesList({
     closeDeleteModal,
     confirmDeleteMessage,
     isDeleting,
-    messageToDelete,
+    isDeleteDialogOpen,
     requestDeleteMessage,
     handleEdit,
     handleDelete,

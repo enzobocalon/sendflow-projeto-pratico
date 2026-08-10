@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { useAuth } from "../../../hooks/useAuth";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
+import { useDelete } from "../../../hooks/useDelete";
 import { deleteConnection } from "../../../services/connectionService";
 import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
 import type { Connection } from "../types";
@@ -35,15 +35,29 @@ export const useConnectionsList = ({
   isLoadingConnections,
   onDeletedEditingConnection,
 }: UseConnectionsListParams) => {
-  const [connectionToDelete, setConnectionToDelete] =
-    useState<Connection | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
-  const [deleteSuccess, setDeleteSuccess] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebouncedValue(searchTerm);
-  const { user } = useAuth();
+  const {
+    clearDeleteDialog: clearDeleteModal,
+    clearDeleteFeedback,
+    closeDeleteDialog: closeDeleteModal,
+    confirmDelete: confirmDeleteConnection,
+    deleteError,
+    deleteSuccess,
+    isDeleteDialogOpen,
+    isDeleting,
+    itemToDelete: connectionToDelete,
+    requestDelete: requestDeleteConnection,
+  } = useDelete<Connection>({
+    deleteItem: (connection) => deleteConnection(connection.id),
+    getErrorMessage: getDeleteConnectionErrorMessage,
+    onDeleted: (connection) => {
+      if (editingConnection?.id === connection.id) {
+        onDeletedEditingConnection();
+      }
+    },
+    successMessage: "Conexão excluída com sucesso.",
+  });
   const filteredConnections = useMemo(() => {
     const normalizedSearchTerm = debouncedSearchTerm.trim().toLowerCase();
 
@@ -55,65 +69,6 @@ export const useConnectionsList = ({
       connection.name.toLowerCase().includes(normalizedSearchTerm),
     );
   }, [connections, debouncedSearchTerm]);
-
-  const requestDeleteConnection = (connection: Connection) => {
-    setDeleteError("");
-    setDeleteSuccess("");
-    setConnectionToDelete(connection);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const closeDeleteModal = () => {
-    if (isDeleting) {
-      return;
-    }
-
-    setIsDeleteDialogOpen(false);
-  };
-
-  const clearDeleteModal = () => {
-    setConnectionToDelete(null);
-  };
-
-  const confirmDeleteConnection = async () => {
-    if (!connectionToDelete) {
-      return;
-    }
-
-    setDeleteError("");
-    setDeleteSuccess("");
-    setIsDeleting(true);
-
-    try {
-      if (!user) {
-        setDeleteError("Faça login para excluir uma conexão.");
-        return;
-      }
-
-      await deleteConnection(connectionToDelete.id);
-
-      if (editingConnection?.id === connectionToDelete.id) {
-        onDeletedEditingConnection();
-      }
-
-      setDeleteSuccess("Conexão excluída com sucesso.");
-      setIsDeleteDialogOpen(false);
-    } catch (error) {
-      const deleteErrorMessage = getDeleteConnectionErrorMessage(error);
-      setDeleteError(deleteErrorMessage);
-
-      if (deleteErrorMessage !== "Não foi possível excluir a conexão.") {
-        setIsDeleteDialogOpen(false);
-      }
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const clearDeleteFeedback = () => {
-    setDeleteError("");
-    setDeleteSuccess("");
-  };
 
   return {
     clearDeleteFeedback,

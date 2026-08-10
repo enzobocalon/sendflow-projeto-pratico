@@ -46,6 +46,7 @@ export const MessagesList = ({
 }: MessagesListProps) => {
   const {
     clearDeleteFeedback,
+    clearDeleteModal,
     closeDeleteModal,
     confirmDeleteMessage,
     currentPage,
@@ -59,9 +60,9 @@ export const MessagesList = ({
     hasNextPage,
     hasPreviousPage,
     isDeleting,
+    isDeleteDialogOpen,
     isLoading,
     isPageChanging,
-    messageToDelete,
     messages,
     handleDelete,
     handleEdit,
@@ -192,8 +193,9 @@ export const MessagesList = ({
 
       <DeleteDialog
         title="Excluir mensagem?"
-        open={Boolean(messageToDelete)}
+        open={isDeleteDialogOpen}
         onClose={closeDeleteModal}
+        onExited={clearDeleteModal}
         onConfirm={confirmDeleteMessage}
         isLoading={isDeleting}
         message={`Tem certeza que deseja excluir esta mensagem? Esta ação não pode ser desfeita.`}
