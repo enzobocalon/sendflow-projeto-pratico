@@ -2,6 +2,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { db } from "./firebase";
 import {
+  NAME_LENGTH_ERROR_MESSAGE,
   isValidName,
   isValidPhone,
   normalizePhone,
@@ -29,10 +30,7 @@ export const createContact = onCall<CreateContactRequest>(
     const phone = normalizePhone(getStringField(request.data?.phone));
 
     if (!isValidName(name)) {
-      throw new HttpsError(
-        "invalid-argument",
-        "Informe um nome com 2 a 80 caracteres.",
-      );
+      throw new HttpsError("invalid-argument", NAME_LENGTH_ERROR_MESSAGE);
     }
 
     if (!isValidPhone(phone)) {
@@ -87,10 +85,7 @@ export const updateContact = onCall<UpdateContactRequest>(
     const phone = normalizePhone(getStringField(request.data?.phone));
     const contactRef = db.collection("contacts").doc(contactId);
     if (!isValidName(name)) {
-      throw new HttpsError(
-        "invalid-argument",
-        "Informe um nome com 2 a 80 caracteres.",
-      );
+      throw new HttpsError("invalid-argument", NAME_LENGTH_ERROR_MESSAGE);
     }
 
     if (!isValidPhone(phone)) {

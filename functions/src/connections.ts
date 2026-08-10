@@ -4,6 +4,7 @@ import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { db } from "./firebase";
 import {
   MAX_CONNECTIONS_PER_USER,
+  NAME_LENGTH_ERROR_MESSAGE,
   isValidName,
   normalizeSearchText,
   type CreateConnectionRequest,
@@ -79,10 +80,7 @@ export const createConnection = onCall<CreateConnectionRequest>(
     }
 
     if (!isValidName(name)) {
-      throw new HttpsError(
-        "invalid-argument",
-        "Informe um nome com 2 a 80 caracteres.",
-      );
+      throw new HttpsError("invalid-argument", NAME_LENGTH_ERROR_MESSAGE);
     }
 
     const connectionRef = db.collection("connections").doc();
@@ -148,10 +146,7 @@ export const updateConnection = onCall<UpdateConnectionRequest>(
     const name = getStringField(request.data?.name);
     const connectionRef = db.collection("connections").doc(connectionId);
     if (!isValidName(name)) {
-      throw new HttpsError(
-        "invalid-argument",
-        "Informe um nome com 2 a 80 caracteres.",
-      );
+      throw new HttpsError("invalid-argument", NAME_LENGTH_ERROR_MESSAGE);
     }
 
     await db.runTransaction(async (transaction) => {
