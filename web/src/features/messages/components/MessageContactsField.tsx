@@ -18,7 +18,6 @@ import type { MessageFormValues } from "../types";
 type MessageContactsFieldProps = {
   connectionId: string;
   control: Control<MessageFormValues>;
-  hasConnections: boolean;
 };
 
 const getEmptyContactsMessage = (
@@ -48,7 +47,6 @@ const getSelectedContactsMessage = (selectedContactsCount: number) => {
 export function MessageContactsField({
   connectionId,
   control,
-  hasConnections,
 }: MessageContactsFieldProps) {
   const [contactSearchTerm, setContactSearchTerm] = useState("");
   const debouncedContactSearchTerm = useDebouncedValue(contactSearchTerm);
@@ -110,7 +108,7 @@ export function MessageContactsField({
         label="Buscar contato"
         value={contactSearchTerm}
         onChange={(event) => setContactSearchTerm(event.target.value)}
-        disabled={!hasConnections || isSubmitting}
+        disabled={!connectionId || isSubmitting}
         fullWidth
         className="mb-3"
       />

@@ -101,7 +101,6 @@ export const MessageComposer = ({
           key={selectedConnectionId}
           connectionId={selectedConnectionId}
           control={control}
-          hasConnections={hasConnections}
         />
 
         {sendMode === "scheduled" && (
