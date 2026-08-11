@@ -36,6 +36,7 @@ export default {
         "src/contacts.ts",
         "src/messages.ts",
         "src/utils.ts",
+        "src/scheduledMessages.ts"
       ],
       thresholds: {
         branches: 95,
