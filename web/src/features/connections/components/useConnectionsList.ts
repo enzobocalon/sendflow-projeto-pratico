@@ -2,7 +2,11 @@ import { useMemo, useState } from "react";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import { useDelete } from "../../../hooks/useDelete";
 import { deleteConnection } from "../../../services/connectionService";
-import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
+import {
+  getFirebaseErrorCode,
+  getFirebaseErrorDetail,
+  getFirebaseErrorMessage,
+} from "../../../utils/firebaseError";
 import type { Connection } from "../types";
 
 type UseConnectionsListParams = {
@@ -14,15 +18,11 @@ type UseConnectionsListParams = {
 };
 
 const getDeleteConnectionErrorMessage = (error: unknown) => {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === "functions/failed-precondition"
-  ) {
-    return error instanceof Error
-      ? error.message
-      : "Não é possível excluir uma conexão com dados vinculados.";
+  if (getFirebaseErrorCode(error) === "functions/failed-precondition") {
+    return (
+      getFirebaseErrorDetail(error) ??
+      "Não é possível excluir uma conexão com dados vinculados."
+    );
   }
 
   return getFirebaseErrorMessage(error, "Não foi possível excluir a conexão.");

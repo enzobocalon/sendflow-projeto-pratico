@@ -6,7 +6,10 @@ import {
   createConnection,
   updateConnection,
 } from "../../../services/connectionService";
-import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
+import {
+  getFirebaseErrorCode,
+  getFirebaseErrorMessage,
+} from "../../../utils/firebaseError";
 import { connectionSchema } from "../schemas/connectionSchema";
 import type { Connection, ConnectionFormValues } from "../types";
 import { MAX_CONNECTIONS_PER_USER } from "@sendflow/shared";
@@ -16,6 +19,8 @@ type UseConnectionFormParams = {
   editingConnection: Connection | null;
   onSaved: () => void;
 };
+
+const connectionsLimitError = `Limite de ${MAX_CONNECTIONS_PER_USER} conexões atingido.`;
 
 export const useConnectionForm = ({
   connectionsCount,
@@ -55,7 +60,7 @@ export const useConnectionForm = ({
     }
 
     if (hasReachedConnectionsLimit) {
-      setError(`Limite de ${MAX_CONNECTIONS_PER_USER} conexões atingido.`);
+      setError(connectionsLimitError);
       return;
     }
 
@@ -81,11 +86,8 @@ export const useConnectionForm = ({
       );
       onSaved();
     } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message === "connections-limit-reached"
-      ) {
-        setError(`Limite de ${MAX_CONNECTIONS_PER_USER} conexões atingido.`);
+      if (getFirebaseErrorCode(error) === "functions/resource-exhausted") {
+        setError(connectionsLimitError);
         return;
       }
 

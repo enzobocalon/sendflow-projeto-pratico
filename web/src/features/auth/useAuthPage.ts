@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { z } from "zod";
 import { useAuth } from "../../hooks/useAuth";
+import { getFirebaseErrorCode } from "../../utils/firebaseError";
 
 type AuthMode = "login" | "register";
 
@@ -33,15 +34,10 @@ const authErrorMessages: Record<string, string> = {
 };
 
 const getErrorMessage = (error: unknown) => {
-  if (typeof error === "object" && error && "code" in error) {
-    const code = String(error.code);
+  const code = getFirebaseErrorCode(error);
+  const knownMessage = code ? authErrorMessages[code] : undefined;
 
-    return (
-      authErrorMessages[code] ?? "Não foi possível concluir a autenticação."
-    );
-  }
-
-  return "Não foi possível concluir a autenticação.";
+  return knownMessage ?? "Não foi possível concluir a autenticação.";
 };
 
 export const useAuthPage = () => {

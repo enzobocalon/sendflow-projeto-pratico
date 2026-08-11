@@ -1,10 +1,23 @@
-type FirebaseLikeError = { code: string; message?: string };
+type UnknownRecord = Record<string, unknown>;
 
-const isFirebaseLikeError = (error: unknown): error is FirebaseLikeError =>
-  typeof error === "object" &&
-  error !== null &&
-  "code" in error &&
-  typeof (error as Record<string, unknown>).code === "string";
+const isRecord = (value: unknown): value is UnknownRecord =>
+  typeof value === "object" && value !== null;
+
+export const getFirebaseErrorCode = (error: unknown): string | null => {
+  if (!isRecord(error) || typeof error.code !== "string") {
+    return null;
+  }
+
+  return error.code;
+};
+
+export const getFirebaseErrorDetail = (error: unknown): string | null => {
+  if (!(error instanceof Error) || !error.message) {
+    return null;
+  }
+
+  return error.message.replace(/^FirebaseError:\s*/, "");
+};
 
 const fallbackByCode: Record<string, string> = {
   "functions/failed-precondition":
@@ -21,13 +34,10 @@ export const getFirebaseErrorMessage = (
   error: unknown,
   fallbackMessage: string,
 ): string => {
-  if (isFirebaseLikeError(error) && error.code in fallbackByCode) {
-    return fallbackByCode[error.code];
-  }
+  const errorCode = getFirebaseErrorCode(error);
+  const knownMessage = errorCode ? fallbackByCode[errorCode] : undefined;
 
-  if (error instanceof Error && error.message) {
-    return error.message.replace(/^FirebaseError:\s*/, "");
-  }
+  if (knownMessage) return knownMessage;
 
-  return fallbackMessage;
+  return getFirebaseErrorDetail(error) ?? fallbackMessage;
 };
