@@ -3,10 +3,8 @@ import { useConnectionsOptions } from "../../../hooks/useConnectionsOptions";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { messageSchema } from "../schemas/messageSchema";
 import type { Message, MessageFormValues, MessageStatus } from "../types";
-import { useContactsOptions } from "../../../hooks/useContactsOptions";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../../hooks/useAuth";
-import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import { createMessage, updateMessage } from "../../../services/messageService";
 import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
 
@@ -46,8 +44,6 @@ export function useMessageComposer({
   onSaved,
 }: UseMessageComposerParams) {
   const { user } = useAuth();
-  const [contactSearchTerm, setContactSearchTerm] = useState("");
-  const debouncedContactSearchTerm = useDebouncedValue(contactSearchTerm);
   const [formError, setFormError] = useState("");
   const [success, setSuccess] = useState("");
   const {
@@ -81,22 +77,6 @@ export function useMessageComposer({
       control,
       name: "contactIds",
     }) ?? [];
-
-  const {
-    contacts: availableContacts,
-    currentPage: contactsCurrentPage,
-    error: contactsError,
-    goToNextPage: goToNextContactsPage,
-    goToPreviousPage: goToPreviousContactsPage,
-    hasNextPage: hasNextContactsPage,
-    hasPreviousPage: hasPreviousContactsPage,
-    isLoading: isLoadingContacts,
-    isPageChanging: isChangingContactsPage,
-  } = useContactsOptions({
-    connectionId: selectedConnectionId,
-    enabled: Boolean(selectedConnectionId),
-    searchTerm: debouncedContactSearchTerm,
-  });
 
   useEffect(() => {
     reset(getMessageFormValues(editingMessage));
@@ -177,7 +157,6 @@ export function useMessageComposer({
 
   const clearSelectedContacts = () => {
     setValue("contactIds", []);
-    setContactSearchTerm("");
   };
 
   const enableScheduledMode = () => {
@@ -195,21 +174,11 @@ export function useMessageComposer({
   };
 
   return {
-    availableContacts,
     clearFeedback,
     clearSelectedContacts,
-    contactSearchTerm,
-    contactsCurrentPage,
-    contactsError,
     connections,
     connectionError,
-    goToNextContactsPage,
-    goToPreviousContactsPage,
-    hasNextContactsPage,
-    hasPreviousContactsPage,
     isLoadingConnections,
-    isLoadingContacts,
-    isChangingContactsPage,
     control,
     errors,
     isSubmitting,
@@ -220,7 +189,6 @@ export function useMessageComposer({
     success,
     cancelScheduledMode,
     enableScheduledMode,
-    setContactSearchTerm,
     submitScheduled,
     submitNow,
   };

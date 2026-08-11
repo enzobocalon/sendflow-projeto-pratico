@@ -6,39 +6,26 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Controller, type Control } from "react-hook-form";
+import { useState } from "react";
+import { type Control, useController, useFormState } from "react-hook-form";
 import { FormFieldFeedback } from "../../../components/FormFieldFeedback";
 import { PaginatedContent } from "../../../components/PaginatedContent";
+import { useContactsOptions } from "../../../hooks/useContactsOptions";
+import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import { formatPhone } from "../../../utils/formatPhone";
-import type { Contact } from "../../contacts/types";
 import type { MessageFormValues } from "../types";
 
 type MessageContactsFieldProps = {
-  availableContacts: Contact[];
-  contactIdsError?: string;
-  contactSearchTerm: string;
-  contactsCurrentPage: number;
-  contactsError: string;
+  connectionId: string;
   control: Control<MessageFormValues>;
   hasConnections: boolean;
-  hasNextContactsPage: boolean;
-  hasPreviousContactsPage: boolean;
-  isChangingContactsPage: boolean;
-  isLoadingContacts: boolean;
-  isSubmitting: boolean;
-  onClearSelection: () => void;
-  onNextPage: () => void;
-  onPreviousPage: () => void;
-  onSearchTermChange: (searchTerm: string) => void;
-  selectedConnectionId: string;
-  selectedContactsCount: number;
 };
 
 const getEmptyContactsMessage = (
-  selectedConnectionId: string,
+  connectionId: string,
   contactSearchTerm: string,
 ) => {
-  if (!selectedConnectionId) {
+  if (!connectionId) {
     return "Selecione uma conexão para listar os contatos.";
   }
 
@@ -59,27 +46,39 @@ const getSelectedContactsMessage = (selectedContactsCount: number) => {
 };
 
 export function MessageContactsField({
-  availableContacts,
-  contactIdsError,
-  contactSearchTerm,
-  contactsCurrentPage,
-  contactsError,
+  connectionId,
   control,
   hasConnections,
-  hasNextContactsPage,
-  hasPreviousContactsPage,
-  isChangingContactsPage,
-  isLoadingContacts,
-  isSubmitting,
-  onClearSelection,
-  onNextPage,
-  onPreviousPage,
-  onSearchTermChange,
-  selectedConnectionId,
-  selectedContactsCount,
 }: MessageContactsFieldProps) {
-  const hasContacts = availableContacts.length > 0;
+  const [contactSearchTerm, setContactSearchTerm] = useState("");
+  const debouncedContactSearchTerm = useDebouncedValue(contactSearchTerm);
+  const { isSubmitting } = useFormState({ control });
+  const {
+    field: contactIdsField,
+    fieldState: { error: contactIdsError },
+  } = useController({ control, name: "contactIds" });
+  const {
+    contacts,
+    currentPage,
+    error: contactsError,
+    goToNextPage,
+    goToPreviousPage,
+    hasNextPage,
+    hasPreviousPage,
+    isLoading,
+    isPageChanging,
+  } = useContactsOptions({
+    connectionId,
+    enabled: Boolean(connectionId),
+    searchTerm: debouncedContactSearchTerm,
+  });
+  const hasContacts = contacts.length > 0;
+  const selectedContactsCount = contactIdsField.value.length;
   const hasSelectedContacts = selectedContactsCount > 0;
+  const clearSelection = () => {
+    contactIdsField.onChange([]);
+    setContactSearchTerm("");
+  };
 
   return (
     <div className="rounded-lg border border-slate-200 p-4">
@@ -98,7 +97,7 @@ export function MessageContactsField({
             type="button"
             size="small"
             startIcon={<CloseIcon />}
-            onClick={onClearSelection}
+            onClick={clearSelection}
             disabled={isSubmitting}
           >
             Limpar seleção
@@ -110,79 +109,70 @@ export function MessageContactsField({
         size="small"
         label="Buscar contato"
         value={contactSearchTerm}
-        onChange={(event) => onSearchTermChange(event.target.value)}
+        onChange={(event) => setContactSearchTerm(event.target.value)}
         disabled={!hasConnections || isSubmitting}
         fullWidth
         className="mb-3"
       />
 
-      <Controller
-        name="contactIds"
-        control={control}
-        render={({ field }) => (
-          <div className="mt-4">
-            <PaginatedContent
-              contentLabel="contatos disponíveis"
-              currentPage={contactsCurrentPage}
-              disabled={isSubmitting || isLoadingContacts}
-              hasNextPage={hasNextContactsPage}
-              hasPreviousPage={hasPreviousContactsPage}
-              isLoading={isChangingContactsPage}
-              loadingLabel="Carregando contatos da próxima página"
-              onNextPage={onNextPage}
-              onPreviousPage={onPreviousPage}
-              size="small"
-            >
-              <div className="grid gap-1">
-                {isLoadingContacts && (
-                  <Typography className="text-sm text-slate-500">
-                    Carregando contatos...
-                  </Typography>
-                )}
+      <div className="mt-4">
+        <PaginatedContent
+          contentLabel="contatos disponíveis"
+          currentPage={currentPage}
+          disabled={isSubmitting || isLoading}
+          hasNextPage={hasNextPage}
+          hasPreviousPage={hasPreviousPage}
+          isLoading={isPageChanging}
+          loadingLabel="Carregando contatos da próxima página"
+          onNextPage={goToNextPage}
+          onPreviousPage={goToPreviousPage}
+          size="small"
+        >
+          <div className="grid gap-1">
+            {isLoading && (
+              <Typography className="text-sm text-slate-500">
+                Carregando contatos...
+              </Typography>
+            )}
 
-                {!isLoadingContacts && !hasContacts && (
-                  <Typography className="text-sm text-slate-500">
-                    {getEmptyContactsMessage(
-                      selectedConnectionId,
-                      contactSearchTerm,
-                    )}
-                  </Typography>
-                )}
+            {!isLoading && !hasContacts && (
+              <Typography className="text-sm text-slate-500">
+                {getEmptyContactsMessage(connectionId, contactSearchTerm)}
+              </Typography>
+            )}
 
-                {availableContacts.map((contact) => (
-                  <FormControlLabel
-                    key={contact.id}
-                    control={
-                      <Checkbox
-                        checked={field.value.includes(contact.id)}
-                        onChange={(event) => {
-                          const nextValue = event.target.checked
-                            ? [...field.value, contact.id]
-                            : field.value.filter(
-                                (contactId) => contactId !== contact.id,
-                              );
+            {contacts.map((contact) => (
+              <FormControlLabel
+                key={contact.id}
+                control={
+                  <Checkbox
+                    checked={contactIdsField.value.includes(contact.id)}
+                    onChange={(event) => {
+                      const nextValue = event.target.checked
+                        ? [...contactIdsField.value, contact.id]
+                        : contactIdsField.value.filter(
+                            (contactId) => contactId !== contact.id,
+                          );
 
-                          field.onChange(nextValue);
-                        }}
-                        disabled={isSubmitting || isChangingContactsPage}
-                      />
-                    }
-                    label={`${contact.name} · ${formatPhone(contact.phone)}`}
+                      contactIdsField.onChange(nextValue);
+                    }}
+                    disabled={isSubmitting || isPageChanging}
                   />
-                ))}
-              </div>
-            </PaginatedContent>
-
-            <FormFieldFeedback error message={contactIdsError} />
-            {!contactIdsError && hasContacts && field.value.length === 0 && (
-              <FormFieldFeedback message="Selecione pelo menos um contato para enviar ou agendar." />
-            )}
-            {!contactIdsError && (
-              <FormFieldFeedback error message={contactsError} />
-            )}
+                }
+                label={`${contact.name} · ${formatPhone(contact.phone)}`}
+              />
+            ))}
           </div>
+        </PaginatedContent>
+
+        <FormFieldFeedback error message={contactIdsError?.message} />
+        {!contactIdsError && hasContacts && !hasSelectedContacts && (
+          <FormFieldFeedback message="Selecione pelo menos um contato para enviar ou agendar." />
         )}
-      />
+        {!contactIdsError && (
+          <FormFieldFeedback error message={contactsError} />
+        )}
+      </div>
     </div>
   );
 }

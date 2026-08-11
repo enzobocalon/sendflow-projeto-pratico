@@ -21,31 +21,20 @@ export const MessageComposer = ({
   onSaved,
 }: MessageComposerProps) => {
   const {
-    availableContacts,
     cancelScheduledMode,
     clearFeedback,
     clearSelectedContacts,
     connectionError,
     connections,
-    contactSearchTerm,
-    contactsCurrentPage,
-    contactsError,
     control,
     enableScheduledMode,
     errors,
     formError,
-    goToNextContactsPage,
-    goToPreviousContactsPage,
-    hasNextContactsPage,
-    hasPreviousContactsPage,
-    isChangingContactsPage,
     isLoadingConnections,
-    isLoadingContacts,
     isSubmitting,
     selectedContactsCount,
     selectedConnectionId,
     sendMode,
-    setContactSearchTerm,
     submitNow,
     submitScheduled,
     success,
@@ -109,24 +98,10 @@ export const MessageComposer = ({
         />
 
         <MessageContactsField
-          availableContacts={availableContacts}
-          contactIdsError={errors.contactIds?.message}
-          contactSearchTerm={contactSearchTerm}
-          contactsCurrentPage={contactsCurrentPage}
-          contactsError={contactsError}
+          key={selectedConnectionId}
+          connectionId={selectedConnectionId}
           control={control}
           hasConnections={hasConnections}
-          hasNextContactsPage={hasNextContactsPage}
-          hasPreviousContactsPage={hasPreviousContactsPage}
-          isChangingContactsPage={isChangingContactsPage}
-          isLoadingContacts={isLoadingContacts}
-          isSubmitting={isSubmitting}
-          onClearSelection={clearSelectedContacts}
-          onNextPage={goToNextContactsPage}
-          onPreviousPage={goToPreviousContactsPage}
-          onSearchTermChange={setContactSearchTerm}
-          selectedConnectionId={selectedConnectionId}
-          selectedContactsCount={selectedContactsCount}
         />
 
         {sendMode === "scheduled" && (
