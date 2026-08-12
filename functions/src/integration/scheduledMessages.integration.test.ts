@@ -14,14 +14,6 @@ const DUE_MESSAGES_BATCH_SIZE = 250;
 let processDueScheduledMessages: (now?: Timestamp) => Promise<void>;
 let markScheduledMessagesAsSent: (typeof import("../scheduledMessages.ts"))["markScheduledMessagesAsSent"];
 
-const readUsageState = async () => {
-  const snapshot = await db.collection("usage").get();
-
-  return snapshot.docs
-    .map((document) => ({ data: document.data(), id: document.id }))
-    .sort((first, second) => first.id.localeCompare(second.id));
-};
-
 const seedScheduledMessages = async ({
   count = 1,
   scheduledAt,
@@ -29,26 +21,31 @@ const seedScheduledMessages = async ({
 }: {
   count?: number;
   scheduledAt: Timestamp;
-  userId: string;
+  userId: string | null;
 }) => {
   const messageRefs = Array.from({ length: count }, () =>
     db.collection("messages").doc(),
   );
-  const usageRef = db.collection("usage").doc(userId);
   const batch = db.batch();
 
   messageRefs.forEach((messageRef) => {
     batch.set(messageRef, { scheduledAt, status: "scheduled", userId });
   });
-  batch.set(usageRef, {
-    messagesCount: count,
-    scheduledMessagesCount: count,
-    userId,
-  });
   await batch.commit();
 
-  return { messageRefs, usageRef };
+  return messageRefs;
 };
+
+const seedUsage = (userId: string, scheduledMessagesCount: number) =>
+  db.collection("usage").doc(userId).set({
+    connectionsCount: 0,
+    contactsCount: 0,
+    createdAt: Timestamp.now(),
+    messagesCount: scheduledMessagesCount,
+    scheduledMessagesCount,
+    updatedAt: Timestamp.now(),
+    userId,
+  });
 
 beforeAll(async () => {
   await initializeIntegrationContext();
@@ -60,163 +57,78 @@ afterAll(terminateIntegrationContext);
 
 describe("processDueScheduledMessages", () => {
   it("ignores messages scheduled in the future", async () => {
-    const userId = createUserId();
     const processingTime = Timestamp.now();
     const futureScheduledAt = Timestamp.fromMillis(
       processingTime.toMillis() + DAY_MS,
     );
-    const {
-      messageRefs: [futureMessageRef],
-      usageRef: futureUsageRef,
-    } = await seedScheduledMessages({
+    const [futureMessageRef] = await seedScheduledMessages({
       scheduledAt: futureScheduledAt,
-      userId,
+      userId: createUserId(),
     });
 
     await processDueScheduledMessages(processingTime);
 
-    const [futureMessage, futureUsage] = await Promise.all([
-      futureMessageRef.get(),
-      futureUsageRef.get(),
-    ]);
-
-    expect(futureMessage.data()).toEqual({
+    expect((await futureMessageRef.get()).data()).toEqual({
       scheduledAt: futureScheduledAt,
       status: "scheduled",
-      userId,
-    });
-    expect(futureUsage.data()).toEqual({
-      messagesCount: 1,
-      scheduledMessagesCount: 1,
-      userId,
+      userId: expect.any(String),
     });
   });
 
   it("processes a due message only once when executions overlap", async () => {
-    const userId = createUserId();
     const processingTime = Timestamp.now();
-    const {
-      messageRefs: [messageRef],
-      usageRef,
-    } = await seedScheduledMessages({ scheduledAt: processingTime, userId });
+    const userId = createUserId();
+    await seedUsage(userId, 1);
+    const [messageRef] = await seedScheduledMessages({
+      scheduledAt: processingTime,
+      userId,
+    });
 
     await Promise.all([
       processDueScheduledMessages(processingTime),
       processDueScheduledMessages(processingTime),
     ]);
 
-    const [messageSnapshot, usageSnapshot] = await Promise.all([
-      messageRef.get(),
-      usageRef.get(),
-    ]);
-
-    expect(messageSnapshot.data()).toMatchObject({
+    expect((await messageRef.get()).data()).toMatchObject({
       scheduledAt: processingTime,
       sentAt: processingTime,
       status: "sent",
       updatedAt: processingTime,
-      userId,
     });
-    expect(usageSnapshot.data()).toMatchObject({
-      messagesCount: 1,
+    expect(
+      (await db.collection("usage").doc(userId).get()).data(),
+    ).toMatchObject({
       scheduledMessagesCount: 0,
+      updatedAt: processingTime,
     });
   });
 
-  it("marks malformed due messages but only decrements valid owners", async () => {
-    const validUserId = createUserId();
+  it("processes due documents independently of optional owner metadata", async () => {
     const processingTime = Timestamp.now();
-    const { usageRef: validUsageRef } = await seedScheduledMessages({
+    const [messageRef] = await seedScheduledMessages({
       scheduledAt: processingTime,
-      userId: validUserId,
-    });
-    const usageBeforeProcessing = await readUsageState();
-    const malformedMessageRef = db.collection("messages").doc();
-
-    await malformedMessageRef.set({
-      scheduledAt: processingTime,
-      status: "scheduled",
       userId: null,
     });
 
     await processDueScheduledMessages(processingTime);
 
-    const [malformedMessage, validUsage, usageAfterProcessing] =
-      await Promise.all([
-        malformedMessageRef.get(),
-        validUsageRef.get(),
-        readUsageState(),
-      ]);
-
-    expect(malformedMessage.data()).toMatchObject({
-      scheduledAt: processingTime,
+    expect((await messageRef.get()).data()).toMatchObject({
       sentAt: processingTime,
       status: "sent",
       updatedAt: processingTime,
       userId: null,
     });
-    expect(validUsage.data()).toMatchObject({
-      messagesCount: 1,
-      scheduledMessagesCount: 0,
-      userId: validUserId,
-    });
-    expect(usageAfterProcessing.filter(({ id }) => id !== validUserId)).toEqual(
-      usageBeforeProcessing.filter(({ id }) => id !== validUserId),
-    );
   });
 
-  it("processes a backlog across bounded batches", async () => {
-    const userId = createUserId();
-    const processingTime = Timestamp.now();
-    const { messageRefs, usageRef } = await seedScheduledMessages({
-      count: DUE_MESSAGES_BATCH_SIZE + 1,
-      scheduledAt: processingTime,
-      userId,
-    });
-
-    await processDueScheduledMessages(processingTime);
-
-    const [firstBatchMessages, usageAfterFirstBatch] = await Promise.all([
-      db.collection("messages").where("userId", "==", userId).get(),
-      usageRef.get(),
-    ]);
-    const firstBatchStatuses = firstBatchMessages.docs.map(
-      (message) => message.data().status,
-    );
-
-    expect(firstBatchMessages.size).toBe(messageRefs.length);
-    expect(
-      firstBatchStatuses.filter((status) => status === "sent"),
-    ).toHaveLength(DUE_MESSAGES_BATCH_SIZE);
-    expect(
-      firstBatchStatuses.filter((status) => status === "scheduled"),
-    ).toHaveLength(1);
-    expect(usageAfterFirstBatch.data()).toMatchObject({
-      scheduledMessagesCount: 1,
-    });
-
-    await processDueScheduledMessages(processingTime);
-
-    const [remainingMessages, usageAfterSecondBatch] = await Promise.all([
-      db.collection("messages").where("userId", "==", userId).get(),
-      usageRef.get(),
-    ]);
-
-    expect(
-      remainingMessages.docs.every(
-        (message) => message.data().status === "sent",
-      ),
-    ).toBe(true);
-    expect(usageAfterSecondBatch.data()).toMatchObject({
-      scheduledMessagesCount: 0,
-    });
-  });
-
-  it("decrements usage independently per user", async () => {
+  it("updates each owner's usage independently", async () => {
     const firstUserId = createUserId();
     const secondUserId = createUserId();
+    const userWithoutUsageId = createUserId();
     const processingTime = Timestamp.now();
-    const [firstUserBatch, secondUserBatch] = await Promise.all([
+
+    await Promise.all([
+      seedUsage(firstUserId, 2),
+      seedUsage(secondUserId, 1),
       seedScheduledMessages({
         count: 2,
         scheduledAt: processingTime,
@@ -226,45 +138,117 @@ describe("processDueScheduledMessages", () => {
         scheduledAt: processingTime,
         userId: secondUserId,
       }),
+      seedScheduledMessages({
+        scheduledAt: processingTime,
+        userId: userWithoutUsageId,
+      }),
     ]);
 
     await processDueScheduledMessages(processingTime);
 
-    const [firstUserUsage, secondUserUsage] = await Promise.all([
-      firstUserBatch.usageRef.get(),
-      secondUserBatch.usageRef.get(),
+    const [firstUsage, secondUsage, missingUsage, untrackedMessages] =
+      await Promise.all([
+        db.collection("usage").doc(firstUserId).get(),
+        db.collection("usage").doc(secondUserId).get(),
+        db.collection("usage").doc(userWithoutUsageId).get(),
+        db
+          .collection("messages")
+          .where("userId", "==", userWithoutUsageId)
+          .get(),
+      ]);
+
+    expect(firstUsage.data()?.scheduledMessagesCount).toBe(0);
+    expect(secondUsage.data()?.scheduledMessagesCount).toBe(0);
+    expect(missingUsage.exists).toBe(false);
+    expect(
+      untrackedMessages.docs.every(
+        (message) => message.data().status === "sent",
+      ),
+    ).toBe(true);
+  });
+
+  it("repairs a legacy usage without a scheduled counter", async () => {
+    const userId = createUserId();
+    const processingTime = Timestamp.now();
+
+    await Promise.all([
+      db.collection("usage").doc(userId).set({
+        messagesCount: 1,
+        userId,
+      }),
+      seedScheduledMessages({ scheduledAt: processingTime, userId }),
     ]);
 
-    expect(firstUserUsage.data()).toMatchObject({
-      messagesCount: 2,
-      scheduledMessagesCount: 0,
+    await processDueScheduledMessages(processingTime);
+
+    expect(
+      (await db.collection("usage").doc(userId).get()).data()
+        ?.scheduledMessagesCount,
+    ).toBe(0);
+  });
+
+  it("processes a backlog across bounded batches", async () => {
+    const userId = createUserId();
+    const processingTime = Timestamp.now();
+    await seedUsage(userId, DUE_MESSAGES_BATCH_SIZE + 1);
+    const messageRefs = await seedScheduledMessages({
+      count: DUE_MESSAGES_BATCH_SIZE + 1,
+      scheduledAt: processingTime,
+      userId,
     });
-    expect(secondUserUsage.data()).toMatchObject({
-      messagesCount: 1,
-      scheduledMessagesCount: 0,
-    });
+
+    await processDueScheduledMessages(processingTime);
+
+    const firstBatch = await db
+      .collection("messages")
+      .where("userId", "==", userId)
+      .get();
+    const firstBatchStatuses = firstBatch.docs.map(
+      (message) => message.data().status,
+    );
+
+    expect(firstBatch.size).toBe(messageRefs.length);
+    expect(
+      firstBatchStatuses.filter((status) => status === "sent"),
+    ).toHaveLength(DUE_MESSAGES_BATCH_SIZE);
+    expect(
+      firstBatchStatuses.filter((status) => status === "scheduled"),
+    ).toHaveLength(1);
+    expect(
+      (await db.collection("usage").doc(userId).get()).data()
+        ?.scheduledMessagesCount,
+    ).toBe(1);
+
+    await processDueScheduledMessages(processingTime);
+
+    const remainingMessages = await db
+      .collection("messages")
+      .where("userId", "==", userId)
+      .get();
+    expect(
+      remainingMessages.docs.every(
+        (message) => message.data().status === "sent",
+      ),
+    ).toBe(true);
+    expect(
+      (await db.collection("usage").doc(userId).get()).data()
+        ?.scheduledMessagesCount,
+    ).toBe(0);
   });
 });
 
 describe("markScheduledMessagesAsSent", () => {
-  it("invokes processDueScheduledMessages through the scheduled handler", async () => {
-    const userId = createUserId();
+  it("invokes processing through the scheduled handler", async () => {
     const dueAt = Timestamp.fromMillis(Date.now() - MINUTE_MS);
-    const { messageRefs, usageRef } = await seedScheduledMessages({
+    const [messageRef] = await seedScheduledMessages({
       scheduledAt: dueAt,
-      userId,
+      userId: createUserId(),
     });
 
     await markScheduledMessagesAsSent.run({
       scheduleTime: new Date().toISOString(),
     });
 
-    const [messageSnapshot, usageSnapshot] = await Promise.all([
-      messageRefs[0].get(),
-      usageRef.get(),
-    ]);
-
-    expect(messageSnapshot.data()).toMatchObject({ status: "sent" });
-    expect(usageSnapshot.data()).toMatchObject({ scheduledMessagesCount: 0 });
+    expect((await messageRef.get()).data()).toMatchObject({ status: "sent" });
   });
 });

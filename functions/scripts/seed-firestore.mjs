@@ -6,7 +6,8 @@ import {
   initializeApp,
 } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { FieldValue, Timestamp, getFirestore } from "firebase-admin/firestore";
+import { Timestamp, getFirestore } from "firebase-admin/firestore";
+import { synchronizeUsage } from "./usage.mjs";
 
 const ITEMS_PER_COLLECTION = 100;
 const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1_000;
@@ -127,32 +128,10 @@ const assertSafeTarget = async (db, userId, prefix) => {
   }
 };
 
-const getCurrentUsage = async (db, userId) => {
-  const [connections, contacts, messages] = await Promise.all([
-    db.collection("connections").where("userId", "==", userId).select().get(),
-    db.collection("contacts").where("userId", "==", userId).select().get(),
-    db
-      .collection("messages")
-      .where("userId", "==", userId)
-      .select("status")
-      .get(),
-  ]);
-
-  return {
-    connectionsCount: connections.size,
-    contactsCount: contacts.size,
-    messagesCount: messages.size,
-    scheduledMessagesCount: messages.docs.filter(
-      (message) => message.data().status === "scheduled",
-    ).length,
-  };
-};
-
 const writeSeedDocuments = async (db, userId, prefix) => {
   const batch = db.batch();
   const now = Date.now();
   const contactsConnectionId = createSeedDocumentId(prefix, "connection", 1);
-  const contactsConnectionName = "Conexão Seed 001";
 
   for (let index = 1; index <= ITEMS_PER_COLLECTION; index += 1) {
     const suffix = padIndex(index);
@@ -165,16 +144,17 @@ const writeSeedDocuments = async (db, userId, prefix) => {
     const isScheduled = index % 2 === 0;
 
     batch.set(db.collection("connections").doc(connectionId), {
+      archivedAt: null,
       createdAt,
       name: connectionName,
       nameNormalized: normalizeSearchText(connectionName),
+      status: "active",
       updatedAt: createdAt,
       userId,
     });
 
     batch.set(db.collection("contacts").doc(contactId), {
       connectionId: contactsConnectionId,
-      connectionName: contactsConnectionName,
       createdAt,
       name: contactName,
       nameNormalized: normalizeSearchText(contactName),
@@ -202,26 +182,6 @@ const writeSeedDocuments = async (db, userId, prefix) => {
   }
 
   await batch.commit();
-};
-
-const updateUsage = async (db, userId) => {
-  const usage = await getCurrentUsage(db, userId);
-  const usageRef = db.collection("usage").doc(userId);
-  const usageSnapshot = await usageRef.get();
-
-  await usageRef.set(
-    {
-      ...usage,
-      ...(usageSnapshot.exists
-        ? {}
-        : { createdAt: FieldValue.serverTimestamp() }),
-      updatedAt: FieldValue.serverTimestamp(),
-      userId,
-    },
-    { merge: true },
-  );
-
-  return usage;
 };
 
 const seedFirestore = async ({
@@ -252,7 +212,7 @@ const seedFirestore = async ({
       await assertSafeTarget(db, userId, prefix);
     }
     await writeSeedDocuments(db, userId, prefix);
-    const usage = await updateUsage(db, userId);
+    const usage = await synchronizeUsage(db, userId);
 
     console.log("Seed concluído com sucesso.");
     console.log(`Projeto: ${projectId}`);

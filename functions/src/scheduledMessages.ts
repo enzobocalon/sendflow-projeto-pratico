@@ -1,14 +1,12 @@
-import {
-  FieldValue,
-  Timestamp,
-  type Transaction,
-} from "firebase-admin/firestore";
+import { Timestamp, type Transaction } from "firebase-admin/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { db } from "./firebase";
 
 const DUE_MESSAGES_LIMIT = 250;
 
 type MessageDocument = FirebaseFirestore.QueryDocumentSnapshot;
+
+type ScheduledMessagesByUser = Map<string, number>;
 
 const getDueScheduledMessagesQuery = (now: Timestamp) =>
   db
@@ -22,8 +20,6 @@ const markMessagesAsSent = (
   messages: MessageDocument[],
   sentAt: Timestamp,
 ) => {
-  const countByUser = countMessagesByUser(messages);
-
   messages.forEach((message) => {
     transaction.update(message.ref, {
       sentAt,
@@ -31,27 +27,42 @@ const markMessagesAsSent = (
       updatedAt: sentAt,
     });
   });
-
-  countByUser.forEach((count, userId) => {
-    const usageRef = db.collection("usage").doc(userId);
-    transaction.set(
-      usageRef,
-      { scheduledMessagesCount: FieldValue.increment(-count) },
-      { merge: true },
-    );
-  });
 };
 
-const countMessagesByUser = (messages: MessageDocument[]) => {
-  return messages.reduce<Map<string, number>>((countByUser, message) => {
-    const { userId } = message.data();
+const countScheduledMessagesByUser = (messages: MessageDocument[]) =>
+  messages.reduce<ScheduledMessagesByUser>((counts, message) => {
+    const userId = message.data().userId;
 
-    if (typeof userId === "string") {
-      countByUser.set(userId, (countByUser.get(userId) ?? 0) + 1);
+    if (typeof userId === "string" && userId) {
+      counts.set(userId, (counts.get(userId) ?? 0) + 1);
     }
 
-    return countByUser;
-  }, new Map<string, number>());
+    return counts;
+  }, new Map());
+
+const updateUsageCounters = async (
+  transaction: Transaction,
+  messages: MessageDocument[],
+  updatedAt: Timestamp,
+) => {
+  const messagesByUser = countScheduledMessagesByUser(messages);
+  const usageEntries = await Promise.all(
+    [...messagesByUser].map(async ([userId, count]) => ({
+      count,
+      snapshot: await transaction.get(db.collection("usage").doc(userId)),
+    })),
+  );
+
+  usageEntries.forEach(({ count, snapshot }) => {
+    if (!snapshot.exists) return;
+
+    const currentCount = Number(snapshot.data()?.scheduledMessagesCount ?? 0);
+
+    transaction.update(snapshot.ref, {
+      scheduledMessagesCount: Math.max(0, currentCount - count),
+      updatedAt,
+    });
+  });
 };
 
 export const processDueScheduledMessages = async (
@@ -62,6 +73,7 @@ export const processDueScheduledMessages = async (
 
     if (snapshot.empty) return;
 
+    await updateUsageCounters(transaction, snapshot.docs, now);
     markMessagesAsSent(transaction, snapshot.docs, now);
   });
 };
