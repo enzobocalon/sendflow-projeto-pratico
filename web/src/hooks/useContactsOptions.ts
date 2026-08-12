@@ -1,22 +1,12 @@
-import {
-  collection,
-  endAt,
-  limit,
-  orderBy,
-  query,
-  startAfter,
-  startAt,
-  where,
-  type DocumentData,
-  type QueryConstraint,
-  type QueryDocumentSnapshot,
-} from "firebase/firestore";
+import { normalizeSearchText } from "@sendflow/shared";
+import type { DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
 import { useCallback } from "react";
-import type { Contact } from "../features/contacts/types";
-import { db } from "../lib/firebase";
+import {
+  mapContactDocument,
+  subscribeToContactsPage,
+} from "../features/contacts/services/contactService";
 import { useAuth } from "./useAuth";
 import { useRealtimeCursorPagination } from "./useRealtimeCursorPagination";
-import { normalizeSearchText } from "@sendflow/shared";
 
 type UseContactsOptionsParams = {
   connectionId?: string;
@@ -26,14 +16,6 @@ type UseContactsOptionsParams = {
 };
 
 const DEFAULT_PAGE_SIZE = 30;
-
-const mapContactDocument = (
-  document: QueryDocumentSnapshot<DocumentData>,
-): Contact =>
-  ({
-    id: document.id,
-    ...document.data(),
-  }) as Contact;
 
 export function useContactsOptions({
   connectionId,
@@ -49,29 +31,24 @@ export function useContactsOptions({
     ":",
   );
 
-  const createQuery = useCallback(
+  const subscribeToPage = useCallback(
     (
       cursor: QueryDocumentSnapshot<DocumentData> | null,
       resultLimit: number,
+      onValue: Parameters<typeof subscribeToContactsPage>[1],
+      onError: Parameters<typeof subscribeToContactsPage>[2],
     ) => {
-      const constraints: QueryConstraint[] = [
-        where("userId", "==", userId),
-        orderBy(normalizedSearchTerm ? "nameNormalized" : "name", "asc"),
-      ];
-
-      if (connectionId) {
-        constraints.splice(1, 0, where("connectionId", "==", connectionId));
-      }
-
-      if (normalizedSearchTerm) {
-        if (!cursor) constraints.push(startAt(normalizedSearchTerm));
-        constraints.push(endAt(`${normalizedSearchTerm}\uf8ff`));
-      }
-
-      if (cursor) constraints.push(startAfter(cursor));
-      constraints.push(limit(resultLimit));
-
-      return query(collection(db, "contacts"), ...constraints);
+      return subscribeToContactsPage(
+        {
+          connectionId,
+          cursor,
+          resultLimit,
+          searchTerm: normalizedSearchTerm,
+          userId,
+        },
+        onValue,
+        onError,
+      );
     },
     [connectionId, normalizedSearchTerm, userId],
   );
@@ -87,12 +64,12 @@ export function useContactsOptions({
     isPageChanging,
     items: contacts,
   } = useRealtimeCursorPagination({
-    createQuery,
     enabled: canLoad,
     mapDocument: mapContactDocument,
     pageSize,
     queryKey,
     resourceLabel: "contatos",
+    subscribeToPage,
   });
 
   return {

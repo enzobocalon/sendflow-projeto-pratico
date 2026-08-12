@@ -1,27 +1,9 @@
-import {
-  collection,
-  limit,
-  onSnapshot,
-  orderBy,
-  query,
-  startAt,
-  endAt,
-  where,
-  type QueryConstraint,
-  type QuerySnapshot,
-} from "firebase/firestore";
 import { useEffect, useState } from "react";
 import type { Connection } from "../features/connections/types";
-import { db } from "../lib/firebase";
+import { subscribeToConnections } from "../features/connections/services/connectionService";
 import { getFirestoreErrorMessage } from "../utils/firestoreError";
 import { useAuth } from "./useAuth";
-import {
-  MAX_CONNECTIONS_PER_USER,
-  normalizeSearchText,
-} from "@sendflow/shared";
-
-const mapConnectionSnapshot = (snapshot: QuerySnapshot): Connection[] =>
-  snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Connection);
+import { normalizeSearchText } from "@sendflow/shared";
 
 type UseConnectionsOptionsParams = {
   enabled?: boolean;
@@ -44,40 +26,25 @@ export function useConnectionsOptions({
     if (!canLoad || !user) return;
 
     let isActive = true;
-    const handleSnapshot = (snapshot: QuerySnapshot) => {
+    const handleConnections = (loadedConnections: Connection[]) => {
       if (!isActive) return;
 
-      setConnections(mapConnectionSnapshot(snapshot));
+      setConnections(loadedConnections);
       setError("");
       setIsLoading(false);
     };
 
-    const constraints: QueryConstraint[] = [
-      where("userId", "==", user.uid),
-      orderBy(normalizedSearchTerm ? "nameNormalized" : "name", "asc"),
-    ];
-
-    if (normalizedSearchTerm) {
-      constraints.push(
-        startAt(normalizedSearchTerm),
-        endAt(`${normalizedSearchTerm}\uf8ff`),
-      );
-    }
-
-    constraints.push(limit(MAX_CONNECTIONS_PER_USER));
-
-    const unsubscribe = onSnapshot(
-      query(collection(db, "connections"), ...constraints),
-      (snapshot) => {
-        handleSnapshot(snapshot);
-      },
-      (firestoreError) => {
+    const unsubscribe = subscribeToConnections({
+      onError: (firestoreError) => {
         if (!isActive) return;
 
         setError(getFirestoreErrorMessage(firestoreError, "conexões"));
         setIsLoading(false);
       },
-    );
+      onValue: handleConnections,
+      searchTerm: normalizedSearchTerm,
+      userId: user.uid,
+    });
 
     return () => {
       isActive = false;

@@ -1,21 +1,21 @@
-import { doc, onSnapshot } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { db } from "../lib/firebase";
+import {
+  emptyUsageCounters,
+  subscribeToUsage,
+} from "../features/dashboard/services/usageService";
 import { useAuth } from "./useAuth";
 
-const emptySummary = {
-  connections: 0,
-  contacts: 0,
-  messages: 0,
-  scheduledMessages: 0,
-};
+const summaryErrorMessage =
+  "Não foi possível carregar os dados totais do dashboard.";
 
-type UsageDocument = Partial<{
-  connectionsCount: number;
-  contactsCount: number;
-  messagesCount: number;
-  scheduledMessagesCount: number;
-}>;
+const mapSummary = (usage: typeof emptyUsageCounters) => ({
+  connections: usage.connectionsCount,
+  contacts: usage.contactsCount,
+  messages: usage.messagesCount,
+  scheduledMessages: usage.scheduledMessagesCount,
+});
+
+const emptySummary = mapSummary(emptyUsageCounters);
 
 export const useDashboardSummary = () => {
   const { user } = useAuth();
@@ -26,37 +26,18 @@ export const useDashboardSummary = () => {
   useEffect(() => {
     if (!user) return;
 
-    let isActive = true;
-    const handleError = () => {
-      if (!isActive) return;
-
-      setError("Não foi possível carregar os dados totais do dashboard.");
-      setIsLoading(false);
-    };
-
-    const unsubscribe = onSnapshot(
-      doc(db, "usage", user.uid),
-      (snapshot) => {
-        if (!isActive) return;
-
-        const usage = (snapshot.data() ?? {}) as UsageDocument;
-
-        setSummary({
-          connections: usage.connectionsCount ?? 0,
-          contacts: usage.contactsCount ?? 0,
-          messages: usage.messagesCount ?? 0,
-          scheduledMessages: usage.scheduledMessagesCount ?? 0,
-        });
+    return subscribeToUsage(
+      user.uid,
+      (usage) => {
+        setSummary(mapSummary(usage));
         setError("");
         setIsLoading(false);
       },
-      handleError,
+      () => {
+        setError(summaryErrorMessage);
+        setIsLoading(false);
+      },
     );
-
-    return () => {
-      isActive = false;
-      unsubscribe();
-    };
   }, [user]);
 
   if (!user) {

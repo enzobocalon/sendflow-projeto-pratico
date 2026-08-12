@@ -13,6 +13,7 @@ import { FeedbackSnackbar } from "../../../components/FeedbackSnackbar";
 import { PaginatedContent } from "../../../components/PaginatedContent";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Contact } from "../types";
+import type { ConnectionsState } from "../../connections/types";
 import { DeleteDialog } from "../../../components/DeleteDialog";
 import {
   getContactsListEmptyState,
@@ -22,12 +23,14 @@ import { useContactsList } from "./useContactsList";
 import { formatPhone } from "../../../utils/formatPhone";
 
 type ContactsListProps = {
+  connectionsState: ConnectionsState;
   editContact: (contact: Contact) => void;
   editingContact: Contact | null;
   onDeletedEditingContact: () => void;
 };
 
 export const ContactsList = ({
+  connectionsState,
   editContact,
   editingContact,
   onDeletedEditingContact,
@@ -56,6 +59,7 @@ export const ContactsList = ({
     setSearchTerm,
     totalContacts,
   } = useContactsList({
+    connectionsState,
     editingContact,
     onDeletedEditingContact,
   });
@@ -113,8 +117,7 @@ export const ContactsList = ({
                     {contact.name}
                   </Typography>
                   <Typography className="text-sm text-slate-500">
-                    {formatPhone(contact.phone)} ·{" "}
-                    {contact.connectionName ?? "Conexão não encontrada"}
+                    {formatPhone(contact.phone)} · {contact.connectionName}
                   </Typography>
                 </div>
                 <Stack direction="row" spacing={0.5}>

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import { useDelete } from "../../../hooks/useDelete";
-import { deleteConnection } from "../../../services/connectionService";
+import { deleteConnection } from "../services/connectionService";
 import {
   getFirebaseErrorCode,
   getFirebaseErrorDetail,
@@ -18,7 +18,7 @@ type UseConnectionsListParams = {
 };
 
 const getDeleteConnectionErrorMessage = (error: unknown) => {
-  if (getFirebaseErrorCode(error) === "functions/failed-precondition") {
+  if (getFirebaseErrorCode(error) === "firestore/failed-precondition") {
     return (
       getFirebaseErrorDetail(error) ??
       "Não é possível excluir uma conexão com dados vinculados."

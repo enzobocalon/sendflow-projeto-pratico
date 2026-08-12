@@ -3,7 +3,7 @@ import { useDelete } from "../../../hooks/useDelete";
 import { useMessagesOptions } from "../../../hooks/useMessagesOptions";
 import type { Message, MessageStatus } from "../types";
 import { formatMessageDate } from "../../../utils/dates";
-import { deleteMessage } from "../../../services/messageService";
+import { deleteMessage } from "../services/messageService";
 import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
 
 export type MessageListItem = Message & {

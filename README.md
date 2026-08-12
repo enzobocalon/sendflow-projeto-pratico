@@ -1,6 +1,6 @@
 # Sendflow
 
-SaaS de broadcast de mensagens com isolamento multi-tenant, desenvolvido para o projeto prático de Desenvolvedor Full-Stack da SendFlow. Cada cliente possui conexões, contatos e mensagens próprias, além de uma coleção extra de usage para métricas. A leitura é feita em tempo real através da Firestore.
+SaaS de broadcast de mensagens com isolamento multi-tenant, desenvolvido para o projeto prático de Desenvolvedor Full-Stack da SendFlow. Cada cliente possui conexões, contatos e mensagens próprias. As páginas visíveis e as métricas do dashboard são atualizadas em tempo real pelo Firestore.
 
 **Acesse o projeto:** https://sendflow-dev-prova.web.app/
 
@@ -27,7 +27,7 @@ SaaS de broadcast de mensagens com isolamento multi-tenant, desenvolvido para o 
 ```
 sendflow/
   web/                    Frontend React com Vite
-  functions/              Cloud Functions
+  functions/              Agendador e pacote compartilhado
   firestore.rules         Regras de segurança do Firestore
   firestore.indexes.json
   firebase.json           Configuração de Hosting, Functions e Firestore
@@ -37,23 +37,30 @@ sendflow/
 
 Todas as coleções ficam na raiz do Firestore, isoladas por `userId`:
 
-| Coleção       | Descrição                                                            |
-| ------------- | -------------------------------------------------------------------- |
-| `connections` | Conexões do usuário                                                  |
-| `contacts`    | Contatos vinculados a uma conexão                                    |
-| `messages`    | Mensagens criadas e agendadas                                        |
-| `usage`       | Métricas pré-computadas por usuário para o dashboard (coleção extra) |
+| Coleção       | Descrição                           |
+| ------------- | ----------------------------------- |
+| `connections` | Conexões ativas ou arquivadas       |
+| `contacts`    | Contatos vinculados a uma conexão   |
+| `messages`    | Mensagens criadas e agendadas       |
+| `usage`       | Contadores do dashboard por usuário |
 
 ## Segurança
 
-O Firestore bloqueia escritas diretas em `connections`, `contacts` e `messages` — todas passam por Cloud Functions. As Functions validam:
+O frontend grava diretamente no Firestore. As Security Rules validam:
 
 - Usuário autenticado e dono do recurso
-- Limite de conexões por usuário (atualmente, cada usuário possui limite de 100 conexões)
-- Contatos pertencentes ao usuário e à conexão selecionada
+- Campos permitidos, formatos, timestamps e propriedade dos recursos
+- Contatos vinculados a uma conexão ativa do próprio usuário
 - Datas de agendamento futuras
 - Bloqueio de edição de mensagens já enviadas
-- Bloqueio de exclusão de conexões com contatos ou mensagens vinculadas
+- Bloqueio de hard delete de conexões
+
+O service de conexões limita o usuário a 100 conexões ativas e impede o
+arquivamento quando há contatos ou mensagens vinculadas. O service de mensagens
+também revalida os contatos selecionados na mesma transação da gravação. A única
+Cloud Function publicada é o agendador que marca mensagens vencidas como
+enviadas. Os services atualizam `usage/{userId}` atomicamente junto ao recurso,
+e o dashboard mantém um único listener nesse documento.
 
 ## Requisitos
 
@@ -157,14 +164,21 @@ atualiza os documentos criados anteriormente sem duplicá-los. Os contatos e as
 mensagens ficam vinculados à primeira conexão de seed para também exercitar a
 paginação do seletor de contatos no composer de mensagens. Por segurança, o
 comando é interrompido se o usuário já possuir documentos que não sejam desse
-seed.
+seed. Ao final, o script recalcula `usage/{userId}` considerando também os dados
+mantidos com `--allow-existing`.
 
 Para manter dados já existentes de um usuário de testes, acrescente a opção
-`--allow-existing`. Nenhum documento existente será apagado e o `usage` será
-recalculado com os totais reais:
+`--allow-existing`. Nenhum documento existente será apagado:
 
 ```bash
 pnpm seed:firestore -- --project-id sendflow-dev-prova --user-id SEU_USER_ID --allow-existing
+```
+
+Para apenas reconciliar os contadores de um usuário existente, sem criar ou
+alterar conexões, contatos e mensagens:
+
+```bash
+pnpm sync:usage -- --project-id sendflow-dev-prova --user-id SEU_USER_ID
 ```
 
 ## Deploy

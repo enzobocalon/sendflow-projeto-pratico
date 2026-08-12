@@ -2,18 +2,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useAuth } from "../../../hooks/useAuth";
-import { useConnectionsOptions } from "../../../hooks/useConnectionsOptions";
-import { createContact, updateContact } from "../../../services/contactService";
+import { createContact, updateContact } from "../services/contactService";
 import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
 import { contactSchema } from "../schemas/contactSchema";
 import type { Contact, ContactFormValues } from "../types";
+import type { ConnectionsState } from "../../connections/types";
 
 type UseContactFormParams = {
+  connectionsState: ConnectionsState;
   editingContact: Contact | null;
   onSaved: () => void;
 };
 
 export const useContactForm = ({
+  connectionsState,
   editingContact,
   onSaved,
 }: UseContactFormParams) => {
@@ -24,7 +26,7 @@ export const useContactForm = ({
     connections,
     error: connectionsError,
     isLoading: isLoadingConnections,
-  } = useConnectionsOptions();
+  } = connectionsState;
   const {
     control,
     formState: { errors, isSubmitting },

@@ -20,14 +20,14 @@ export const getFirebaseErrorDetail = (error: unknown): string | null => {
 };
 
 const fallbackByCode: Record<string, string> = {
-  "functions/failed-precondition":
+  "firestore/failed-precondition":
     "A ação não pode ser concluída no estado atual.",
-  "functions/invalid-argument":
+  "firestore/invalid-argument":
     "Confira os dados informados e tente novamente.",
-  "functions/permission-denied":
+  "firestore/permission-denied":
     "Você não tem permissão para realizar esta ação.",
-  "functions/resource-exhausted": "O limite permitido foi atingido.",
-  "functions/unauthenticated": "Faça login para continuar.",
+  "firestore/resource-exhausted": "O limite permitido foi atingido.",
+  "firestore/unauthenticated": "Faça login para continuar.",
 };
 
 export const getFirebaseErrorMessage = (

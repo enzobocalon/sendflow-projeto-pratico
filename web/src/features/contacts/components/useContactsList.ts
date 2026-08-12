@@ -1,17 +1,20 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useContactsOptions } from "../../../hooks/useContactsOptions";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import { useDelete } from "../../../hooks/useDelete";
-import { deleteContact } from "../../../services/contactService";
+import { deleteContact } from "../services/contactService";
 import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
 import type { Contact } from "../types";
+import type { ConnectionsState } from "../../connections/types";
 
 type UseContactsListParams = {
+  connectionsState: ConnectionsState;
   editingContact: Contact | null;
   onDeletedEditingContact: () => void;
 };
 
 export const useContactsList = ({
+  connectionsState,
   editingContact,
   onDeletedEditingContact,
 }: UseContactsListParams) => {
@@ -51,6 +54,22 @@ export const useContactsList = ({
     isLoading: isLoadingContacts,
     isPageChanging,
   } = useContactsOptions({ searchTerm: debouncedSearchTerm });
+  const {
+    connections,
+    error: connectionsError,
+    isLoading: isLoadingConnections,
+  } = connectionsState;
+  const contactsWithConnectionNames = useMemo(() => {
+    const connectionNames = new Map(
+      connections.map((connection) => [connection.id, connection.name]),
+    );
+
+    return contacts.map((contact) => ({
+      ...contact,
+      connectionName:
+        connectionNames.get(contact.connectionId) ?? "Conexão não encontrada",
+    }));
+  }, [connections, contacts]);
 
   return {
     clearDeleteFeedback,
@@ -58,18 +77,18 @@ export const useContactsList = ({
     clearDeleteModal,
     confirmDeleteContact,
     contactToDelete,
-    contacts,
+    contacts: contactsWithConnectionNames,
     currentPage,
     deleteError,
     deleteSuccess,
-    error: contactsError,
+    error: contactsError || connectionsError,
     goToNextPage,
     goToPreviousPage,
     hasNextPage,
     hasPreviousPage,
     isDeleteDialogOpen,
     isDeleting,
-    isLoading: isLoadingContacts,
+    isLoading: isLoadingContacts || isLoadingConnections,
     isPageChanging,
     requestDeleteContact,
     searchTerm,

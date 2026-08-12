@@ -14,9 +14,6 @@ importers:
 
   functions:
     dependencies:
-      '@sendflow/shared':
-        specifier: file:./shared
-        version: link:shared
       firebase-admin:
         specifier: ^13.6.0
         version: 13.10.0
@@ -27,6 +24,9 @@ importers:
       '@firebase/rules-unit-testing':
         specifier: ^5.0.1
         version: 5.0.1(firebase@12.6.0)
+      '@sendflow/shared':
+        specifier: file:./shared
+        version: link:shared
       '@vitest/coverage-v8':
         specifier: ^4.1.10
         version: 4.1.10(vitest@4.1.10)

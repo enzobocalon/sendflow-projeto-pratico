@@ -16,6 +16,7 @@
       "predeploy": ["pnpm --dir \"$RESOURCE_DIR\" build"],
       "ignore": [
         "node_modules",
+        "coverage",
         ".git",
         "firebase-debug.log",
         "firebase-debug.*.log"

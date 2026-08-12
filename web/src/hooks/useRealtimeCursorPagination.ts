@@ -1,8 +1,9 @@
 import {
-  onSnapshot,
   type DocumentData,
-  type Query,
+  type FirestoreError,
   type QueryDocumentSnapshot,
+  type QuerySnapshot,
+  type Unsubscribe,
 } from "firebase/firestore";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -23,21 +24,26 @@ import {
 } from "./realtimeCursorPaginationState";
 
 type UseRealtimeCursorPaginationParams<Item> = {
-  createQuery: (cursor: Cursor, resultLimit: number) => Query<DocumentData>;
   enabled: boolean;
   mapDocument: (document: QueryDocumentSnapshot<DocumentData>) => Item;
   pageSize: number;
   queryKey: string;
   resourceLabel: FirestoreListResource;
+  subscribeToPage: (
+    cursor: Cursor,
+    resultLimit: number,
+    onValue: (snapshot: QuerySnapshot<DocumentData>) => void,
+    onError: (error: FirestoreError) => void,
+  ) => Unsubscribe;
 };
 
 export function useRealtimeCursorPagination<Item>({
-  createQuery,
   enabled,
   mapDocument,
   pageSize,
   queryKey,
   resourceLabel,
+  subscribeToPage,
 }: UseRealtimeCursorPaginationParams<Item>) {
   const scope = useMemo(
     () => createPaginationScope(queryKey, pageSize, enabled),
@@ -56,11 +62,11 @@ export function useRealtimeCursorPagination<Item>({
     if (!enabled) return;
 
     let isActive = true;
-    const unsubscribe = onSnapshot(
-      createQuery(cursor, pageSize + 1),
-      { includeMetadataChanges: true },
+    const unsubscribe = subscribeToPage(
+      cursor,
+      pageSize + 1,
       (snapshot) => {
-        if (!isActive || snapshot.metadata.fromCache) return;
+        if (!isActive) return;
 
         const loadedPage = readLoadedPage(snapshot.docs, pageSize, mapDocument);
 
@@ -94,7 +100,6 @@ export function useRealtimeCursorPagination<Item>({
       unsubscribe();
     };
   }, [
-    createQuery,
     cursor,
     enabled,
     mapDocument,
@@ -102,6 +107,7 @@ export function useRealtimeCursorPagination<Item>({
     requestedPage,
     resourceLabel,
     scope,
+    subscribeToPage,
   ]);
 
   const goToPreviousPage = useCallback(() => {

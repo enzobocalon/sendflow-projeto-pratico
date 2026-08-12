@@ -5,7 +5,7 @@ import { useAuth } from "../../../hooks/useAuth";
 import {
   createConnection,
   updateConnection,
-} from "../../../services/connectionService";
+} from "../services/connectionService";
 import {
   getFirebaseErrorCode,
   getFirebaseErrorMessage,
@@ -86,7 +86,7 @@ export const useConnectionForm = ({
       );
       onSaved();
     } catch (error) {
-      if (getFirebaseErrorCode(error) === "functions/resource-exhausted") {
+      if (getFirebaseErrorCode(error) === "firestore/resource-exhausted") {
         setError(connectionsLimitError);
         return;
       }

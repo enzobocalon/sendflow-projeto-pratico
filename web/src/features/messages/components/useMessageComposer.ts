@@ -5,7 +5,7 @@ import { messageSchema } from "../schemas/messageSchema";
 import type { Message, MessageFormValues, MessageStatus } from "../types";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../../hooks/useAuth";
-import { createMessage, updateMessage } from "../../../services/messageService";
+import { createMessage, updateMessage } from "../services/messageService";
 import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
 
 type UseMessageComposerParams = {

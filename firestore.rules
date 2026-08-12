@@ -6,28 +6,292 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function ownsResource() {
+    function ownsExistingResource() {
       return signedIn() && request.auth.uid == resource.data.userId;
     }
 
+    function ownsRequestedResource() {
+      return signedIn() && request.auth.uid == request.resource.data.userId;
+    }
+
+    function hasValidName(data) {
+      return data.name is string
+        && data.name.size() >= 2
+        && data.name.size() <= 80
+        && data.name.matches('^\\S([\\s\\S]*\\S)?$')
+        && data.nameNormalized is string
+        && data.nameNormalized == data.name.lower();
+    }
+
+    function hasValidPhone(data) {
+      return data.phone is string
+        && data.phone.matches('^([0-9]{10,11}|\\+[0-9]{10,15})$');
+    }
+
+    function isOwnedActiveConnection(connectionId) {
+      let connectionPath = /databases/$(database)/documents/connections/$(connectionId);
+      let connection = get(connectionPath).data;
+
+      return exists(connectionPath)
+        && connection.userId == request.auth.uid
+        && (!connection.keys().hasAny(['status']) || connection.status == 'active');
+    }
+
+    function hasValidConnectionDocument(data) {
+      return data.keys().hasAll([
+          'archivedAt',
+          'createdAt',
+          'name',
+          'nameNormalized',
+          'status',
+          'updatedAt',
+          'userId'
+        ])
+        && data.keys().hasOnly([
+          'archivedAt',
+          'createdAt',
+          'name',
+          'nameNormalized',
+          'status',
+          'updatedAt',
+          'userId'
+        ])
+        && hasValidName(data)
+        && (data.status == 'active' || data.status == 'archived')
+        && (
+          (data.status == 'active' && data.archivedAt == null)
+          || (data.status == 'archived' && data.archivedAt is timestamp)
+        )
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function hasValidContactDocument(data) {
+      return data.keys().hasAll([
+          'connectionId',
+          'createdAt',
+          'name',
+          'nameNormalized',
+          'phone',
+          'updatedAt',
+          'userId'
+        ])
+        && data.keys().hasOnly([
+          'connectionId',
+          'createdAt',
+          'name',
+          'nameNormalized',
+          'phone',
+          'updatedAt',
+          'userId'
+        ])
+        && data.connectionId is string
+        && data.connectionId.size() > 0
+        && hasValidName(data)
+        && hasValidPhone(data)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function hasValidMessageContent(data) {
+      return data.content is string
+        && data.content.size() >= 2
+        && data.content.size() <= 500
+        && data.content.matches('^\\S([\\s\\S]*\\S)?$');
+    }
+
+    function hasValidMessageContacts(data) {
+      return data.contactIds is list
+        && data.contactIds.size() >= 1
+        && data.contactIds.size() <= 100
+        && data.contactIds.toSet().size() == data.contactIds.size()
+        && data.recipientsCount is int
+        && data.recipientsCount == data.contactIds.size();
+    }
+
+    function hasValidMessageSchedule(data) {
+      return (
+          data.status == 'sent'
+          && data.scheduledAt == null
+          && data.sentAt == request.time
+        ) || (
+          data.status == 'scheduled'
+          && data.scheduledAt is timestamp
+          && data.scheduledAt > request.time
+          && data.sentAt == null
+        );
+    }
+
+    function hasValidMessageDocument(data) {
+      return data.keys().hasAll([
+          'connectionId',
+          'contactIds',
+          'content',
+          'createdAt',
+          'recipientsCount',
+          'scheduledAt',
+          'sentAt',
+          'status',
+          'updatedAt',
+          'userId'
+        ])
+        && data.keys().hasOnly([
+          'connectionId',
+          'contactIds',
+          'content',
+          'createdAt',
+          'recipientsCount',
+          'scheduledAt',
+          'sentAt',
+          'status',
+          'updatedAt',
+          'userId'
+        ])
+        && data.connectionId is string
+        && data.connectionId.size() > 0
+        && hasValidMessageContent(data)
+        && hasValidMessageContacts(data)
+        && hasValidMessageSchedule(data)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function hasValidUsageDocument(data, userId) {
+      return data.keys().hasAll([
+          'connectionsCount',
+          'contactsCount',
+          'createdAt',
+          'messagesCount',
+          'scheduledMessagesCount',
+          'updatedAt',
+          'userId'
+        ])
+        && data.keys().hasOnly([
+          'connectionsCount',
+          'contactsCount',
+          'createdAt',
+          'messagesCount',
+          'scheduledMessagesCount',
+          'updatedAt',
+          'userId'
+        ])
+        && data.userId == userId
+        && data.connectionsCount is int
+        && data.connectionsCount >= 0
+        && data.contactsCount is int
+        && data.contactsCount >= 0
+        && data.messagesCount is int
+        && data.messagesCount >= 0
+        && data.scheduledMessagesCount is int
+        && data.scheduledMessagesCount >= 0
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function hasValidUsageCounterChanges() {
+      return request.resource.data.connectionsCount >= resource.data.connectionsCount - 1
+        && request.resource.data.connectionsCount <= resource.data.connectionsCount + 1
+        && request.resource.data.contactsCount >= resource.data.contactsCount - 1
+        && request.resource.data.contactsCount <= resource.data.contactsCount + 1
+        && request.resource.data.messagesCount >= resource.data.messagesCount - 1
+        && request.resource.data.messagesCount <= resource.data.messagesCount + 1
+        && request.resource.data.scheduledMessagesCount >= resource.data.scheduledMessagesCount - 1
+        && request.resource.data.scheduledMessagesCount <= resource.data.scheduledMessagesCount + 1;
+    }
+
     match /connections/{connectionId} {
-      allow read: if ownsResource();
-      allow create, update, delete: if false;
+      allow read: if ownsExistingResource();
+
+      allow create: if ownsRequestedResource()
+        && hasValidConnectionDocument(request.resource.data)
+        && request.resource.data.status == 'active'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if ownsExistingResource()
+        && ownsRequestedResource()
+        && hasValidConnectionDocument(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time
+        && (
+          (
+            (!resource.data.keys().hasAny(['status']) || resource.data.status == 'active')
+            && (
+              request.resource.data.status == 'active'
+              || request.resource.data.archivedAt == request.time
+            )
+          )
+          || (
+            resource.data.status == 'archived'
+            && request.resource.data.status == 'active'
+            && request.resource.data.archivedAt == null
+          )
+        );
+
+      allow delete: if false;
+    }
+
+    match /contacts/{contactId} {
+      allow read: if ownsExistingResource();
+
+      allow create: if ownsRequestedResource()
+        && hasValidContactDocument(request.resource.data)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && isOwnedActiveConnection(request.resource.data.connectionId);
+
+      allow update: if ownsExistingResource()
+        && ownsRequestedResource()
+        && hasValidContactDocument(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time
+        && isOwnedActiveConnection(request.resource.data.connectionId);
+
+      allow delete: if ownsExistingResource();
+    }
+
+    match /messages/{messageId} {
+      allow read: if ownsExistingResource();
+
+      allow create: if ownsRequestedResource()
+        && hasValidMessageDocument(request.resource.data)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && isOwnedActiveConnection(request.resource.data.connectionId);
+
+      allow update: if ownsExistingResource()
+        && ownsRequestedResource()
+        && resource.data.status == 'scheduled'
+        && hasValidMessageDocument(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time
+        && isOwnedActiveConnection(request.resource.data.connectionId);
+
+      allow delete: if ownsExistingResource();
     }
 
     match /usage/{userId} {
       allow read: if signedIn() && request.auth.uid == userId;
-      allow write: if false;
-    }
 
-    match /contacts/{contactId} {
-      allow read: if ownsResource();
-      allow create, update, delete: if false;
-    }
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && hasValidUsageDocument(request.resource.data, userId)
+        && request.resource.data.connectionsCount <= 1
+        && request.resource.data.contactsCount <= 1
+        && request.resource.data.messagesCount <= 1
+        && request.resource.data.scheduledMessagesCount <= 1
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
 
-    match /messages/{messageId} {
-      allow read: if ownsResource();
-      allow create, update, delete: if false;
+      allow update: if signedIn()
+        && request.auth.uid == userId
+        && resource.data.userId == userId
+        && hasValidUsageDocument(request.resource.data, userId)
+        && hasValidUsageCounterChanges()
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
     }
   }
 }

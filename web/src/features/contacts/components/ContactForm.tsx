@@ -7,16 +7,19 @@ import { Controller } from "react-hook-form";
 import { ConnectionSelectField } from "../../../components/ConnectionSelectField";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Contact } from "../types";
+import type { ConnectionsState } from "../../connections/types";
 import { useContactForm } from "./useContactForm";
 import { formatPhone, normalizePhoneInput } from "../../../utils/formatPhone";
 
 type ContactFormProps = {
+  connectionsState: ConnectionsState;
   editingContact: Contact | null;
   onCancel: () => void;
   onSaved: () => void;
 };
 
 export const ContactForm = ({
+  connectionsState,
   editingContact,
   onCancel,
   onSaved,
@@ -34,6 +37,7 @@ export const ContactForm = ({
     success,
     submitContact,
   } = useContactForm({
+    connectionsState,
     editingContact,
     onSaved,
   });

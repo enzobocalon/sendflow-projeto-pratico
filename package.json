@@ -13,7 +13,8 @@
     "test:coverage": "firebase emulators:exec --only firestore --project sendflow-dev-prova \"pnpm --filter functions test:coverage\"",
     "functions:build": "pnpm --filter functions build",
     "functions:test:integration": "firebase emulators:exec --only firestore --project sendflow-dev-prova \"pnpm --filter functions test:integration\"",
-    "seed:firestore": "node functions/scripts/seed-firestore.mjs"
+    "seed:firestore": "node functions/scripts/seed-firestore.mjs",
+    "sync:usage": "node functions/scripts/sync-usage.mjs"
   },
   "devDependencies": {
     "prettier": "^3.9.6"
