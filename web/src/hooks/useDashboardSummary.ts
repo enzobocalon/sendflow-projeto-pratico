@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  emptyUsageCounters,
-  subscribeToUsage,
-} from "../features/dashboard/services/usageService";
+import { emptyUsageCounters, subscribeToUsage } from "../services/usageService";
 import { useAuth } from "./useAuth";
 
 const summaryErrorMessage =

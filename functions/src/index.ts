@@ -1,1 +1,1 @@
-export { markScheduledMessagesAsSent } from "./scheduledMessages";
+export { markScheduledMessagesAsSent } from "./features/messages/scheduledMessages";

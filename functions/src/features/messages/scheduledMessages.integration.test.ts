@@ -1,18 +1,18 @@
 import { Timestamp } from "firebase-admin/firestore";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createUserId } from "./test-helpers.ts";
+import { createUserId } from "../../integration/test-helpers.ts";
 import {
   db,
   initializeIntegrationContext,
   terminateIntegrationContext,
-} from "./test-context.ts";
+} from "../../integration/test-context.ts";
 
 const MINUTE_MS = 60_000;
 const DAY_MS = 24 * 60 * MINUTE_MS;
 const DUE_MESSAGES_BATCH_SIZE = 250;
 
 let processDueScheduledMessages: (now?: Timestamp) => Promise<void>;
-let markScheduledMessagesAsSent: (typeof import("../scheduledMessages.ts"))["markScheduledMessagesAsSent"];
+let markScheduledMessagesAsSent: (typeof import("./scheduledMessages.ts"))["markScheduledMessagesAsSent"];
 
 const seedScheduledMessages = async ({
   count = 1,
@@ -50,7 +50,7 @@ const seedUsage = (userId: string, scheduledMessagesCount: number) =>
 beforeAll(async () => {
   await initializeIntegrationContext();
   ({ markScheduledMessagesAsSent, processDueScheduledMessages } =
-    await import("../scheduledMessages.ts"));
+    await import("./scheduledMessages.ts"));
 });
 
 afterAll(terminateIntegrationContext);

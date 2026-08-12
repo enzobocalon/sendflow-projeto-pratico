@@ -30,7 +30,7 @@ import {
   createFirestoreServiceError,
   requireAuthenticatedUserId,
 } from "../../../lib/firestoreService";
-import { updateUsageInTransaction } from "../../dashboard/services/usageService";
+import { updateUsageInTransaction } from "../../../services/usageService";
 import type { Connection } from "../types";
 
 type ConnectionDocument = Omit<Connection, "id">;

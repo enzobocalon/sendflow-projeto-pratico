@@ -32,7 +32,7 @@ import {
   createFirestoreServiceError,
   requireAuthenticatedUserId,
 } from "../../../lib/firestoreService";
-import { updateUsageInTransaction } from "../../dashboard/services/usageService";
+import { updateUsageInTransaction } from "../../../services/usageService";
 import { readActiveConnectionInTransaction } from "../../connections/services/connectionService";
 import type { Message } from "../types";
 
@@ -184,12 +184,7 @@ export const subscribeToMessagesPage = (
   params: CreateMessagesPageQueryParams,
   onValue: (snapshot: QuerySnapshot<DocumentData>) => void,
   onError: (error: FirestoreError) => void,
-) =>
-  onSnapshot(
-    createMessagesPageQuery(params),
-    onValue,
-    onError,
-  );
+) => onSnapshot(createMessagesPageQuery(params), onValue, onError);
 
 export const createMessage = async ({
   connectionId: rawConnectionId,

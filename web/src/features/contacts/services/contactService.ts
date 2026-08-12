@@ -30,7 +30,7 @@ import {
   createFirestoreServiceError,
   requireAuthenticatedUserId,
 } from "../../../lib/firestoreService";
-import { updateUsageInTransaction } from "../../dashboard/services/usageService";
+import { updateUsageInTransaction } from "../../../services/usageService";
 import { readActiveConnectionInTransaction } from "../../connections/services/connectionService";
 import type { Contact } from "../types";
 
@@ -105,12 +105,7 @@ export const subscribeToContactsPage = (
   params: CreateContactsPageQueryParams,
   onValue: (snapshot: QuerySnapshot<DocumentData>) => void,
   onError: (error: FirestoreError) => void,
-) =>
-  onSnapshot(
-    createContactsPageQuery(params),
-    onValue,
-    onError,
-  );
+) => onSnapshot(createContactsPageQuery(params), onValue, onError);
 
 export const createContact = async ({
   connectionId: rawConnectionId,

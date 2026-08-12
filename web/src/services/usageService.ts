@@ -6,7 +6,7 @@ import {
   type FirestoreError,
   type Transaction,
 } from "firebase/firestore";
-import { db } from "../../../lib/firebase";
+import { db } from "../lib/firebase";
 
 export type UsageCounters = {
   connectionsCount: number;
