@@ -1,7 +1,10 @@
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
-import { Button, CircularProgress, Stack, TextField } from "@mui/material";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
 import { FeedbackSnackbar } from "../../../components/FeedbackSnackbar";
 import { Controller } from "react-hook-form";
 import { ConnectionSelectField } from "../../../components/ConnectionSelectField";

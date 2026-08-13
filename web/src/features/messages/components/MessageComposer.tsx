@@ -1,4 +1,5 @@
-import { Stack, TextField } from "@mui/material";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
 import { Controller } from "react-hook-form";
 import { ConnectionSelectField } from "../../../components/ConnectionSelectField";
 import { FeedbackSnackbar } from "../../../components/FeedbackSnackbar";

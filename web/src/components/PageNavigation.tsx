@@ -1,4 +1,7 @@
-import { Button, CircularProgress, Stack, Typography } from "@mui/material";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { useDelayedFlag } from "../hooks/useDelayedFlag";
 
 type PageNavigationProps = {

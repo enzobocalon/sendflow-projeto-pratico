@@ -1,4 +1,4 @@
-import { FormHelperText } from "@mui/material";
+import FormHelperText from "@mui/material/FormHelperText";
 
 type FormFieldFeedbackProps = {
   error?: boolean;

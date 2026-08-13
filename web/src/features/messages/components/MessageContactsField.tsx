@@ -1,11 +1,9 @@
 import CloseIcon from "@mui/icons-material/Close";
-import {
-  Button,
-  Checkbox,
-  FormControlLabel,
-  TextField,
-  Typography,
-} from "@mui/material";
+import Button from "@mui/material/Button";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { type Control, useController, useFormState } from "react-hook-form";
 import { FormFieldFeedback } from "../../../components/FormFieldFeedback";

@@ -1,14 +1,12 @@
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import {
-  Alert,
-  CircularProgress,
-  IconButton,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import Alert from "@mui/material/Alert";
+import CircularProgress from "@mui/material/CircularProgress";
+import IconButton from "@mui/material/IconButton";
+import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import { EmptyState } from "../../../components/EmptyState";
 import { FeedbackSnackbar } from "../../../components/FeedbackSnackbar";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";

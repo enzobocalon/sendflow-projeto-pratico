@@ -1,4 +1,4 @@
-import { LinearProgress } from "@mui/material";
+import LinearProgress from "@mui/material/LinearProgress";
 import type { ReactNode } from "react";
 import { useDelayedFlag } from "../hooks/useDelayedFlag";
 

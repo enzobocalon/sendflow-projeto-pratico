@@ -1,7 +1,9 @@
 import CloseIcon from "@mui/icons-material/Close";
 import EventIcon from "@mui/icons-material/Event";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
-import { Button, CircularProgress, Stack } from "@mui/material";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Stack from "@mui/material/Stack";
 import type { MessageFormValues } from "../types";
 
 type MessageComposerActionsProps = {

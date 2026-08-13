@@ -2,7 +2,10 @@ import EventIcon from "@mui/icons-material/Event";
 import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
-import { Alert, Paper, Skeleton, Typography } from "@mui/material";
+import Alert from "@mui/material/Alert";
+import Paper from "@mui/material/Paper";
+import Skeleton from "@mui/material/Skeleton";
+import Typography from "@mui/material/Typography";
 import { useDashboardSummary } from "../../../hooks/useDashboardSummary";
 
 const summaryItems = [

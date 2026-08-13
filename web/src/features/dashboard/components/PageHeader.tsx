@@ -1,4 +1,4 @@
-import { Typography } from "@mui/material";
+import Typography from "@mui/material/Typography";
 
 export const PageHeader = () => (
   <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">

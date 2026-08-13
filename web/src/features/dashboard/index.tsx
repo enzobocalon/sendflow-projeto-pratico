@@ -1,7 +1,10 @@
 import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
-import { Paper, Stack, Tab, Tabs } from "@mui/material";
+import Paper from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
+import Tab from "@mui/material/Tab";
+import Tabs from "@mui/material/Tabs";
 import { useState } from "react";
 import { ContactsPage } from "../contacts";
 import { ConnectionsPage } from "../connections";

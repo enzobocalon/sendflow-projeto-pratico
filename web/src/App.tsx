@@ -1,4 +1,4 @@
-import { CircularProgress } from "@mui/material";
+import CircularProgress from "@mui/material/CircularProgress";
 import { AuthPage } from "./features/auth";
 import { useAuth } from "./hooks/useAuth";
 import { PrivateLayout } from "./layouts";

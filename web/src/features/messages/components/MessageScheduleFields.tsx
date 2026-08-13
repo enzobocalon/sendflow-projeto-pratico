@@ -1,5 +1,7 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { Button, TextField, Typography } from "@mui/material";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import { Controller, type Control } from "react-hook-form";
 import type { MessageFormValues } from "../types";
 
