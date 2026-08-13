@@ -1,15 +1,23 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { MAX_CONNECTIONS_PER_USER } from "@sendflow/shared";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useAuth } from "../../../hooks/use-auth";
-import { createConnection, upsertConnection } from "../models/connection.model";
+
+import { useAuth } from "@/hooks/use-auth";
 import {
   getFirebaseErrorCode,
   getFirebaseErrorMessage,
-} from "../../../utils/firebase-error";
-import { connectionSchema } from "../schemas/connection.schema";
-import type { Connection, ConnectionFormValues } from "../types";
-import { MAX_CONNECTIONS_PER_USER } from "@sendflow/shared";
+} from "@/utils/firebase-error";
+
+import {
+  createConnection,
+  upsertConnection,
+  type Connection,
+} from "../models/connection.model";
+import {
+  connectionSchema,
+  type ConnectionFormValues,
+} from "../schemas/connection.schema";
 
 interface UseConnectionFormParams {
   connectionsCount: number;

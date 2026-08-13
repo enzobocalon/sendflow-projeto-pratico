@@ -27,16 +27,28 @@ import {
   type QueryConstraint,
   type QueryDocumentSnapshot,
   type QuerySnapshot,
+  type Timestamp,
 } from "firebase/firestore";
-import { db } from "../../../lib/firebase";
-import { collectionPaths } from "../../../models/collection-paths";
+
+import { getActiveConnectionInTransaction } from "@/features/connections/models/connection.model";
+import { db } from "@/lib/firebase";
 import {
   createFirestoreServiceError,
   requireAuthenticatedUserId,
-} from "../../../lib/firestore-service";
-import { updateUsageInTransaction } from "../../../models/usage.model";
-import { getActiveConnectionInTransaction } from "../../connections/models/connection.model";
-import type { Contact } from "../types";
+} from "@/lib/firestore-service";
+import { collectionPaths } from "@/models/collection-paths";
+import { updateUsageInTransaction } from "@/models/usage.model";
+
+export interface Contact {
+  connectionId: string;
+  createdAt?: Timestamp;
+  id: string;
+  name: string;
+  nameNormalized?: string;
+  phone: string;
+  updatedAt?: Timestamp;
+  userId: string;
+}
 
 interface ContactDocument extends Omit<Contact, "id"> {
   connectionName?: string;

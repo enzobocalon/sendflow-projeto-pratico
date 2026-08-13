@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
+
 import { PageNavigation } from "./page-navigation";
 import { PaginationTransition } from "./pagination-transition";
 

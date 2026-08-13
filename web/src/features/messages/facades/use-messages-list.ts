@@ -1,10 +1,12 @@
+import type { MessageStatus } from "@sendflow/shared";
 import { useMemo, useState, type MouseEvent } from "react";
-import { useDelete } from "../../../facades/use-delete";
+
+import { useDelete } from "@/facades/use-delete";
+import { formatMessageDate } from "@/utils/dates";
+import { getFirebaseErrorMessage } from "@/utils/firebase-error";
+
+import { deleteMessage, type Message } from "../models/message.model";
 import { useMessages } from "../models/use-messages";
-import type { Message, MessageStatus } from "../types";
-import { formatMessageDate } from "../../../utils/dates";
-import { deleteMessage } from "../models/message.model";
-import { getFirebaseErrorMessage } from "../../../utils/firebase-error";
 
 export interface MessageListItem extends Message {
   date: string;

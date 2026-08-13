@@ -6,18 +6,20 @@ import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { EmptyState } from "../../../components/empty-state";
-import { FeedbackSnackbar } from "../../../components/feedback-snackbar";
-import { PaginatedContent } from "../../../components/paginated-content";
-import { SectionTitle } from "../../dashboard/components/section-title";
-import type { Contact } from "../types";
-import type { ConnectionsState } from "../../connections/types";
+
+import { EmptyState } from "@/components/empty-state";
+import { FeedbackSnackbar } from "@/components/feedback-snackbar";
+import { PaginatedContent } from "@/components/paginated-content";
+import type { ConnectionsState } from "@/features/connections/models/use-connections";
+import { SectionTitle } from "@/features/dashboard/components/section-title";
+import { formatPhone } from "@/utils/format-phone";
+
+import { useContactsList } from "../facades/use-contacts-list";
+import type { Contact } from "../models/contact.model";
 import {
   getContactsListEmptyState,
   getContactsListSubtitle,
 } from "./contact-list-copy";
-import { useContactsList } from "../facades/use-contacts-list";
-import { formatPhone } from "../../../utils/format-phone";
 
 interface ContactsListProps {
   connectionsState: ConnectionsState;

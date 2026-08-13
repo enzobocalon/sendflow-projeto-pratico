@@ -1,3 +1,6 @@
+import type { User } from "firebase/auth";
+import { useState } from "react";
+import type { ReactNode } from "react";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AppBar from "@mui/material/AppBar";
@@ -10,10 +13,8 @@ import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
-import type { ReactNode } from "react";
-import type { User } from "firebase/auth";
-import { useAuth } from "../../hooks/use-auth";
+
+import { useAuth } from "@/hooks/use-auth";
 
 interface PrivateLayoutProps {
   children: ReactNode;

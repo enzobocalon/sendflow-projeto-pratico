@@ -1,8 +1,10 @@
 import { normalizeSearchText } from "@sendflow/shared";
 import type { DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
 import { useCallback } from "react";
-import { useAuth } from "../../../hooks/use-auth";
-import { useRealtimeCursorPagination } from "../../../hooks/use-realtime-cursor-pagination";
+
+import { useAuth } from "@/hooks/use-auth";
+import { useRealtimeCursorPagination } from "@/hooks/use-realtime-cursor-pagination";
+
 import { getContactsPageRealtime, mapContactDocument } from "./contact.model";
 
 interface UseContactsParams {

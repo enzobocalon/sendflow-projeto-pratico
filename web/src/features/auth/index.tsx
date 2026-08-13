@@ -4,6 +4,7 @@ import Divider from "@mui/material/Divider";
 import Paper from "@mui/material/Paper";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+
 import { useAuthPage } from "./facades";
 
 export function AuthPage() {

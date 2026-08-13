@@ -1,6 +1,7 @@
-import Dialog from "@mui/material/Dialog";
 import { useCallback, useState } from "react";
 import type { ReactNode } from "react";
+import Dialog from "@mui/material/Dialog";
+
 import { DialogContext } from "./dialog-context";
 import type { OpenDialogOptions } from "./dialog-context";
 

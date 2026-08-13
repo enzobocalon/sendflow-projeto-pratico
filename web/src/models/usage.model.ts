@@ -9,7 +9,9 @@ import {
   type FirestoreError,
   type Transaction,
 } from "firebase/firestore";
-import { db } from "../lib/firebase";
+
+import { db } from "@/lib/firebase";
+
 import { collectionPaths } from "./collection-paths";
 
 export interface UsageCounters {

@@ -1,11 +1,12 @@
+import { useId, useState } from "react";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import { useId, useState } from "react";
-import { useDialog } from "../../providers/dialog";
+
+import { useDialog } from "@/providers/dialog";
 
 export interface DeleteDialogProps {
   title: string;

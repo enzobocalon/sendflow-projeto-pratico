@@ -1,12 +1,21 @@
-import { useForm, useWatch } from "react-hook-form";
-import { useConnections } from "../../connections/models/use-connections";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { messageSchema } from "../schemas/message.schema";
-import type { Message, MessageFormValues, MessageStatus } from "../types";
+import type { MessageStatus } from "@sendflow/shared";
 import { useEffect, useState } from "react";
-import { useAuth } from "../../../hooks/use-auth";
-import { createMessage, upsertMessage } from "../models/message.model";
-import { getFirebaseErrorMessage } from "../../../utils/firebase-error";
+import { useForm, useWatch } from "react-hook-form";
+
+import { useConnections } from "@/features/connections/models/use-connections";
+import { useAuth } from "@/hooks/use-auth";
+import { getFirebaseErrorMessage } from "@/utils/firebase-error";
+
+import {
+  createMessage,
+  upsertMessage,
+  type Message,
+} from "../models/message.model";
+import {
+  messageSchema,
+  type MessageFormValues,
+} from "../schemas/message.schema";
 
 interface UseMessageComposerParams {
   editingMessage: Message | null;

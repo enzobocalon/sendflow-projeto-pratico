@@ -24,16 +24,28 @@ import {
   type DocumentSnapshot,
   type FirestoreError,
   type QueryConstraint,
+  type Timestamp,
   type Transaction,
 } from "firebase/firestore";
-import { db } from "../../../lib/firebase";
-import { collectionPaths } from "../../../models/collection-paths";
+
+import { db } from "@/lib/firebase";
 import {
   createFirestoreServiceError,
   requireAuthenticatedUserId,
-} from "../../../lib/firestore-service";
-import { updateUsageInTransaction } from "../../../models/usage.model";
-import type { Connection } from "../types";
+} from "@/lib/firestore-service";
+import { collectionPaths } from "@/models/collection-paths";
+import { updateUsageInTransaction } from "@/models/usage.model";
+
+export interface Connection {
+  archivedAt?: Timestamp | null;
+  createdAt?: Timestamp;
+  id: string;
+  name: string;
+  nameNormalized?: string;
+  status?: "active" | "archived";
+  updatedAt?: Timestamp;
+  userId: string;
+}
 
 type ConnectionDocument = Omit<Connection, "id">;
 

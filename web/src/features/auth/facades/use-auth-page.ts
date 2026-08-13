@@ -2,8 +2,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useAuth } from "../../../hooks/use-auth";
-import { getFirebaseErrorCode } from "../../../utils/firebase-error";
+
+import { useAuth } from "@/hooks/use-auth";
+import { getFirebaseErrorCode } from "@/utils/firebase-error";
 
 type AuthMode = "login" | "register";
 

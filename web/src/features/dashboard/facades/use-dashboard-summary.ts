@@ -1,5 +1,5 @@
-import { useUsage } from "../../../models/use-usage";
-import { emptyUsageCounters } from "../../../models/usage.model";
+import { emptyUsageCounters } from "@/models/usage.model";
+import { useUsage } from "@/models/use-usage";
 
 const mapSummary = (usage: typeof emptyUsageCounters) => ({
   connections: usage.connectionsCount,

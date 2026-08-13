@@ -50,6 +50,13 @@ exemplo `connection.model.ts`, `contact.schema.ts` e `message.service.ts`.
 Arquivos que representam coleções preservam o plural semântico, como
 `connections-list.tsx` e `use-connections.ts`.
 
+Os imports são separados por origem: primeiro dependências externas, depois
+módulos compartilhados ou de outras features usando o alias `@/` e, por fim,
+arquivos locais com caminhos relativos. Cada grupo é separado por uma linha em
+branco. Componentes do Material UI são importados diretamente de seus
+entrypoints, como `@mui/material/Button`, sem utilizar o barrel
+`@mui/material`.
+
 ## Modelo de dados
 
 Todas as coleções ficam na raiz do Firestore, isoladas por `userId`:

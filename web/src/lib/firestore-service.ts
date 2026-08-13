@@ -1,4 +1,5 @@
 import { FirebaseError } from "firebase/app";
+
 import { auth } from "./firebase";
 
 type FirestoreServiceErrorCode =

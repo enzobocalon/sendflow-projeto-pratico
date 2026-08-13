@@ -3,12 +3,14 @@ import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import { FeedbackSnackbar } from "../../../components/feedback-snackbar";
-import { Controller } from "react-hook-form";
-import { SectionTitle } from "../../dashboard/components/section-title";
-import type { Connection } from "../types";
-import { useConnectionForm } from "../facades/use-connection-form";
 import { MAX_CONNECTIONS_PER_USER } from "@sendflow/shared";
+import { Controller } from "react-hook-form";
+
+import { FeedbackSnackbar } from "@/components/feedback-snackbar";
+import { SectionTitle } from "@/features/dashboard/components/section-title";
+
+import { useConnectionForm } from "../facades/use-connection-form";
+import type { Connection } from "../models/connection.model";
 
 interface ConnectionFormProps {
   connectionsCount: number;

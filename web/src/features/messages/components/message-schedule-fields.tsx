@@ -3,7 +3,8 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { Controller, type Control } from "react-hook-form";
-import type { MessageFormValues } from "../types";
+
+import type { MessageFormValues } from "../schemas/message.schema";
 
 interface MessageScheduleFieldsProps {
   control: Control<MessageFormValues>;

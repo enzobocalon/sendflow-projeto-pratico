@@ -1,12 +1,14 @@
+import type { ControllerRenderProps, FieldValues } from "react-hook-form";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import type { SelectChangeEvent } from "@mui/material/Select";
-import type { ControllerRenderProps, FieldValues } from "react-hook-form";
-import type { Connection } from "../features/connections/types";
+
+import type { Connection } from "@/features/connections/models/connection.model";
+import { getConnectionFieldFeedback } from "@/utils/connection-field-feedback";
+
 import { FormFieldFeedback } from "./form-field-feedback";
-import { getConnectionFieldFeedback } from "../utils/connection-field-feedback";
 
 type ConnectionField = ControllerRenderProps<FieldValues, "connectionId">;
 

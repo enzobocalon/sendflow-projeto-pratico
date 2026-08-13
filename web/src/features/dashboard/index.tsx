@@ -6,9 +6,11 @@ import Stack from "@mui/material/Stack";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import { useState } from "react";
-import { ContactsPage } from "../contacts";
-import { ConnectionsPage } from "../connections";
-import { MessagesPage } from "../messages";
+
+import { ConnectionsPage } from "@/features/connections";
+import { ContactsPage } from "@/features/contacts";
+import { MessagesPage } from "@/features/messages";
+
 import { PageHeader } from "./components/page-header";
 import { WorkflowSummary } from "./components/workflow-summary";
 import type { DashboardTab, DashboardTabDefinition } from "./types";

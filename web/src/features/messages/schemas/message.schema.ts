@@ -8,6 +8,15 @@ import {
   parseDate,
 } from "@sendflow/shared";
 
+export interface MessageFormValues {
+  connectionId: string;
+  contactIds: string[];
+  content: string;
+  scheduledDate: string;
+  scheduledTime: string;
+  sendMode: "now" | "scheduled";
+}
+
 export const messageSchema = z
   .object({
     connectionId: z.string().trim().min(1, "Informe uma conexão."),

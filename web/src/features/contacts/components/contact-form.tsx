@@ -5,14 +5,16 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import { FeedbackSnackbar } from "../../../components/feedback-snackbar";
 import { Controller } from "react-hook-form";
-import { ConnectionSelectField } from "../../../components/connection-select-field";
-import { SectionTitle } from "../../dashboard/components/section-title";
-import type { Contact } from "../types";
-import type { ConnectionsState } from "../../connections/types";
+
+import { ConnectionSelectField } from "@/components/connection-select-field";
+import { FeedbackSnackbar } from "@/components/feedback-snackbar";
+import type { ConnectionsState } from "@/features/connections/models/use-connections";
+import { SectionTitle } from "@/features/dashboard/components/section-title";
+import { formatPhone, normalizePhoneInput } from "@/utils/format-phone";
+
 import { useContactForm } from "../facades/use-contact-form";
-import { formatPhone, normalizePhoneInput } from "../../../utils/format-phone";
+import type { Contact } from "../models/contact.model";
 
 interface ContactFormProps {
   connectionsState: ConnectionsState;

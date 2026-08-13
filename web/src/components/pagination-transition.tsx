@@ -1,6 +1,7 @@
-import LinearProgress from "@mui/material/LinearProgress";
 import type { ReactNode } from "react";
-import { useDelayedFlag } from "../hooks/use-delayed-flag";
+import LinearProgress from "@mui/material/LinearProgress";
+
+import { useDelayedFlag } from "@/hooks/use-delayed-flag";
 
 interface PaginationTransitionProps {
   children: ReactNode;

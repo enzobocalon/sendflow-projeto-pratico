@@ -11,14 +11,16 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { EmptyState } from "../../../components/empty-state";
-import { FeedbackSnackbar } from "../../../components/feedback-snackbar";
-import { PaginatedContent } from "../../../components/paginated-content";
-import { SectionTitle } from "../../dashboard/components/section-title";
-import type { Message } from "../types";
+
+import { EmptyState } from "@/components/empty-state";
+import { FeedbackSnackbar } from "@/components/feedback-snackbar";
+import { PaginatedContent } from "@/components/paginated-content";
+import { SectionTitle } from "@/features/dashboard/components/section-title";
+
+import { useMessagesList } from "../facades/use-messages-list";
+import type { Message } from "../models/message.model";
 import { MessageFilters } from "./message-filters";
 import { getMessagesListEmptyState } from "./message-list-copy";
-import { useMessagesList } from "../facades/use-messages-list";
 
 const statusLabel = {
   scheduled: "Agendada",

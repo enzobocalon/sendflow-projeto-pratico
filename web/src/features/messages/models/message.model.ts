@@ -30,15 +30,29 @@ import {
   type QuerySnapshot,
   type Transaction,
 } from "firebase/firestore";
-import { db } from "../../../lib/firebase";
-import { collectionPaths } from "../../../models/collection-paths";
+
+import { getActiveConnectionInTransaction } from "@/features/connections/models/connection.model";
+import { db } from "@/lib/firebase";
 import {
   createFirestoreServiceError,
   requireAuthenticatedUserId,
-} from "../../../lib/firestore-service";
-import { updateUsageInTransaction } from "../../../models/usage.model";
-import { getActiveConnectionInTransaction } from "../../connections/models/connection.model";
-import type { Message } from "../types";
+} from "@/lib/firestore-service";
+import { collectionPaths } from "@/models/collection-paths";
+import { updateUsageInTransaction } from "@/models/usage.model";
+
+export interface Message {
+  connectionId: string;
+  contactIds: string[];
+  content: string;
+  createdAt?: Timestamp;
+  id: string;
+  recipientsCount: number;
+  scheduledAt?: Timestamp | null;
+  sentAt?: Timestamp | null;
+  status: MessageStatus;
+  updatedAt?: Timestamp;
+  userId: string;
+}
 
 interface CreateMessageInput {
   connectionId: string;

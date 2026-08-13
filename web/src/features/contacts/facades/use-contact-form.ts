@@ -1,12 +1,20 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useAuth } from "../../../hooks/use-auth";
-import { createContact, upsertContact } from "../models/contact.model";
-import { getFirebaseErrorMessage } from "../../../utils/firebase-error";
-import { contactSchema } from "../schemas/contact.schema";
-import type { Contact, ContactFormValues } from "../types";
-import type { ConnectionsState } from "../../connections/types";
+
+import type { ConnectionsState } from "@/features/connections/models/use-connections";
+import { useAuth } from "@/hooks/use-auth";
+import { getFirebaseErrorMessage } from "@/utils/firebase-error";
+
+import {
+  createContact,
+  upsertContact,
+  type Contact,
+} from "../models/contact.model";
+import {
+  contactSchema,
+  type ContactFormValues,
+} from "../schemas/contact.schema";
 
 interface UseContactFormParams {
   connectionsState: ConnectionsState;

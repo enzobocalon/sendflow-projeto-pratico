@@ -1,5 +1,6 @@
 import { Timestamp, type Transaction } from "firebase-admin/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
+
 import { db } from "../../firebase";
 
 const DUE_MESSAGES_LIMIT = 250;

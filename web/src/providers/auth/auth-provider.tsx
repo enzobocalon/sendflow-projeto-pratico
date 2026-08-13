@@ -8,8 +8,10 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { User } from "firebase/auth";
+
+import { auth } from "@/lib/firebase";
+
 import { AuthContext } from "./auth-context";
-import { auth } from "../../lib/firebase";
 import type { LoginPayload, RegisterAccountPayload } from "./types";
 
 interface AuthProviderProps {

@@ -1,16 +1,25 @@
 import { normalizeSearchText } from "@sendflow/shared";
 import { useEffect, useState } from "react";
-import { useAuth } from "../../../hooks/use-auth";
-import { getFirestoreErrorMessage } from "../../../utils/firestore-error";
-import type { Connection } from "../types";
-import { getConnectionsRealtime } from "./connection.model";
+
+import { useAuth } from "@/hooks/use-auth";
+import { getFirestoreErrorMessage } from "@/utils/firestore-error";
+
+import { getConnectionsRealtime, type Connection } from "./connection.model";
 
 interface UseConnectionsParams {
   enabled?: boolean;
   searchTerm?: string;
 }
 
-export function useConnections(params: UseConnectionsParams = {}) {
+export interface ConnectionsState {
+  connections: Connection[];
+  error: string;
+  isLoading: boolean;
+}
+
+export function useConnections(
+  params: UseConnectionsParams = {},
+): ConnectionsState {
   const { enabled = true, searchTerm = "" } = params;
   const { user } = useAuth();
   const [connections, setConnections] = useState<Connection[]>([]);

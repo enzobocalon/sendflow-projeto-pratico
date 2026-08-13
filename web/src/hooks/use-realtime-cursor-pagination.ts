@@ -6,10 +6,12 @@ import {
   type Unsubscribe,
 } from "firebase/firestore";
 import { useCallback, useEffect, useMemo, useState } from "react";
+
 import {
   getFirestoreErrorMessage,
   type FirestoreListResource,
-} from "../utils/firestore-error";
+} from "@/utils/firestore-error";
+
 import {
   applyListenerError,
   applyLoadedPage,

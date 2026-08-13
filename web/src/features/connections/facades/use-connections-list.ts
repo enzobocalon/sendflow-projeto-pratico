@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
-import { useDebouncedValue } from "../../../hooks/use-debounced-value";
-import { useDelete } from "../../../facades/use-delete";
-import { deleteConnection } from "../models/connection.model";
+
+import { useDelete } from "@/facades/use-delete";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import {
   getFirebaseErrorCode,
   getFirebaseErrorDetail,
   getFirebaseErrorMessage,
-} from "../../../utils/firebase-error";
-import type { Connection } from "../types";
+} from "@/utils/firebase-error";
+
+import { deleteConnection, type Connection } from "../models/connection.model";
 
 interface UseConnectionsListParams {
   connections: Connection[];

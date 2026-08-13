@@ -1,14 +1,16 @@
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { Controller } from "react-hook-form";
-import { ConnectionSelectField } from "../../../components/connection-select-field";
-import { FeedbackSnackbar } from "../../../components/feedback-snackbar";
-import { SectionTitle } from "../../dashboard/components/section-title";
-import type { Message } from "../types";
+
+import { ConnectionSelectField } from "@/components/connection-select-field";
+import { FeedbackSnackbar } from "@/components/feedback-snackbar";
+import { SectionTitle } from "@/features/dashboard/components/section-title";
+
+import { useMessageComposer } from "../facades/use-message-composer";
+import type { Message } from "../models/message.model";
 import { MessageComposerActions } from "./message-composer-actions";
 import { MessageContactsField } from "./message-contacts-field";
 import { MessageScheduleFields } from "./message-schedule-fields";
-import { useMessageComposer } from "../facades/use-message-composer";
 
 interface MessageComposerProps {
   editingMessage: Message | null;

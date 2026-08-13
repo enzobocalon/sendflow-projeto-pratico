@@ -1,6 +1,6 @@
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import type { MessageStatus } from "../types";
+import type { MessageStatus } from "@sendflow/shared";
 
 interface MessageFilterProps {
   filter: MessageStatus | "all";

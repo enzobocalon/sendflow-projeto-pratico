@@ -5,6 +5,10 @@ import {
   NAME_MIN_LENGTH,
 } from "@sendflow/shared";
 
+export interface ConnectionFormValues {
+  name: string;
+}
+
 export const connectionSchema = z.object({
   name: z
     .string()

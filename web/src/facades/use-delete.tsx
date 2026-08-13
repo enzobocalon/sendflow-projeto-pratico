@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { DeleteDialog } from "../components/delete-dialog";
-import { useDialog } from "../providers/dialog";
+
+import { DeleteDialog } from "@/components/delete-dialog";
+import { useDialog } from "@/providers/dialog";
 
 interface UseDeleteParams<Item> {
   deleteItem: (item: Item) => Promise<unknown>;

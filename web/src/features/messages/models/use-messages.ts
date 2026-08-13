@@ -1,8 +1,10 @@
+import type { MessageStatus } from "@sendflow/shared";
 import type { DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
 import { useCallback } from "react";
-import { useAuth } from "../../../hooks/use-auth";
-import { useRealtimeCursorPagination } from "../../../hooks/use-realtime-cursor-pagination";
-import type { MessageStatus } from "../types";
+
+import { useAuth } from "@/hooks/use-auth";
+import { useRealtimeCursorPagination } from "@/hooks/use-realtime-cursor-pagination";
+
 import { getMessagesPageRealtime, mapMessageDocument } from "./message.model";
 
 interface UseMessagesParams {

@@ -6,12 +6,14 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { type Control, useController, useFormState } from "react-hook-form";
-import { FormFieldFeedback } from "../../../components/form-field-feedback";
-import { PaginatedContent } from "../../../components/paginated-content";
-import { useContacts } from "../../contacts/models/use-contacts";
-import { useDebouncedValue } from "../../../hooks/use-debounced-value";
-import { formatPhone } from "../../../utils/format-phone";
-import type { MessageFormValues } from "../types";
+
+import { FormFieldFeedback } from "@/components/form-field-feedback";
+import { PaginatedContent } from "@/components/paginated-content";
+import { useContacts } from "@/features/contacts/models/use-contacts";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { formatPhone } from "@/utils/format-phone";
+
+import type { MessageFormValues } from "../schemas/message.schema";
 
 interface MessageContactsFieldProps {
   connectionId: string;

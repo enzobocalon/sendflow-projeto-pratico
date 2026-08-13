@@ -7,15 +7,17 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { EmptyState } from "../../../components/empty-state";
-import { FeedbackSnackbar } from "../../../components/feedback-snackbar";
-import { SectionTitle } from "../../dashboard/components/section-title";
-import type { Connection } from "../types";
+
+import { EmptyState } from "@/components/empty-state";
+import { FeedbackSnackbar } from "@/components/feedback-snackbar";
+import { SectionTitle } from "@/features/dashboard/components/section-title";
+
+import { useConnectionsList } from "../facades/use-connections-list";
+import type { Connection } from "../models/connection.model";
 import {
   getConnectionsListEmptyState,
   getConnectionsListSubtitle,
 } from "./connection-list-copy";
-import { useConnectionsList } from "../facades/use-connections-list";
 
 interface ConnectionsListProps {
   connections: Connection[];

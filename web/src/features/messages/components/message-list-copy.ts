@@ -1,4 +1,4 @@
-import type { MessageStatus } from "../types";
+import type { MessageStatus } from "@sendflow/shared";
 
 const emptyStateByFilter = {
   all: {

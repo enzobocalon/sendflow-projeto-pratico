@@ -4,7 +4,8 @@ import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
-import type { MessageFormValues } from "../types";
+
+import type { MessageFormValues } from "../schemas/message.schema";
 
 interface MessageComposerActionsProps {
   canChooseSendMode: boolean;

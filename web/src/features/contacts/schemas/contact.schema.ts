@@ -8,6 +8,12 @@ import {
   isValidPhone,
 } from "@sendflow/shared";
 
+export interface ContactFormValues {
+  connectionId: string;
+  name: string;
+  phone: string;
+}
+
 export const contactSchema = z.object({
   name: z
     .string()
