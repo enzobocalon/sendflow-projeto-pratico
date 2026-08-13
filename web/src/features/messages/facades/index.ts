@@ -1,3 +1,3 @@
-export { useMessageComposer } from "./useMessageComposer";
-export { useMessagesList } from "./useMessagesList";
-export { useMessagesPage } from "./useMessagesPage";
+export { useMessageComposer } from "./use-message-composer";
+export { useMessagesList } from "./use-messages-list";
+export { useMessagesPage } from "./use-messages-page";

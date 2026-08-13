@@ -1,3 +1,3 @@
-export { useConnectionForm } from "./useConnectionForm";
-export { useConnectionsList } from "./useConnectionsList";
-export { useConnectionsPage } from "./useConnectionsPage";
+export { useConnectionForm } from "./use-connection-form";
+export { useConnectionsList } from "./use-connections-list";
+export { useConnectionsPage } from "./use-connections-page";

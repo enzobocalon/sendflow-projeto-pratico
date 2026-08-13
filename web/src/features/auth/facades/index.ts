@@ -1,1 +1,1 @@
-export { useAuthPage } from "./useAuthPage";
+export { useAuthPage } from "./use-auth-page";

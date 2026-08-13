@@ -1,6 +1,6 @@
-import { ContactForm } from "./components/ContactForm";
-import { ContactsList } from "./components/ContactList";
-import { useContactsPage } from "./facades/useContactsPage";
+import { ContactForm } from "./components/contact-form";
+import { ContactsList } from "./components/contacts-list";
+import { useContactsPage } from "./facades/use-contacts-page";
 
 export function ContactsPage() {
   const { cancelEditContact, connectionsState, editContact, editingContact } =

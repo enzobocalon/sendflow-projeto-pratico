@@ -1,3 +1,3 @@
-export * from "./collectionPaths";
-export * from "./usageModel";
-export * from "./useUsage";
+export * from "./collection-paths";
+export * from "./usage.model";
+export * from "./use-usage";

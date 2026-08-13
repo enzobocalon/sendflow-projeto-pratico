@@ -9,8 +9,8 @@ import { useState } from "react";
 import { ContactsPage } from "../contacts";
 import { ConnectionsPage } from "../connections";
 import { MessagesPage } from "../messages";
-import { PageHeader } from "./components/PageHeader";
-import { WorkflowSummary } from "./components/WorkflowSummary";
+import { PageHeader } from "./components/page-header";
+import { WorkflowSummary } from "./components/workflow-summary";
 import type { DashboardTab, DashboardTabDefinition } from "./types";
 
 const tabs: DashboardTabDefinition[] = [

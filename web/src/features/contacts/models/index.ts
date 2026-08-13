@@ -1,2 +1,2 @@
-export * from "./contactModel";
-export * from "./useContacts";
+export * from "./contact.model";
+export * from "./use-contacts";

@@ -13,7 +13,7 @@ import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import type { User } from "firebase/auth";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../../hooks/use-auth";
 
 interface PrivateLayoutProps {
   children: ReactNode;

@@ -31,7 +31,7 @@ export default {
     testTimeout: 15_000,
     coverage: {
       exclude: ["src/**/*.test.ts", "src/integration/**"],
-      include: ["src/features/messages/scheduledMessages.ts"],
+      include: ["src/features/messages/scheduled-messages.ts"],
       thresholds: {
         branches: 95,
         functions: 95,

@@ -1,3 +1,3 @@
-export { DialogProvider } from "./DialogProvider";
-export { useDialog } from "./DialogContext";
-export type { OpenDialogOptions } from "./DialogContext";
+export { DialogProvider } from "./dialog-provider";
+export { useDialog } from "./dialog-context";
+export type { OpenDialogOptions } from "./dialog-context";

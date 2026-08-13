@@ -1,3 +1,3 @@
-export { useContactForm } from "./useContactForm";
-export { useContactsList } from "./useContactsList";
-export { useContactsPage } from "./useContactsPage";
+export { useContactForm } from "./use-contact-form";
+export { useContactsList } from "./use-contacts-list";
+export { useContactsPage } from "./use-contacts-page";

@@ -1,2 +1,2 @@
-export * from "./connectionModel";
-export * from "./useConnections";
+export * from "./connection.model";
+export * from "./use-connections";

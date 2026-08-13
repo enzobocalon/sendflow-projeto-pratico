@@ -27,5 +27,42 @@ export default defineConfig([
       },
     },
   },
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@mui/material",
+              message:
+                "Importe cada componente diretamente, por exemplo @mui/material/Button.",
+            },
+          ],
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ExportDefaultDeclaration",
+          message: "Use exports nomeados nos arquivos da aplicação.",
+        },
+        {
+          selector:
+            "FunctionDeclaration[id.name=/^[A-Z]/] > ObjectPattern.params",
+          message:
+            "Componentes devem receber props tipadas e desestruturá-las no corpo da função.",
+        },
+        {
+          selector:
+            "VariableDeclarator[id.name=/^[A-Z]/] > ArrowFunctionExpression > ObjectPattern.params",
+          message:
+            "Componentes devem receber props tipadas e desestruturá-las no corpo da função.",
+        },
+      ],
+    },
+  },
   eslintConfigPrettier,
 ]);

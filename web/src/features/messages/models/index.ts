@@ -1,2 +1,2 @@
-export * from "./messageModel";
-export * from "./useMessages";
+export * from "./message.model";
+export * from "./use-messages";
