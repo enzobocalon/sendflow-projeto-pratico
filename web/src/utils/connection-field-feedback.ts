@@ -1,10 +1,10 @@
-type ConnectionFieldFeedbackParams = {
+interface ConnectionFieldFeedbackParams {
   connectionsError?: string;
   emptyMessage: string;
   fieldError?: string;
   hasConnections: boolean;
   isLoadingConnections: boolean;
-};
+}
 
 export const getConnectionFieldFeedback = ({
   connectionsError,

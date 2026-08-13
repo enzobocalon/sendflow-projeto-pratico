@@ -2,9 +2,9 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { AuthPage } from "./features/auth";
 import { useAuth } from "./hooks/useAuth";
 import { PrivateLayout } from "./layouts";
-import Dashboard from "./features/dashboard";
+import { Dashboard } from "./features/dashboard";
 
-function App() {
+export function App() {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -23,5 +23,3 @@ function App() {
     <AuthPage />
   );
 }
-
-export default App;

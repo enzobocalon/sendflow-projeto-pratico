@@ -10,6 +10,7 @@ import {
   deleteField,
   doc,
   endAt,
+  getDoc,
   orderBy,
   query,
   runTransaction,
@@ -19,36 +20,50 @@ import {
   where,
   limit,
   onSnapshot,
+  type CollectionReference,
   type DocumentData,
+  type DocumentSnapshot,
   type FirestoreError,
   type QueryConstraint,
   type QueryDocumentSnapshot,
   type QuerySnapshot,
 } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
+import { collectionPaths } from "../../../models/collectionPaths";
 import {
   createFirestoreServiceError,
   requireAuthenticatedUserId,
 } from "../../../lib/firestoreService";
-import { updateUsageInTransaction } from "../../../services/usageService";
-import { readActiveConnectionInTransaction } from "../../connections/services/connectionService";
+import { updateUsageInTransaction } from "../../../models/usageModel";
+import { getActiveConnectionInTransaction } from "../../connections/models/connectionModel";
 import type { Contact } from "../types";
 
-type ContactDocument = Omit<Contact, "id">;
-
-type CreateContactInput = Pick<Contact, "connectionId" | "name" | "phone">;
-
-type UpdateContactInput = CreateContactInput & {
-  contactId: string;
+type ContactDocument = Omit<Contact, "id"> & {
+  connectionName?: string;
 };
 
-type CreateContactsPageQueryParams = {
+const contactsCollection = collection(
+  db,
+  collectionPaths.contacts,
+) as CollectionReference<ContactDocument, ContactDocument>;
+
+interface CreateContactInput {
+  connectionId: Contact["connectionId"];
+  name: Contact["name"];
+  phone: Contact["phone"];
+}
+
+interface UpdateContactInput extends CreateContactInput {
+  contactId: string;
+}
+
+interface GetContactsPageRealtimeParams {
   connectionId?: string;
   cursor: QueryDocumentSnapshot<DocumentData> | null;
   resultLimit: number;
   searchTerm: string;
   userId: string;
-};
+}
 
 const validateContactFields = (name: string, phone: string) => {
   if (!isValidName(name)) {
@@ -67,19 +82,25 @@ const validateContactFields = (name: string, phone: string) => {
 };
 
 export const mapContactDocument = (
-  document: QueryDocumentSnapshot<DocumentData>,
+  document: DocumentSnapshot<DocumentData>,
 ): Contact => ({
   id: document.id,
   ...(document.data() as ContactDocument),
 });
 
-const createContactsPageQuery = ({
-  connectionId,
-  cursor,
-  resultLimit,
-  searchTerm,
-  userId,
-}: CreateContactsPageQueryParams) => {
+export const getContact = async (contactId: string, userId: string) => {
+  const snapshot = await getDoc(doc(contactsCollection, contactId));
+  const contact = snapshot.data();
+
+  if (!snapshot.exists() || contact?.userId !== userId) {
+    throw createFirestoreServiceError("permission-denied", "Contato inválido.");
+  }
+
+  return mapContactDocument(snapshot);
+};
+
+const createContactsPageQuery = (params: GetContactsPageRealtimeParams) => {
+  const { connectionId, cursor, resultLimit, searchTerm, userId } = params;
   const normalizedSearchTerm = normalizeSearchText(searchTerm);
   const constraints: QueryConstraint[] = [
     where("userId", "==", userId),
@@ -98,20 +119,21 @@ const createContactsPageQuery = ({
   if (cursor) constraints.push(startAfter(cursor));
   constraints.push(limit(resultLimit));
 
-  return query(collection(db, "contacts"), ...constraints);
+  return query(contactsCollection, ...constraints);
 };
 
-export const subscribeToContactsPage = (
-  params: CreateContactsPageQueryParams,
+export const getContactsPageRealtime = (
+  params: GetContactsPageRealtimeParams,
   onValue: (snapshot: QuerySnapshot<DocumentData>) => void,
   onError: (error: FirestoreError) => void,
 ) => onSnapshot(createContactsPageQuery(params), onValue, onError);
 
-export const createContact = async ({
-  connectionId: rawConnectionId,
-  name: rawName,
-  phone: rawPhone,
-}: CreateContactInput) => {
+export const createContact = async (params: CreateContactInput) => {
+  const {
+    connectionId: rawConnectionId,
+    name: rawName,
+    phone: rawPhone,
+  } = params;
   const userId = requireAuthenticatedUserId(
     "Faça login para salvar um contato.",
   );
@@ -128,10 +150,10 @@ export const createContact = async ({
 
   validateContactFields(name, phone);
 
-  const contactRef = doc(collection(db, "contacts"));
+  const contactRef = doc(contactsCollection);
 
   await runTransaction(db, async (transaction) => {
-    await readActiveConnectionInTransaction(transaction, connectionId, userId);
+    await getActiveConnectionInTransaction(transaction, connectionId, userId);
     await updateUsageInTransaction(transaction, userId, { contactsCount: 1 });
     const now = serverTimestamp();
 
@@ -147,12 +169,13 @@ export const createContact = async ({
   });
 };
 
-export const updateContact = async ({
-  connectionId: rawConnectionId,
-  contactId: rawContactId,
-  name: rawName,
-  phone: rawPhone,
-}: UpdateContactInput) => {
+export const upsertContact = async (params: UpdateContactInput) => {
+  const {
+    connectionId: rawConnectionId,
+    contactId: rawContactId,
+    name: rawName,
+    phone: rawPhone,
+  } = params;
   const userId = requireAuthenticatedUserId(
     "Faça login para salvar um contato.",
   );
@@ -178,7 +201,7 @@ export const updateContact = async ({
   validateContactFields(name, phone);
 
   await runTransaction(db, async (transaction) => {
-    const contactRef = doc(db, "contacts", contactId);
+    const contactRef = doc(contactsCollection, contactId);
     const contactSnapshot = await transaction.get(contactRef);
 
     if (!contactSnapshot.exists() || contactSnapshot.data().userId !== userId) {
@@ -188,7 +211,7 @@ export const updateContact = async ({
       );
     }
 
-    await readActiveConnectionInTransaction(transaction, connectionId, userId);
+    await getActiveConnectionInTransaction(transaction, connectionId, userId);
     transaction.update(contactRef, {
       connectionId,
       connectionName: deleteField(),
@@ -212,7 +235,7 @@ export const deleteContact = async (contactId: string) => {
   }
 
   await runTransaction(db, async (transaction) => {
-    const contactRef = doc(db, "contacts", normalizedContactId);
+    const contactRef = doc(contactsCollection, normalizedContactId);
     const contactSnapshot = await transaction.get(contactRef);
 
     if (!contactSnapshot.exists() || contactSnapshot.data().userId !== userId) {

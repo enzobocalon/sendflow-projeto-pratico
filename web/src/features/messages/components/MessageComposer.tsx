@@ -8,7 +8,7 @@ import type { Message } from "../types";
 import { MessageComposerActions } from "./MessageComposerActions";
 import { MessageContactsField } from "./MessageContactsField";
 import { MessageScheduleFields } from "./MessageScheduleFields";
-import { useMessageComposer } from "./useMessageComposer";
+import { useMessageComposer } from "../facades/useMessageComposer";
 
 interface MessageComposerProps {
   editingMessage: Message | null;

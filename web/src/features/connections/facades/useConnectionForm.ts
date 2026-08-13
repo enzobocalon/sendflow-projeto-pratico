@@ -2,10 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useAuth } from "../../../hooks/useAuth";
-import {
-  createConnection,
-  updateConnection,
-} from "../services/connectionService";
+import { createConnection, upsertConnection } from "../models/connectionModel";
 import {
   getFirebaseErrorCode,
   getFirebaseErrorMessage,
@@ -14,19 +11,16 @@ import { connectionSchema } from "../schemas/connectionSchema";
 import type { Connection, ConnectionFormValues } from "../types";
 import { MAX_CONNECTIONS_PER_USER } from "@sendflow/shared";
 
-type UseConnectionFormParams = {
+interface UseConnectionFormParams {
   connectionsCount: number;
   editingConnection: Connection | null;
   onSaved: () => void;
-};
+}
 
 const connectionsLimitError = `Limite de ${MAX_CONNECTIONS_PER_USER} conexões atingido.`;
 
-export const useConnectionForm = ({
-  connectionsCount,
-  editingConnection,
-  onSaved,
-}: UseConnectionFormParams) => {
+export function useConnectionForm(params: UseConnectionFormParams) {
+  const { connectionsCount, editingConnection, onSaved } = params;
   const { user } = useAuth();
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -68,7 +62,7 @@ export const useConnectionForm = ({
 
     try {
       if (editingConnection) {
-        await updateConnection({
+        await upsertConnection({
           connectionId: editingConnection.id,
           name,
         });
@@ -112,4 +106,4 @@ export const useConnectionForm = ({
     success,
     submitConnection,
   };
-};
+}

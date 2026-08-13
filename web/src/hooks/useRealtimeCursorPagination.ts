@@ -23,7 +23,7 @@ import {
   type Cursor,
 } from "./realtimeCursorPaginationState";
 
-type UseRealtimeCursorPaginationParams<Item> = {
+interface UseRealtimeCursorPaginationParams<Item> {
   enabled: boolean;
   mapDocument: (document: QueryDocumentSnapshot<DocumentData>) => Item;
   pageSize: number;
@@ -35,16 +35,19 @@ type UseRealtimeCursorPaginationParams<Item> = {
     onValue: (snapshot: QuerySnapshot<DocumentData>) => void,
     onError: (error: FirestoreError) => void,
   ) => Unsubscribe;
-};
+}
 
-export function useRealtimeCursorPagination<Item>({
-  enabled,
-  mapDocument,
-  pageSize,
-  queryKey,
-  resourceLabel,
-  subscribeToPage,
-}: UseRealtimeCursorPaginationParams<Item>) {
+export function useRealtimeCursorPagination<Item>(
+  params: UseRealtimeCursorPaginationParams<Item>,
+) {
+  const {
+    enabled,
+    mapDocument,
+    pageSize,
+    queryKey,
+    resourceLabel,
+    subscribeToPage,
+  } = params;
   const scope = useMemo(
     () => createPaginationScope(queryKey, pageSize, enabled),
     [enabled, pageSize, queryKey],

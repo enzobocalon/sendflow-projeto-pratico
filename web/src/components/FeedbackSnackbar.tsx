@@ -8,11 +8,11 @@ interface FeedbackSnackbarProps {
   onClose: () => void;
 }
 
-type Feedback = {
+interface Feedback {
   id: number;
   message: string;
   severity: "error" | "success";
-};
+}
 
 export function FeedbackSnackbar(props: FeedbackSnackbarProps) {
   const { message, severity, onClose } = props;

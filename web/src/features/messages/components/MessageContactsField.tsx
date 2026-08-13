@@ -8,7 +8,7 @@ import { useState } from "react";
 import { type Control, useController, useFormState } from "react-hook-form";
 import { FormFieldFeedback } from "../../../components/FormFieldFeedback";
 import { PaginatedContent } from "../../../components/PaginatedContent";
-import { useContactsOptions } from "../../../hooks/useContactsOptions";
+import { useContacts } from "../../contacts/models/useContacts";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import { formatPhone } from "../../../utils/formatPhone";
 import type { MessageFormValues } from "../types";
@@ -62,7 +62,7 @@ export function MessageContactsField(props: MessageContactsFieldProps) {
     hasPreviousPage,
     isLoading,
     isPageChanging,
-  } = useContactsOptions({
+  } = useContacts({
     connectionId,
     enabled: Boolean(connectionId),
     searchTerm: debouncedContactSearchTerm,

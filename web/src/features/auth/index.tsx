@@ -4,9 +4,9 @@ import Divider from "@mui/material/Divider";
 import Paper from "@mui/material/Paper";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useAuthPage } from "./useAuthPage";
+import { useAuthPage } from "./facades";
 
-export const AuthPage = () => {
+export function AuthPage() {
   const {
     error,
     errors,
@@ -121,4 +121,4 @@ export const AuthPage = () => {
       </section>
     </main>
   );
-};
+}

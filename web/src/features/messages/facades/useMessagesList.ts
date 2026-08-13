@@ -1,27 +1,24 @@
 import { useMemo, useState, type MouseEvent } from "react";
-import { useDelete } from "../../../hooks/useDelete";
-import { useMessagesOptions } from "../../../hooks/useMessagesOptions";
+import { useDelete } from "../../../facades/useDelete";
+import { useMessages } from "../models/useMessages";
 import type { Message, MessageStatus } from "../types";
 import { formatMessageDate } from "../../../utils/dates";
-import { deleteMessage } from "../services/messageService";
+import { deleteMessage } from "../models/messageModel";
 import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
 
-export type MessageListItem = Message & {
+export interface MessageListItem extends Message {
   date: string;
   recipients: number;
-};
+}
 
-type UseMessagesListParams = {
+interface UseMessagesListParams {
   editingMessage: Message | null;
   onDeletedEditingMessage: () => void;
   onEdit: (message: Message) => void;
-};
+}
 
-export function useMessagesList({
-  editingMessage,
-  onDeletedEditingMessage,
-  onEdit,
-}: UseMessagesListParams) {
+export function useMessagesList(params: UseMessagesListParams) {
+  const { editingMessage, onDeletedEditingMessage, onEdit } = params;
   const [filter, setFilter] = useState<MessageStatus | "all">("all");
   const {
     currentPage,
@@ -33,7 +30,7 @@ export function useMessagesList({
     isLoading,
     isPageChanging,
     messages,
-  } = useMessagesOptions({
+  } = useMessages({
     status: filter,
   });
   const {

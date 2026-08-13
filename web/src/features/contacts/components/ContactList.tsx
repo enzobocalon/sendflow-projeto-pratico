@@ -16,7 +16,7 @@ import {
   getContactsListEmptyState,
   getContactsListSubtitle,
 } from "./contact-list-copy";
-import { useContactsList } from "./useContactsList";
+import { useContactsList } from "../facades/useContactsList";
 import { formatPhone } from "../../../utils/formatPhone";
 
 interface ContactsListProps {

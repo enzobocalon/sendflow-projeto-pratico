@@ -1,7 +1,7 @@
 import { useState } from "react";
-import type { Message } from "./types";
+import type { Message } from "../types";
 
-export function useMessages() {
+export function useMessagesPage() {
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
 
   const editMessage = (message: Message) => {

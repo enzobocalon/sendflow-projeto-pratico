@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { useConnectionsOptions } from "../../hooks/useConnectionsOptions";
-import type { Connection } from "./types";
+import { useConnections } from "../models/useConnections";
+import type { Connection } from "../types";
 
-export const useConnections = () => {
+export function useConnectionsPage() {
   const {
     connections,
     error: connectionsError,
     isLoading: isLoadingConnections,
-  } = useConnectionsOptions();
+  } = useConnections();
   const [editingConnection, setEditingConnection] = useState<Connection | null>(
     null,
   );
@@ -29,4 +29,4 @@ export const useConnections = () => {
     isLoadingConnections,
     totalConnections: connections.length,
   };
-};
+}

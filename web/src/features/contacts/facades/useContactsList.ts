@@ -1,23 +1,20 @@
 import { useMemo, useState } from "react";
-import { useContactsOptions } from "../../../hooks/useContactsOptions";
+import { useContacts } from "../models/useContacts";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
-import { useDelete } from "../../../hooks/useDelete";
-import { deleteContact } from "../services/contactService";
+import { useDelete } from "../../../facades/useDelete";
+import { deleteContact } from "../models/contactModel";
 import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
 import type { Contact } from "../types";
 import type { ConnectionsState } from "../../connections/types";
 
-type UseContactsListParams = {
+interface UseContactsListParams {
   connectionsState: ConnectionsState;
   editingContact: Contact | null;
   onDeletedEditingContact: () => void;
-};
+}
 
-export const useContactsList = ({
-  connectionsState,
-  editingContact,
-  onDeletedEditingContact,
-}: UseContactsListParams) => {
+export function useContactsList(params: UseContactsListParams) {
+  const { connectionsState, editingContact, onDeletedEditingContact } = params;
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebouncedValue(searchTerm);
   const {
@@ -51,7 +48,7 @@ export const useContactsList = ({
     hasPreviousPage,
     isLoading: isLoadingContacts,
     isPageChanging,
-  } = useContactsOptions({ searchTerm: debouncedSearchTerm });
+  } = useContacts({ searchTerm: debouncedSearchTerm });
   const {
     connections,
     error: connectionsError,
@@ -88,4 +85,4 @@ export const useContactsList = ({
     setSearchTerm,
     totalContacts: contacts.length,
   };
-};
+}

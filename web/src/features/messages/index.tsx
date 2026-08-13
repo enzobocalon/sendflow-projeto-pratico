@@ -1,9 +1,9 @@
 import { MessageComposer } from "./components/MessageComposer";
 import { MessagesList } from "./components/MessagesList";
-import { useMessages } from "./useMessages";
+import { useMessagesPage } from "./facades/useMessagesPage";
 
-export const MessagesPage = () => {
-  const { cancelEditMessage, editMessage, editingMessage } = useMessages();
+export function MessagesPage() {
+  const { cancelEditMessage, editMessage, editingMessage } = useMessagesPage();
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
@@ -19,4 +19,4 @@ export const MessagesPage = () => {
       />
     </div>
   );
-};
+}

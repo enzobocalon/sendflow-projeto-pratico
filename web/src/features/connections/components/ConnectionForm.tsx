@@ -7,7 +7,7 @@ import { FeedbackSnackbar } from "../../../components/FeedbackSnackbar";
 import { Controller } from "react-hook-form";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Connection } from "../types";
-import { useConnectionForm } from "./useConnectionForm";
+import { useConnectionForm } from "../facades/useConnectionForm";
 import { MAX_CONNECTIONS_PER_USER } from "@sendflow/shared";
 
 interface ConnectionFormProps {

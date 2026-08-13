@@ -1,8 +1,8 @@
 import { ConnectionForm } from "./components/ConnectionForm";
 import { ConnectionsList } from "./components/ConnectionsList";
-import { useConnections } from "./useConnections";
+import { useConnectionsPage } from "./facades/useConnectionsPage";
 
-export const ConnectionsPage = () => {
+export function ConnectionsPage() {
   const {
     cancelEdit,
     connections,
@@ -11,7 +11,7 @@ export const ConnectionsPage = () => {
     editingConnection,
     isLoadingConnections,
     totalConnections,
-  } = useConnections();
+  } = useConnectionsPage();
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
@@ -31,4 +31,4 @@ export const ConnectionsPage = () => {
       />
     </div>
   );
-};
+}

@@ -1,10 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
 import { z } from "zod";
-import { useAuth } from "../../hooks/useAuth";
-import { getFirebaseErrorCode } from "../../utils/firebaseError";
+import { useAuth } from "../../../hooks/useAuth";
+import { getFirebaseErrorCode } from "../../../utils/firebaseError";
 
 type AuthMode = "login" | "register";
 
@@ -19,11 +18,11 @@ const registerSchema = loginSchema.extend({
   password: z.string().min(6, "Use uma senha com pelo menos 6 caracteres."),
 });
 
-type AuthFormValues = {
+interface AuthFormValues {
   email: string;
   name?: string;
   password: string;
-};
+}
 
 const authErrorMessages: Record<string, string> = {
   "auth/email-already-in-use": "Este e-mail já está cadastrado.",
@@ -40,11 +39,10 @@ const getErrorMessage = (error: unknown) => {
   return knownMessage ?? "Não foi possível concluir a autenticação.";
 };
 
-export const useAuthPage = () => {
+export function useAuthPage() {
   const { login, registerAccount } = useAuth();
   const [mode, setMode] = useState<AuthMode>("login");
   const [error, setError] = useState("");
-
   const isRegistering = mode === "register";
   const schema = useMemo(
     () => (isRegistering ? registerSchema : loginSchema),
@@ -82,11 +80,7 @@ export const useAuthPage = () => {
   const switchMode = () => {
     setMode(isRegistering ? "login" : "register");
     setError("");
-    reset({
-      email: "",
-      name: "",
-      password: "",
-    });
+    reset({ email: "", name: "", password: "" });
   };
 
   return {
@@ -98,4 +92,4 @@ export const useAuthPage = () => {
     submitAuth,
     switchMode,
   };
-};
+}

@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { AuthContext } from "../providers/auth/AuthContext";
 
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext);
 
   if (!context) {
@@ -9,4 +9,4 @@ export const useAuth = () => {
   }
 
   return context;
-};
+}

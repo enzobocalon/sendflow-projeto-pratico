@@ -6,7 +6,7 @@ import Alert from "@mui/material/Alert";
 import Paper from "@mui/material/Paper";
 import Skeleton from "@mui/material/Skeleton";
 import Typography from "@mui/material/Typography";
-import { useDashboardSummary } from "../../../hooks/useDashboardSummary";
+import { useDashboardSummary } from "../facades/useDashboardSummary";
 
 const summaryItems = [
   { icon: GroupsOutlinedIcon, label: "Conexões", key: "connections" },
@@ -15,7 +15,7 @@ const summaryItems = [
   { icon: EventIcon, label: "Agendadas", key: "scheduledMessages" },
 ] as const;
 
-export const WorkflowSummary = () => {
+export function WorkflowSummary() {
   const { error, isLoading, summary } = useDashboardSummary();
 
   return (
@@ -55,4 +55,4 @@ export const WorkflowSummary = () => {
       </div>
     </>
   );
-};
+}

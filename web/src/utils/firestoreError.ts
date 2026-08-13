@@ -1,8 +1,8 @@
 export type FirestoreListResource = "conexões" | "contatos" | "mensagens";
 
-type FirestoreError = {
+interface FirestoreError {
   code?: string;
-};
+}
 
 const firestoreErrorMessages: Record<
   string,

@@ -1,6 +1,6 @@
 import type { Timestamp } from "firebase/firestore";
 
-export type Connection = {
+export interface Connection {
   archivedAt?: Timestamp | null;
   createdAt?: Timestamp;
   id: string;
@@ -9,14 +9,14 @@ export type Connection = {
   status?: "active" | "archived";
   updatedAt?: Timestamp;
   userId: string;
-};
+}
 
-export type ConnectionFormValues = {
+export interface ConnectionFormValues {
   name: string;
-};
+}
 
-export type ConnectionsState = {
+export interface ConnectionsState {
   connections: Connection[];
   error: string;
   isLoading: boolean;
-};
+}

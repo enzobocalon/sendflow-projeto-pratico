@@ -11,7 +11,7 @@ import { ConnectionSelectField } from "../../../components/ConnectionSelectField
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Contact } from "../types";
 import type { ConnectionsState } from "../../connections/types";
-import { useContactForm } from "./useContactForm";
+import { useContactForm } from "../facades/useContactForm";
 import { formatPhone, normalizePhoneInput } from "../../../utils/formatPhone";
 
 interface ContactFormProps {

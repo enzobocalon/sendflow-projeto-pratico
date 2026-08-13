@@ -1,49 +1,41 @@
 import type { DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
 import { useCallback } from "react";
-import {
-  mapMessageDocument,
-  subscribeToMessagesPage,
-} from "../features/messages/services/messageService";
-import type { MessageStatus } from "../features/messages/types";
-import { useAuth } from "./useAuth";
-import { useRealtimeCursorPagination } from "./useRealtimeCursorPagination";
+import { useAuth } from "../../../hooks/useAuth";
+import { useRealtimeCursorPagination } from "../../../hooks/useRealtimeCursorPagination";
+import type { MessageStatus } from "../types";
+import { getMessagesPageRealtime, mapMessageDocument } from "./messageModel";
 
-type UseMessagesOptionsParams = {
+interface UseMessagesParams {
   enabled?: boolean;
   pageSize?: number;
   status?: MessageStatus | "all";
-};
+}
 
 const DEFAULT_PAGE_SIZE = 30;
 
-export function useMessagesOptions({
-  enabled = true,
-  pageSize = DEFAULT_PAGE_SIZE,
-  status = "all",
-}: UseMessagesOptionsParams = {}) {
+export function useMessages(params: UseMessagesParams = {}) {
+  const {
+    enabled = true,
+    pageSize = DEFAULT_PAGE_SIZE,
+    status = "all",
+  } = params;
   const { user } = useAuth();
   const userId = user?.uid ?? "";
   const canLoad = Boolean(user && enabled);
   const queryKey = [userId, status].join(":");
 
-  const subscribeToPage = useCallback(
+  const getPageRealtime = useCallback(
     (
       cursor: QueryDocumentSnapshot<DocumentData> | null,
       resultLimit: number,
-      onValue: Parameters<typeof subscribeToMessagesPage>[1],
-      onError: Parameters<typeof subscribeToMessagesPage>[2],
-    ) => {
-      return subscribeToMessagesPage(
-        {
-          cursor,
-          resultLimit,
-          status,
-          userId,
-        },
+      onValue: Parameters<typeof getMessagesPageRealtime>[1],
+      onError: Parameters<typeof getMessagesPageRealtime>[2],
+    ) =>
+      getMessagesPageRealtime(
+        { cursor, resultLimit, status, userId },
         onValue,
         onError,
-      );
-    },
+      ),
     [status, userId],
   );
 
@@ -63,7 +55,7 @@ export function useMessagesOptions({
     pageSize,
     queryKey,
     resourceLabel: "mensagens",
-    subscribeToPage,
+    subscribeToPage: getPageRealtime,
   });
 
   return {

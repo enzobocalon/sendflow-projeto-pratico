@@ -1,24 +1,21 @@
-import { useEffect, useState } from "react";
-import type { Connection } from "../features/connections/types";
-import { subscribeToConnections } from "../features/connections/services/connectionService";
-import { getFirestoreErrorMessage } from "../utils/firestoreError";
-import { useAuth } from "./useAuth";
 import { normalizeSearchText } from "@sendflow/shared";
+import { useEffect, useState } from "react";
+import { useAuth } from "../../../hooks/useAuth";
+import { getFirestoreErrorMessage } from "../../../utils/firestoreError";
+import type { Connection } from "../types";
+import { getConnectionsRealtime } from "./connectionModel";
 
-type UseConnectionsOptionsParams = {
+interface UseConnectionsParams {
   enabled?: boolean;
   searchTerm?: string;
-};
+}
 
-export function useConnectionsOptions({
-  enabled = true,
-  searchTerm = "",
-}: UseConnectionsOptionsParams = {}) {
+export function useConnections(params: UseConnectionsParams = {}) {
+  const { enabled = true, searchTerm = "" } = params;
   const { user } = useAuth();
   const [connections, setConnections] = useState<Connection[]>([]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(() => Boolean(user && enabled));
-
   const normalizedSearchTerm = normalizeSearchText(searchTerm);
   const canLoad = Boolean(user && enabled);
 
@@ -34,7 +31,7 @@ export function useConnectionsOptions({
       setIsLoading(false);
     };
 
-    const unsubscribe = subscribeToConnections({
+    const unsubscribe = getConnectionsRealtime({
       onError: (firestoreError) => {
         if (!isActive) return;
 

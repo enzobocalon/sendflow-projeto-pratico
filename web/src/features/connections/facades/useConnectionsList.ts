@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
-import { useDelete } from "../../../hooks/useDelete";
-import { deleteConnection } from "../services/connectionService";
+import { useDelete } from "../../../facades/useDelete";
+import { deleteConnection } from "../models/connectionModel";
 import {
   getFirebaseErrorCode,
   getFirebaseErrorDetail,
@@ -9,13 +9,13 @@ import {
 } from "../../../utils/firebaseError";
 import type { Connection } from "../types";
 
-type UseConnectionsListParams = {
+interface UseConnectionsListParams {
   connections: Connection[];
   connectionsError: string;
   editingConnection: Connection | null;
   isLoadingConnections: boolean;
   onDeletedEditingConnection: () => void;
-};
+}
 
 const getDeleteConnectionErrorMessage = (error: unknown) => {
   if (getFirebaseErrorCode(error) === "firestore/failed-precondition") {
@@ -28,13 +28,14 @@ const getDeleteConnectionErrorMessage = (error: unknown) => {
   return getFirebaseErrorMessage(error, "Não foi possível excluir a conexão.");
 };
 
-export const useConnectionsList = ({
-  connections,
-  connectionsError,
-  editingConnection,
-  isLoadingConnections,
-  onDeletedEditingConnection,
-}: UseConnectionsListParams) => {
+export function useConnectionsList(params: UseConnectionsListParams) {
+  const {
+    connections,
+    connectionsError,
+    editingConnection,
+    isLoadingConnections,
+    onDeletedEditingConnection,
+  } = params;
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebouncedValue(searchTerm);
   const {
@@ -81,4 +82,4 @@ export const useConnectionsList = ({
     setSearchTerm,
     totalConnections: filteredConnections.length,
   };
-};
+}

@@ -18,7 +18,7 @@ import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Message } from "../types";
 import { MessageFilters } from "./MessageFilters";
 import { getMessagesListEmptyState } from "./message-list-copy";
-import { useMessagesList } from "./useMessagesList";
+import { useMessagesList } from "../facades/useMessagesList";
 
 const statusLabel = {
   scheduled: "Agendada",

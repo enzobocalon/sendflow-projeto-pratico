@@ -10,6 +10,7 @@ import {
 import {
   collection,
   doc,
+  getDoc,
   limit,
   onSnapshot,
   orderBy,
@@ -19,7 +20,9 @@ import {
   startAfter,
   Timestamp,
   where,
+  type CollectionReference,
   type DocumentData,
+  type DocumentSnapshot,
   type FieldValue,
   type FirestoreError,
   type QueryConstraint,
@@ -28,40 +31,46 @@ import {
   type Transaction,
 } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
+import { collectionPaths } from "../../../models/collectionPaths";
 import {
   createFirestoreServiceError,
   requireAuthenticatedUserId,
 } from "../../../lib/firestoreService";
-import { updateUsageInTransaction } from "../../../services/usageService";
-import { readActiveConnectionInTransaction } from "../../connections/services/connectionService";
+import { updateUsageInTransaction } from "../../../models/usageModel";
+import { getActiveConnectionInTransaction } from "../../connections/models/connectionModel";
 import type { Message } from "../types";
 
-type CreateMessageInput = {
+interface CreateMessageInput {
   connectionId: string;
   contactIds: string[];
   content: string;
   scheduledAt?: Date;
   status: MessageStatus;
-};
+}
 
-type UpdateMessageInput = CreateMessageInput & {
+interface UpdateMessageInput extends CreateMessageInput {
   messageId: string;
-};
+}
 
 type MessageDocument = Omit<Message, "id">;
 
-type CreateMessagesPageQueryParams = {
+const messagesCollection = collection(
+  db,
+  collectionPaths.messages,
+) as CollectionReference<MessageDocument, MessageDocument>;
+
+interface GetMessagesPageRealtimeParams {
   cursor: QueryDocumentSnapshot<DocumentData> | null;
   resultLimit: number;
   status: MessageStatus | "all";
   userId: string;
-};
+}
 
-type MessageScheduleFields = {
+interface MessageScheduleFields {
   scheduledAt: Timestamp | null;
   sentAt: FieldValue | null;
   status: MessageStatus;
-};
+}
 
 const validateMessageFields = (content: string, contactIds: string[]) => {
   if (!isValidMessageContent(content)) {
@@ -131,7 +140,7 @@ const validateContactsInTransaction = async (
 ) => {
   const snapshots = await Promise.all(
     contactIds.map((contactId) =>
-      transaction.get(doc(db, "contacts", contactId)),
+      transaction.get(doc(collection(db, collectionPaths.contacts), contactId)),
     ),
   );
   const allContactsAreValid = snapshots.every((snapshot) => {
@@ -153,18 +162,28 @@ const validateContactsInTransaction = async (
 };
 
 export const mapMessageDocument = (
-  document: QueryDocumentSnapshot<DocumentData>,
+  document: DocumentSnapshot<DocumentData>,
 ): Message => ({
   id: document.id,
   ...(document.data() as MessageDocument),
 });
 
-const createMessagesPageQuery = ({
-  cursor,
-  resultLimit,
-  status,
-  userId,
-}: CreateMessagesPageQueryParams) => {
+export const getMessage = async (messageId: string, userId: string) => {
+  const snapshot = await getDoc(doc(messagesCollection, messageId));
+  const message = snapshot.data();
+
+  if (!snapshot.exists() || message?.userId !== userId) {
+    throw createFirestoreServiceError(
+      "permission-denied",
+      "Mensagem inválida.",
+    );
+  }
+
+  return mapMessageDocument(snapshot);
+};
+
+const createMessagesPageQuery = (params: GetMessagesPageRealtimeParams) => {
+  const { cursor, resultLimit, status, userId } = params;
   const constraints: QueryConstraint[] = [
     where("userId", "==", userId),
     orderBy("createdAt", "desc"),
@@ -177,22 +196,23 @@ const createMessagesPageQuery = ({
   if (cursor) constraints.push(startAfter(cursor));
   constraints.push(limit(resultLimit));
 
-  return query(collection(db, "messages"), ...constraints);
+  return query(messagesCollection, ...constraints);
 };
 
-export const subscribeToMessagesPage = (
-  params: CreateMessagesPageQueryParams,
+export const getMessagesPageRealtime = (
+  params: GetMessagesPageRealtimeParams,
   onValue: (snapshot: QuerySnapshot<DocumentData>) => void,
   onError: (error: FirestoreError) => void,
 ) => onSnapshot(createMessagesPageQuery(params), onValue, onError);
 
-export const createMessage = async ({
-  connectionId: rawConnectionId,
-  contactIds: rawContactIds,
-  content: rawContent,
-  scheduledAt,
-  status,
-}: CreateMessageInput) => {
+export const createMessage = async (params: CreateMessageInput) => {
+  const {
+    connectionId: rawConnectionId,
+    contactIds: rawContactIds,
+    content: rawContent,
+    scheduledAt,
+    status,
+  } = params;
   const userId = requireAuthenticatedUserId(
     "Faça login para salvar uma mensagem.",
   );
@@ -209,10 +229,10 @@ export const createMessage = async ({
 
   validateMessageFields(content, contactIds);
   const scheduleFields = getMessageScheduleFields(status, scheduledAt);
-  const messageRef = doc(collection(db, "messages"));
+  const messageRef = doc(messagesCollection);
 
   await runTransaction(db, async (transaction) => {
-    await readActiveConnectionInTransaction(transaction, connectionId, userId);
+    await getActiveConnectionInTransaction(transaction, connectionId, userId);
     await validateContactsInTransaction(
       transaction,
       contactIds,
@@ -238,14 +258,15 @@ export const createMessage = async ({
   });
 };
 
-export const updateMessage = async ({
-  connectionId: rawConnectionId,
-  contactIds: rawContactIds,
-  content: rawContent,
-  messageId: rawMessageId,
-  scheduledAt,
-  status,
-}: UpdateMessageInput) => {
+export const upsertMessage = async (params: UpdateMessageInput) => {
+  const {
+    connectionId: rawConnectionId,
+    contactIds: rawContactIds,
+    content: rawContent,
+    messageId: rawMessageId,
+    scheduledAt,
+    status,
+  } = params;
   const userId = requireAuthenticatedUserId(
     "Faça login para salvar uma mensagem.",
   );
@@ -272,7 +293,7 @@ export const updateMessage = async ({
   const scheduleFields = getMessageScheduleFields(status, scheduledAt);
 
   await runTransaction(db, async (transaction) => {
-    const messageRef = doc(db, "messages", messageId);
+    const messageRef = doc(messagesCollection, messageId);
     const messageSnapshot = await transaction.get(messageRef);
 
     if (!messageSnapshot.exists() || messageSnapshot.data().userId !== userId) {
@@ -289,7 +310,7 @@ export const updateMessage = async ({
       );
     }
 
-    await readActiveConnectionInTransaction(transaction, connectionId, userId);
+    await getActiveConnectionInTransaction(transaction, connectionId, userId);
     await validateContactsInTransaction(
       transaction,
       contactIds,
@@ -324,7 +345,7 @@ export const deleteMessage = async (messageId: string) => {
   }
 
   await runTransaction(db, async (transaction) => {
-    const messageRef = doc(db, "messages", normalizedMessageId);
+    const messageRef = doc(messagesCollection, normalizedMessageId);
     const messageSnapshot = await transaction.get(messageRef);
 
     if (!messageSnapshot.exists() || messageSnapshot.data().userId !== userId) {

@@ -2,16 +2,16 @@ import { useState } from "react";
 import { DeleteDialog } from "../components/DeleteDialog";
 import { useDialog } from "../providers/dialog";
 
-type UseDeleteParams<Item> = {
+interface UseDeleteParams<Item> {
   deleteItem: (item: Item) => Promise<unknown>;
   dialogTitle: string;
   getDialogMessage: (item: Item) => string;
   getErrorMessage: (error: unknown) => string;
   onDeleted?: (item: Item) => void;
   successMessage: string;
-};
+}
 
-export function useDelete<Item>(props: UseDeleteParams<Item>) {
+export function useDelete<Item>(params: UseDeleteParams<Item>) {
   const {
     deleteItem,
     dialogTitle,
@@ -19,7 +19,7 @@ export function useDelete<Item>(props: UseDeleteParams<Item>) {
     getErrorMessage,
     onDeleted,
     successMessage,
-  } = props;
+  } = params;
   const { openDialog } = useDialog();
   const [deleteError, setDeleteError] = useState("");
   const [deleteSuccess, setDeleteSuccess] = useState("");

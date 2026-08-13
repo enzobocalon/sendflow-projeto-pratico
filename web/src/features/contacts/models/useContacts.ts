@@ -1,28 +1,26 @@
 import { normalizeSearchText } from "@sendflow/shared";
 import type { DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
 import { useCallback } from "react";
-import {
-  mapContactDocument,
-  subscribeToContactsPage,
-} from "../features/contacts/services/contactService";
-import { useAuth } from "./useAuth";
-import { useRealtimeCursorPagination } from "./useRealtimeCursorPagination";
+import { useAuth } from "../../../hooks/useAuth";
+import { useRealtimeCursorPagination } from "../../../hooks/useRealtimeCursorPagination";
+import { getContactsPageRealtime, mapContactDocument } from "./contactModel";
 
-type UseContactsOptionsParams = {
+interface UseContactsParams {
   connectionId?: string;
   enabled?: boolean;
   pageSize?: number;
   searchTerm?: string;
-};
+}
 
 const DEFAULT_PAGE_SIZE = 30;
 
-export function useContactsOptions({
-  connectionId,
-  enabled = true,
-  pageSize = DEFAULT_PAGE_SIZE,
-  searchTerm = "",
-}: UseContactsOptionsParams = {}) {
+export function useContacts(params: UseContactsParams = {}) {
+  const {
+    connectionId,
+    enabled = true,
+    pageSize = DEFAULT_PAGE_SIZE,
+    searchTerm = "",
+  } = params;
   const { user } = useAuth();
   const userId = user?.uid ?? "";
   const normalizedSearchTerm = normalizeSearchText(searchTerm);
@@ -31,14 +29,14 @@ export function useContactsOptions({
     ":",
   );
 
-  const subscribeToPage = useCallback(
+  const getPageRealtime = useCallback(
     (
       cursor: QueryDocumentSnapshot<DocumentData> | null,
       resultLimit: number,
-      onValue: Parameters<typeof subscribeToContactsPage>[1],
-      onError: Parameters<typeof subscribeToContactsPage>[2],
-    ) => {
-      return subscribeToContactsPage(
+      onValue: Parameters<typeof getContactsPageRealtime>[1],
+      onError: Parameters<typeof getContactsPageRealtime>[2],
+    ) =>
+      getContactsPageRealtime(
         {
           connectionId,
           cursor,
@@ -48,8 +46,7 @@ export function useContactsOptions({
         },
         onValue,
         onError,
-      );
-    },
+      ),
     [connectionId, normalizedSearchTerm, userId],
   );
 
@@ -69,7 +66,7 @@ export function useContactsOptions({
     pageSize,
     queryKey,
     resourceLabel: "contatos",
-    subscribeToPage,
+    subscribeToPage: getPageRealtime,
   });
 
   return {

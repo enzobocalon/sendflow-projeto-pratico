@@ -1,17 +1,17 @@
 import { useForm, useWatch } from "react-hook-form";
-import { useConnectionsOptions } from "../../../hooks/useConnectionsOptions";
+import { useConnections } from "../../connections/models/useConnections";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { messageSchema } from "../schemas/messageSchema";
 import type { Message, MessageFormValues, MessageStatus } from "../types";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../../hooks/useAuth";
-import { createMessage, updateMessage } from "../services/messageService";
+import { createMessage, upsertMessage } from "../models/messageModel";
 import { getFirebaseErrorMessage } from "../../../utils/firebaseError";
 
-type UseMessageComposerParams = {
+interface UseMessageComposerParams {
   editingMessage: Message | null;
   onSaved: () => void;
-};
+}
 
 const formatDateInputValue = (date: Date) =>
   [
@@ -39,10 +39,8 @@ const getMessageFormValues = (message: Message | null): MessageFormValues => {
   };
 };
 
-export function useMessageComposer({
-  editingMessage,
-  onSaved,
-}: UseMessageComposerParams) {
+export function useMessageComposer(params: UseMessageComposerParams) {
+  const { editingMessage, onSaved } = params;
   const { user } = useAuth();
   const [formError, setFormError] = useState("");
   const [success, setSuccess] = useState("");
@@ -50,7 +48,7 @@ export function useMessageComposer({
     connections,
     error: connectionError,
     isLoading: isLoadingConnections,
-  } = useConnectionsOptions();
+  } = useConnections();
   const {
     control,
     formState: { errors, isSubmitting },
@@ -107,7 +105,7 @@ export function useMessageComposer({
       };
 
       if (editingMessage) {
-        await updateMessage({
+        await upsertMessage({
           ...messageData,
           messageId: editingMessage.id,
         });

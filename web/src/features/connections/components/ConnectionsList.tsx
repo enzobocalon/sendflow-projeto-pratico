@@ -15,7 +15,7 @@ import {
   getConnectionsListEmptyState,
   getConnectionsListSubtitle,
 } from "./connection-list-copy";
-import { useConnectionsList } from "./useConnectionsList";
+import { useConnectionsList } from "../facades/useConnectionsList";
 
 interface ConnectionsListProps {
   connections: Connection[];

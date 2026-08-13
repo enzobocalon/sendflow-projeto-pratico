@@ -1,21 +1,36 @@
 import {
+  collection,
   doc,
+  getDoc,
   increment,
   onSnapshot,
   serverTimestamp,
+  type CollectionReference,
   type FirestoreError,
   type Transaction,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import { collectionPaths } from "./collectionPaths";
 
-export type UsageCounters = {
+export interface UsageCounters {
   connectionsCount: number;
   contactsCount: number;
   messagesCount: number;
   scheduledMessagesCount: number;
-};
+}
 
 export type UsageCounterChanges = Partial<UsageCounters>;
+
+type UsageDocument = UsageCounters & {
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+};
+
+const usageCollection = collection(
+  db,
+  collectionPaths.usage,
+) as CollectionReference<UsageDocument, UsageDocument>;
 
 export const emptyUsageCounters: UsageCounters = {
   connectionsCount: 0,
@@ -24,7 +39,7 @@ export const emptyUsageCounters: UsageCounters = {
   scheduledMessagesCount: 0,
 };
 
-const getUsageReference = (userId: string) => doc(db, "usage", userId);
+const getUsageReference = (userId: string) => doc(usageCollection, userId);
 
 const mapUsageCounters = (data: Partial<UsageCounters>): UsageCounters => ({
   connectionsCount: data.connectionsCount ?? 0,
@@ -33,7 +48,13 @@ const mapUsageCounters = (data: Partial<UsageCounters>): UsageCounters => ({
   scheduledMessagesCount: data.scheduledMessagesCount ?? 0,
 });
 
-export const subscribeToUsage = (
+export const getUsage = async (userId: string) => {
+  const snapshot = await getDoc(getUsageReference(userId));
+
+  return mapUsageCounters(snapshot.data() ?? {});
+};
+
+export const getUsageRealtime = (
   userId: string,
   onValue: (usage: UsageCounters) => void,
   onError: (error: FirestoreError) => void,

@@ -3,7 +3,7 @@ import type { MessageStatus } from "@sendflow/shared";
 
 export type { MessageStatus } from "@sendflow/shared";
 
-export type Message = {
+export interface Message {
   connectionId: string;
   contactIds: string[];
   content: string;
@@ -15,13 +15,13 @@ export type Message = {
   status: MessageStatus;
   updatedAt?: Timestamp;
   userId: string;
-};
+}
 
-export type MessageFormValues = {
+export interface MessageFormValues {
   connectionId: string;
   contactIds: string[];
   content: string;
   scheduledDate: string;
   scheduledTime: string;
   sendMode: "now" | "scheduled";
-};
+}

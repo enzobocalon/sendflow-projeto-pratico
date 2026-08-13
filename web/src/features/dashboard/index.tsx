@@ -11,15 +11,15 @@ import { ConnectionsPage } from "../connections";
 import { MessagesPage } from "../messages";
 import { PageHeader } from "./components/PageHeader";
 import { WorkflowSummary } from "./components/WorkflowSummary";
-import type { DashboardTab, TTabs } from "./types";
+import type { DashboardTab, DashboardTabDefinition } from "./types";
 
-const tabs: TTabs[] = [
+const tabs: DashboardTabDefinition[] = [
   { icon: <GroupsOutlinedIcon />, label: "Conexões", value: "connections" },
   { icon: <PhoneOutlinedIcon />, label: "Contatos", value: "contacts" },
   { icon: <MailOutlineIcon />, label: "Mensagens", value: "messages" },
 ];
 
-export default function Dashboard() {
+export function Dashboard() {
   const [activeTab, setActiveTab] = useState<DashboardTab>("connections");
 
   const changeTab = (_event: unknown, value: DashboardTab) => {

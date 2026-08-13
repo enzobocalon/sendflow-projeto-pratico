@@ -1,10 +1,10 @@
 import { ContactForm } from "./components/ContactForm";
 import { ContactsList } from "./components/ContactList";
-import { useContacts } from "./useContacts";
+import { useContactsPage } from "./facades/useContactsPage";
 
-export const ContactsPage = () => {
+export function ContactsPage() {
   const { cancelEditContact, connectionsState, editContact, editingContact } =
-    useContacts();
+    useContactsPage();
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
@@ -22,4 +22,4 @@ export const ContactsPage = () => {
       />
     </div>
   );
-};
+}

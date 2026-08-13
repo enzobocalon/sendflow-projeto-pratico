@@ -19,6 +19,7 @@ import {
   serverTimestamp,
   startAt,
   where,
+  type CollectionReference,
   type DocumentData,
   type DocumentSnapshot,
   type FirestoreError,
@@ -26,27 +27,40 @@ import {
   type Transaction,
 } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
+import { collectionPaths } from "../../../models/collectionPaths";
 import {
   createFirestoreServiceError,
   requireAuthenticatedUserId,
 } from "../../../lib/firestoreService";
-import { updateUsageInTransaction } from "../../../services/usageService";
+import { updateUsageInTransaction } from "../../../models/usageModel";
 import type { Connection } from "../types";
 
 type ConnectionDocument = Omit<Connection, "id">;
 
-type CreateConnectionInput = Pick<Connection, "name">;
+const connectionsCollection = collection(
+  db,
+  collectionPaths.connections,
+) as CollectionReference<ConnectionDocument, ConnectionDocument>;
 
-type UpdateConnectionInput = CreateConnectionInput & {
+interface CreateConnectionInput {
+  name: Connection["name"];
+}
+
+interface UpdateConnectionInput extends CreateConnectionInput {
   connectionId: string;
-};
+}
 
-type SubscribeToConnectionsParams = {
+interface GetConnectionsRealtimeParams {
   onError: (error: FirestoreError) => void;
   onValue: (connections: Connection[]) => void;
   searchTerm?: string;
   userId: string;
-};
+}
+
+interface GetConnectionsParams {
+  searchTerm?: string;
+  userId: string;
+}
 
 const isActiveConnection = (data: DocumentData) => data.status !== "archived";
 
@@ -83,31 +97,37 @@ const assertOwnedActiveConnection = (
   return connection;
 };
 
-export const readActiveConnection = async (
+export const getActiveConnection = async (
   connectionId: string,
   userId: string,
 ) => {
-  const snapshot = await getDoc(doc(db, "connections", connectionId));
+  const snapshot = await getDoc(doc(connectionsCollection, connectionId));
 
   return assertOwnedActiveConnection(snapshot, userId);
 };
 
-export const readActiveConnectionInTransaction = async (
+export const getConnection = async (connectionId: string, userId: string) => {
+  const snapshot = await getDoc(doc(connectionsCollection, connectionId));
+
+  return assertOwnedConnection(snapshot, userId);
+};
+
+export const getActiveConnectionInTransaction = async (
   transaction: Transaction,
   connectionId: string,
   userId: string,
 ) => {
-  const snapshot = await transaction.get(doc(db, "connections", connectionId));
+  const snapshot = await transaction.get(
+    doc(connectionsCollection, connectionId),
+  );
 
   return assertOwnedActiveConnection(snapshot, userId);
 };
 
-export const subscribeToConnections = ({
-  onError,
-  onValue,
+const createConnectionsQuery = ({
   searchTerm = "",
   userId,
-}: SubscribeToConnectionsParams) => {
+}: GetConnectionsParams) => {
   const normalizedSearchTerm = normalizeSearchText(searchTerm);
   const constraints: QueryConstraint[] = [
     where("userId", "==", userId),
@@ -121,8 +141,24 @@ export const subscribeToConnections = ({
     );
   }
 
+  return query(connectionsCollection, ...constraints);
+};
+
+export const getConnections = async (params: GetConnectionsParams) => {
+  const snapshot = await getDocs(createConnectionsQuery(params));
+
+  return snapshot.docs
+    .filter((document) => isActiveConnection(document.data()))
+    .map(mapConnectionDocument);
+};
+
+export const getConnectionsRealtime = (
+  params: GetConnectionsRealtimeParams,
+) => {
+  const { onError, onValue, searchTerm = "", userId } = params;
+
   return onSnapshot(
-    query(collection(db, "connections"), ...constraints),
+    createConnectionsQuery({ searchTerm, userId }),
     (snapshot) => {
       onValue(
         snapshot.docs
@@ -134,9 +170,9 @@ export const subscribeToConnections = ({
   );
 };
 
-export const countConnections = async (userId: string) => {
+export const getConnectionsCount = async (userId: string) => {
   const ownedConnections = query(
-    collection(db, "connections"),
+    connectionsCollection,
     where("userId", "==", userId),
   );
   const archivedConnections = query(
@@ -151,9 +187,8 @@ export const countConnections = async (userId: string) => {
   return total.data().count - archived.data().count;
 };
 
-export const createConnection = async ({
-  name: rawName,
-}: CreateConnectionInput) => {
+export const createConnection = async (params: CreateConnectionInput) => {
+  const { name: rawName } = params;
   const userId = requireAuthenticatedUserId(
     "Faça login para cadastrar uma conexão.",
   );
@@ -166,7 +201,7 @@ export const createConnection = async ({
     );
   }
 
-  const connectionsCount = await countConnections(userId);
+  const connectionsCount = await getConnectionsCount(userId);
   if (connectionsCount >= MAX_CONNECTIONS_PER_USER) {
     throw createFirestoreServiceError(
       "resource-exhausted",
@@ -175,7 +210,7 @@ export const createConnection = async ({
   }
 
   await runTransaction(db, async (transaction) => {
-    const connectionRef = doc(collection(db, "connections"));
+    const connectionRef = doc(connectionsCollection);
     const now = serverTimestamp();
 
     await updateUsageInTransaction(transaction, userId, {
@@ -193,10 +228,8 @@ export const createConnection = async ({
   });
 };
 
-export const updateConnection = async ({
-  connectionId,
-  name: rawName,
-}: UpdateConnectionInput) => {
+export const upsertConnection = async (params: UpdateConnectionInput) => {
+  const { connectionId, name: rawName } = params;
   const userId = requireAuthenticatedUserId("Faça login para continuar.");
   const name = rawName.trim();
 
@@ -215,9 +248,9 @@ export const updateConnection = async ({
   }
 
   await runTransaction(db, async (transaction) => {
-    const connectionRef = doc(db, "connections", connectionId);
+    const connectionRef = doc(connectionsCollection, connectionId);
 
-    await readActiveConnectionInTransaction(transaction, connectionId, userId);
+    await getActiveConnectionInTransaction(transaction, connectionId, userId);
     transaction.update(connectionRef, {
       archivedAt: null,
       name,
@@ -235,7 +268,7 @@ const hasLinkedResource = async (
 ) => {
   const snapshot = await getDocs(
     query(
-      collection(db, collectionName),
+      collection(db, collectionPaths[collectionName]),
       where("userId", "==", userId),
       where("connectionId", "==", connectionId),
       limit(1),
@@ -264,7 +297,7 @@ const getLinkedResourceError = async (connectionId: string, userId: string) => {
 
 const restoreArchivedConnection = (connectionId: string, userId: string) =>
   runTransaction(db, async (transaction) => {
-    const connectionRef = doc(db, "connections", connectionId);
+    const connectionRef = doc(connectionsCollection, connectionId);
     const snapshot = await transaction.get(connectionRef);
     const connection = assertOwnedConnection(snapshot, userId);
 
@@ -302,9 +335,9 @@ export const deleteConnection = async (connectionId: string) => {
   }
 
   await runTransaction(db, async (transaction) => {
-    const connectionRef = doc(db, "connections", connectionId);
+    const connectionRef = doc(connectionsCollection, connectionId);
 
-    await readActiveConnectionInTransaction(transaction, connectionId, userId);
+    await getActiveConnectionInTransaction(transaction, connectionId, userId);
     await updateUsageInTransaction(transaction, userId, {
       connectionsCount: -1,
     });

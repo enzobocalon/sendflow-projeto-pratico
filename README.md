@@ -33,6 +33,17 @@ sendflow/
   firebase.json           Configuração de Hosting, Functions e Firestore
 ```
 
+No frontend, cada feature separa suas responsabilidades em:
+
+- `components`: renderização e contratos de propriedades;
+- `models`: collections, leituras `get...`, hooks reativos `use...` e operações
+  de persistência `create...`, `upsert...` e `delete...`;
+- `facades`: coordenação dos casos de uso da UI, incluindo formulários,
+  handlers, dialogs e feedback. Um facade pode consumir um ou vários models.
+
+Os hooks reativos atuais usam os listeners nativos do Firestore. A adoção de
+RxJS fica reservada para uma etapa posterior.
+
 ## Modelo de dados
 
 Todas as coleções ficam na raiz do Firestore, isoladas por `userId`:
@@ -55,11 +66,11 @@ O frontend grava diretamente no Firestore. As Security Rules validam:
 - Bloqueio de edição de mensagens já enviadas
 - Bloqueio de hard delete de conexões
 
-O service de conexões limita o usuário a 100 conexões ativas e impede o
-arquivamento quando há contatos ou mensagens vinculadas. O service de mensagens
+O model de conexões limita o usuário a 100 conexões ativas e impede o
+arquivamento quando há contatos ou mensagens vinculadas. O model de mensagens
 também revalida os contatos selecionados na mesma transação da gravação. A única
 Cloud Function publicada é o agendador que marca mensagens vencidas como
-enviadas. Os services atualizam `usage/{userId}` atomicamente junto ao recurso,
+enviadas. Os models atualizam `usage/{userId}` atomicamente junto ao recurso,
 e o dashboard mantém um único listener nesse documento.
 
 ## Requisitos
