@@ -30,7 +30,6 @@ export function ContactForm(props: ContactFormProps) {
   const {
     clearFeedback,
     connections,
-    connectionsError,
     control,
     error,
     errors,
@@ -101,7 +100,6 @@ export function ContactForm(props: ContactFormProps) {
           render={({ field }) => (
             <ConnectionSelectField
               connections={connections}
-              connectionsError={connectionsError}
               emptyMessage="Cadastre uma conexão antes de criar contatos."
               field={field}
               fieldError={errors.connectionId?.message}

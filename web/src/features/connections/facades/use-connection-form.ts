@@ -3,7 +3,6 @@ import { MAX_CONNECTIONS_PER_USER } from "@sendflow/shared";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { useAuth } from "@/hooks/use-auth";
 import {
   getFirebaseErrorCode,
   getFirebaseErrorMessage,
@@ -29,7 +28,6 @@ const connectionsLimitError = `Limite de ${MAX_CONNECTIONS_PER_USER} conexões a
 
 export function useConnectionForm(params: UseConnectionFormParams) {
   const { connectionsCount, editingConnection, onSaved } = params;
-  const { user } = useAuth();
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const hasReachedConnectionsLimit =
@@ -55,11 +53,6 @@ export function useConnectionForm(params: UseConnectionFormParams) {
 
   const submitConnection = handleSubmit(async ({ name }) => {
     setSuccess("");
-
-    if (!user) {
-      setError("Faça login para cadastrar uma conexão.");
-      return;
-    }
 
     if (hasReachedConnectionsLimit) {
       setError(connectionsLimitError);

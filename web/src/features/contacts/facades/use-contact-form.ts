@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import type { ConnectionsState } from "@/features/connections/models/use-connections";
-import { useAuth } from "@/hooks/use-auth";
 import { getFirebaseErrorMessage } from "@/utils/firebase-error";
 
 import {
@@ -24,14 +23,9 @@ interface UseContactFormParams {
 
 export function useContactForm(params: UseContactFormParams) {
   const { connectionsState, editingContact, onSaved } = params;
-  const { user } = useAuth();
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const {
-    connections,
-    error: connectionsError,
-    isLoading: isLoadingConnections,
-  } = connectionsState;
+  const { connections, isLoading: isLoadingConnections } = connectionsState;
   const {
     control,
     formState: { errors, isSubmitting },
@@ -56,11 +50,6 @@ export function useContactForm(params: UseContactFormParams) {
 
   const submitContact = handleSubmit(async ({ connectionId, name, phone }) => {
     setSuccess("");
-
-    if (!user) {
-      setError("Faça login para salvar um contato.");
-      return;
-    }
 
     setError("");
 
@@ -102,7 +91,6 @@ export function useContactForm(params: UseContactFormParams) {
   return {
     clearFeedback,
     connections,
-    connectionsError,
     control,
     error,
     errors,

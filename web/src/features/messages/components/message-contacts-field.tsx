@@ -57,7 +57,6 @@ export function MessageContactsField(props: MessageContactsFieldProps) {
   const {
     contacts,
     currentPage,
-    error: contactsError,
     goToNextPage,
     goToPreviousPage,
     hasNextPage,
@@ -165,9 +164,6 @@ export function MessageContactsField(props: MessageContactsFieldProps) {
         <FormFieldFeedback error message={contactIdsError?.message} />
         {!contactIdsError && hasContacts && !hasSelectedContacts && (
           <FormFieldFeedback message="Selecione pelo menos um contato para enviar ou agendar." />
-        )}
-        {!contactIdsError && (
-          <FormFieldFeedback error message={contactsError} />
         )}
       </div>
     </div>

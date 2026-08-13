@@ -25,7 +25,6 @@ export function MessageComposer(props: MessageComposerProps) {
     cancelScheduledMode,
     clearFeedback,
     clearSelectedContacts,
-    connectionError,
     connections,
     control,
     enableScheduledMode,
@@ -67,7 +66,6 @@ export function MessageComposer(props: MessageComposerProps) {
           render={({ field }) => (
             <ConnectionSelectField
               connections={connections}
-              connectionsError={connectionError}
               emptyMessage="Cadastre uma conexão antes de preparar mensagens."
               field={field}
               fieldError={errors.connectionId?.message}

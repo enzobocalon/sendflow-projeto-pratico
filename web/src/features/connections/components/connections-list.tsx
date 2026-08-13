@@ -1,6 +1,5 @@
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
@@ -21,7 +20,6 @@ import {
 
 interface ConnectionsListProps {
   connections: Connection[];
-  connectionsError: string;
   editingConnection: Connection | null;
   isLoadingConnections: boolean;
   onEdit: (connection: Connection) => void;
@@ -31,7 +29,6 @@ interface ConnectionsListProps {
 export function ConnectionsList(props: ConnectionsListProps) {
   const {
     connections: loadedConnections,
-    connectionsError,
     editingConnection,
     isLoadingConnections,
     onEdit,
@@ -42,7 +39,6 @@ export function ConnectionsList(props: ConnectionsListProps) {
     connections,
     deleteError,
     deleteSuccess,
-    error,
     isDeleting,
     isLoading,
     requestDeleteConnection,
@@ -51,7 +47,6 @@ export function ConnectionsList(props: ConnectionsListProps) {
     totalConnections,
   } = useConnectionsList({
     connections: loadedConnections,
-    connectionsError,
     editingConnection,
     isLoadingConnections,
     onDeletedEditingConnection,
@@ -74,12 +69,6 @@ export function ConnectionsList(props: ConnectionsListProps) {
           className="md:w-52"
         />
       </div>
-
-      {error && (
-        <Alert severity="error" className="mb-4">
-          {error}
-        </Alert>
-      )}
 
       {isLoading ? (
         <div className="grid min-h-40 place-items-center rounded-lg border border-dashed border-slate-200">

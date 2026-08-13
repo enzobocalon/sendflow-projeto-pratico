@@ -1,5 +1,4 @@
 interface ConnectionFieldFeedbackParams {
-  connectionsError?: string;
   emptyMessage: string;
   fieldError?: string;
   hasConnections: boolean;
@@ -9,19 +8,13 @@ interface ConnectionFieldFeedbackParams {
 export function getConnectionFieldFeedback(
   params: ConnectionFieldFeedbackParams,
 ) {
-  const {
-    connectionsError,
-    emptyMessage,
-    fieldError,
-    hasConnections,
-    isLoadingConnections,
-  } = params;
+  const { emptyMessage, fieldError, hasConnections, isLoadingConnections } =
+    params;
 
   return {
-    error: Boolean(fieldError || connectionsError),
+    error: Boolean(fieldError),
     message:
       fieldError ??
-      connectionsError ??
       (!isLoadingConnections && !hasConnections ? emptyMessage : undefined),
   };
 }

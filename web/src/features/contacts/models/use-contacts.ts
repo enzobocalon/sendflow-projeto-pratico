@@ -54,7 +54,6 @@ export function useContacts(params: UseContactsParams = {}) {
 
   const {
     currentPage,
-    error,
     goToNextPage,
     goToPreviousPage,
     hasNextPage,
@@ -67,14 +66,12 @@ export function useContacts(params: UseContactsParams = {}) {
     mapDocument: mapContactDocument,
     pageSize,
     queryKey,
-    resourceLabel: "contatos",
     subscribeToPage: getPageRealtime,
   });
 
   return {
     contacts,
     currentPage,
-    error,
     goToNextPage,
     goToPreviousPage,
     hasNextPage,

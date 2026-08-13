@@ -43,7 +43,6 @@ export function useMessages(params: UseMessagesParams = {}) {
 
   const {
     currentPage,
-    error,
     goToNextPage,
     goToPreviousPage,
     hasNextPage,
@@ -56,13 +55,11 @@ export function useMessages(params: UseMessagesParams = {}) {
     mapDocument: mapMessageDocument,
     pageSize,
     queryKey,
-    resourceLabel: "mensagens",
     subscribeToPage: getPageRealtime,
   });
 
   return {
     currentPage,
-    error,
     goToNextPage,
     goToPreviousPage,
     hasNextPage,

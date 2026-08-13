@@ -8,12 +8,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
-  getFirestoreErrorMessage,
-  type FirestoreListResource,
-} from "@/utils/firestore-error";
-
-import {
-  applyListenerError,
+  applyListenerFailure,
   applyLoadedPage,
   createPaginationScope,
   createPaginationState,
@@ -30,7 +25,6 @@ interface UseRealtimeCursorPaginationParams<Item> {
   mapDocument: (document: QueryDocumentSnapshot<DocumentData>) => Item;
   pageSize: number;
   queryKey: string;
-  resourceLabel: FirestoreListResource;
   subscribeToPage: (
     cursor: Cursor,
     resultLimit: number,
@@ -42,14 +36,7 @@ interface UseRealtimeCursorPaginationParams<Item> {
 export function useRealtimeCursorPagination<Item>(
   params: UseRealtimeCursorPaginationParams<Item>,
 ) {
-  const {
-    enabled,
-    mapDocument,
-    pageSize,
-    queryKey,
-    resourceLabel,
-    subscribeToPage,
-  } = params;
+  const { enabled, mapDocument, pageSize, queryKey, subscribeToPage } = params;
   const scope = useMemo(
     () => createPaginationScope(queryKey, pageSize, enabled),
     [enabled, pageSize, queryKey],
@@ -58,7 +45,7 @@ export function useRealtimeCursorPagination<Item>(
     createPaginationState<Item>(scope),
   );
   const activeState = getStateForScope(paginationState, scope); // quando o scope muda, o state criado aqui serve como temporario
-  const { error, requestedPage, result } = activeState;
+  const { requestedPage, result } = activeState;
   const cursor = activeState.cursors.get(requestedPage) ?? null;
   const currentPage = result?.page ?? 1;
   const hasLoadedRequestedPage = result?.page === requestedPage;
@@ -87,15 +74,11 @@ export function useRealtimeCursorPagination<Item>(
           applyLoadedPage(currentState, scope, requestedPage, loadedPage),
         );
       },
-      (snapshotError) => {
+      () => {
         if (!isActive) return;
 
-        const errorMessage = getFirestoreErrorMessage(
-          snapshotError,
-          resourceLabel,
-        );
         setPaginationState((currentState) =>
-          applyListenerError(currentState, scope, requestedPage, errorMessage),
+          applyListenerFailure(currentState, scope, requestedPage),
         );
       },
     );
@@ -110,7 +93,6 @@ export function useRealtimeCursorPagination<Item>(
     mapDocument,
     pageSize,
     requestedPage,
-    resourceLabel,
     scope,
     subscribeToPage,
   ]);
@@ -125,12 +107,11 @@ export function useRealtimeCursorPagination<Item>(
     setPaginationState((currentState) => requestNextPage(currentState, scope));
   }, [scope]);
 
-  const isInitialLoading = enabled && !result && !error;
+  const isInitialLoading = enabled && !result;
   const isPageChanging = enabled && Boolean(result) && !hasLoadedRequestedPage;
 
   return {
     currentPage,
-    error: enabled ? error : "",
     goToNextPage,
     goToPreviousPage,
     hasNextPage: enabled ? (result?.hasNextPage ?? false) : false,

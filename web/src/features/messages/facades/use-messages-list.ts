@@ -24,7 +24,6 @@ export function useMessagesList(params: UseMessagesListParams) {
   const [filter, setFilter] = useState<MessageStatus | "all">("all");
   const {
     currentPage,
-    error,
     goToNextPage,
     goToPreviousPage,
     hasNextPage,
@@ -108,7 +107,6 @@ export function useMessagesList(params: UseMessagesListParams) {
     messages: formattedMessages,
     deleteError,
     deleteSuccess,
-    error,
     isLoading,
     isPageChanging,
     handleFilterChange,

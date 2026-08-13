@@ -1,6 +1,5 @@
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
@@ -41,7 +40,6 @@ export function ContactsList(props: ContactsListProps) {
     currentPage,
     deleteError,
     deleteSuccess,
-    error,
     goToNextPage,
     goToPreviousPage,
     hasNextPage,
@@ -76,12 +74,6 @@ export function ContactsList(props: ContactsListProps) {
           className="md:w-52"
         />
       </div>
-
-      {error && (
-        <Alert severity="error" className="mb-4">
-          {error}
-        </Alert>
-      )}
 
       {isLoading ? (
         <div className="grid min-h-40 place-items-center rounded-lg border border-dashed border-slate-200">

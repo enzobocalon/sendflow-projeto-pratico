@@ -16,7 +16,6 @@ interface PageResult<Item> {
 
 export interface PaginationState<Item> {
   cursors: Map<number, Cursor>;
-  error: string;
   requestedPage: number;
   result: PageResult<Item> | null;
   scope: PaginationScope;
@@ -38,7 +37,6 @@ export const createPaginationState = <Item>(
   scope: PaginationScope,
 ): PaginationState<Item> => ({
   cursors: new Map([[1, null]]),
-  error: "",
   requestedPage: 1,
   result: null,
   scope,
@@ -86,7 +84,6 @@ export const applyLoadedPage = <Item>(
   return {
     ...currentState,
     cursors,
-    error: "",
     requestedPage: page,
     result: {
       hasNextPage: loadedPage.hasNextPage,
@@ -102,22 +99,24 @@ export const returnFromEmptyPage = <Item>(
   emptyPage: number,
 ): PaginationState<Item> => ({
   ...getStateForScope(state, scope),
-  error: "",
   requestedPage: Math.max(1, emptyPage - 1),
 });
 
-export const applyListenerError = <Item>(
+export const applyListenerFailure = <Item>(
   state: PaginationState<Item>,
   scope: PaginationScope,
   requestedPage: number,
-  error: string,
 ): PaginationState<Item> => {
   const currentState = getStateForScope(state, scope);
 
   return {
     ...currentState,
-    error,
     requestedPage: currentState.result?.page ?? requestedPage,
+    result: currentState.result ?? {
+      hasNextPage: false,
+      items: [],
+      page: requestedPage,
+    },
   };
 };
 
@@ -133,7 +132,6 @@ export const requestPreviousPage = <Item>(
 
   return {
     ...currentState,
-    error: "",
     requestedPage: Math.max(1, currentState.requestedPage - 1),
   };
 };
@@ -153,7 +151,6 @@ export const requestNextPage = <Item>(
 
   return {
     ...currentState,
-    error: "",
     requestedPage: nextPage,
   };
 };

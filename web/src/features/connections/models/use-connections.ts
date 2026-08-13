@@ -2,7 +2,6 @@ import { normalizeSearchText } from "@sendflow/shared";
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/hooks/use-auth";
-import { getFirestoreErrorMessage } from "@/utils/firestore-error";
 
 import { getConnectionsRealtime, type Connection } from "./connection.model";
 
@@ -13,7 +12,6 @@ interface UseConnectionsParams {
 
 export interface ConnectionsState {
   connections: Connection[];
-  error: string;
   isLoading: boolean;
 }
 
@@ -23,7 +21,6 @@ export function useConnections(
   const { enabled = true, searchTerm = "" } = params;
   const { user } = useAuth();
   const [connections, setConnections] = useState<Connection[]>([]);
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(() => Boolean(user && enabled));
   const normalizedSearchTerm = normalizeSearchText(searchTerm);
   const canLoad = Boolean(user && enabled);
@@ -36,15 +33,13 @@ export function useConnections(
       if (!isActive) return;
 
       setConnections(loadedConnections);
-      setError("");
       setIsLoading(false);
     };
 
     const unsubscribe = getConnectionsRealtime({
-      onError: (firestoreError) => {
+      onError: () => {
         if (!isActive) return;
 
-        setError(getFirestoreErrorMessage(firestoreError, "conexões"));
         setIsLoading(false);
       },
       onValue: handleConnections,
@@ -58,7 +53,7 @@ export function useConnections(
     };
   }, [canLoad, normalizedSearchTerm, user]);
 
-  if (!canLoad) return { connections: [], error: "", isLoading: false };
+  if (!canLoad) return { connections: [], isLoading: false };
 
-  return { connections, error, isLoading };
+  return { connections, isLoading };
 }

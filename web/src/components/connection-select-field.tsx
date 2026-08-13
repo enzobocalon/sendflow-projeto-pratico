@@ -14,7 +14,6 @@ type ConnectionField = ControllerRenderProps<FieldValues, "connectionId">;
 
 interface ConnectionSelectFieldProps {
   connections: Connection[];
-  connectionsError: string;
   emptyMessage: string;
   field: ConnectionField;
   fieldError?: string;
@@ -26,7 +25,6 @@ interface ConnectionSelectFieldProps {
 export function ConnectionSelectField(props: ConnectionSelectFieldProps) {
   const {
     connections,
-    connectionsError,
     emptyMessage,
     field,
     fieldError,
@@ -36,7 +34,6 @@ export function ConnectionSelectField(props: ConnectionSelectFieldProps) {
   } = props;
   const hasConnections = connections.length > 0;
   const feedback = getConnectionFieldFeedback({
-    connectionsError,
     emptyMessage,
     fieldError,
     hasConnections,

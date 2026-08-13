@@ -1,7 +1,6 @@
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import Alert from "@mui/material/Alert";
 import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
@@ -46,7 +45,6 @@ export function MessagesList(props: MessagesListProps) {
     currentPage,
     deleteError,
     deleteSuccess,
-    error,
     filter,
     goToNextPage,
     goToPreviousPage,
@@ -79,12 +77,6 @@ export function MessagesList(props: MessagesListProps) {
         />
         <MessageFilters filter={filter} onFilterChange={handleFilterChange} />
       </div>
-
-      {error && (
-        <Alert severity="error" className="mb-4">
-          {error}
-        </Alert>
-      )}
 
       {isLoading ? (
         <div className="grid min-h-40 place-items-center rounded-lg border border-dashed border-slate-200">

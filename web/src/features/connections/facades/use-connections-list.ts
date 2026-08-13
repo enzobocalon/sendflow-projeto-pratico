@@ -12,7 +12,6 @@ import { deleteConnection, type Connection } from "../models/connection.model";
 
 interface UseConnectionsListParams {
   connections: Connection[];
-  connectionsError: string;
   editingConnection: Connection | null;
   isLoadingConnections: boolean;
   onDeletedEditingConnection: () => void;
@@ -32,7 +31,6 @@ const getDeleteConnectionErrorMessage = (error: unknown) => {
 export function useConnectionsList(params: UseConnectionsListParams) {
   const {
     connections,
-    connectionsError,
     editingConnection,
     isLoadingConnections,
     onDeletedEditingConnection,
@@ -75,7 +73,6 @@ export function useConnectionsList(params: UseConnectionsListParams) {
     connections: filteredConnections,
     deleteError,
     deleteSuccess,
-    error: connectionsError,
     isDeleting,
     isLoading: isLoadingConnections,
     requestDeleteConnection,

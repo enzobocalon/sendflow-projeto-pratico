@@ -6,7 +6,6 @@ export function ConnectionsPage() {
   const {
     cancelEdit,
     connections,
-    connectionsError,
     editConnection,
     editingConnection,
     isLoadingConnections,
@@ -23,7 +22,6 @@ export function ConnectionsPage() {
       />
       <ConnectionsList
         connections={connections}
-        connectionsError={connectionsError}
         editingConnection={editingConnection}
         isLoadingConnections={isLoadingConnections}
         onEdit={editConnection}

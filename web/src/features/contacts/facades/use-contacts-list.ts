@@ -42,7 +42,6 @@ export function useContactsList(params: UseContactsListParams) {
   const {
     contacts,
     currentPage,
-    error: contactsError,
     goToNextPage,
     goToPreviousPage,
     hasNextPage,
@@ -50,11 +49,7 @@ export function useContactsList(params: UseContactsListParams) {
     isLoading: isLoadingContacts,
     isPageChanging,
   } = useContacts({ searchTerm: debouncedSearchTerm });
-  const {
-    connections,
-    error: connectionsError,
-    isLoading: isLoadingConnections,
-  } = connectionsState;
+  const { connections, isLoading: isLoadingConnections } = connectionsState;
   const contactsWithConnectionNames = useMemo(() => {
     const connectionNames = new Map(
       connections.map((connection) => [connection.id, connection.name]),
@@ -73,7 +68,6 @@ export function useContactsList(params: UseContactsListParams) {
     currentPage,
     deleteError,
     deleteSuccess,
-    error: contactsError || connectionsError,
     goToNextPage,
     goToPreviousPage,
     hasNextPage,

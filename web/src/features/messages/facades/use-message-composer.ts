@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { useConnections } from "@/features/connections/models/use-connections";
-import { useAuth } from "@/hooks/use-auth";
 import { getFirebaseErrorMessage } from "@/utils/firebase-error";
 
 import {
@@ -50,14 +49,9 @@ const getMessageFormValues = (message: Message | null): MessageFormValues => {
 
 export function useMessageComposer(params: UseMessageComposerParams) {
   const { editingMessage, onSaved } = params;
-  const { user } = useAuth();
   const [formError, setFormError] = useState("");
   const [success, setSuccess] = useState("");
-  const {
-    connections,
-    error: connectionError,
-    isLoading: isLoadingConnections,
-  } = useConnections();
+  const { connections, isLoading: isLoadingConnections } = useConnections();
   const {
     control,
     formState: { errors, isSubmitting },
@@ -91,11 +85,6 @@ export function useMessageComposer(params: UseMessageComposerParams) {
 
   const submitMessage = handleSubmit(async (values) => {
     setSuccess("");
-
-    if (!user) {
-      setFormError("Faça login para salvar uma mensagem.");
-      return;
-    }
 
     setFormError("");
 
@@ -184,7 +173,6 @@ export function useMessageComposer(params: UseMessageComposerParams) {
     clearFeedback,
     clearSelectedContacts,
     connections,
-    connectionError,
     isLoadingConnections,
     control,
     errors,

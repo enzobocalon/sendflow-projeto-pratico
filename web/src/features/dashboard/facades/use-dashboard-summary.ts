@@ -9,7 +9,7 @@ const mapSummary = (usage: typeof emptyUsageCounters) => ({
 });
 
 export function useDashboardSummary() {
-  const { error, isLoading, usage } = useUsage();
+  const { isLoading, usage } = useUsage();
 
-  return { error, isLoading, summary: mapSummary(usage) };
+  return { isLoading, summary: mapSummary(usage) };
 }
