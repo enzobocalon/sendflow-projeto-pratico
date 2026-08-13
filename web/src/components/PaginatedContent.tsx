@@ -2,7 +2,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { PageNavigation } from "./PageNavigation";
 import { PaginationTransition } from "./PaginationTransition";
 
-type PaginatedContentProps = {
+interface PaginatedContentProps {
   children: ReactNode;
   contentLabel: string;
   currentPage: number;
@@ -14,21 +14,22 @@ type PaginatedContentProps = {
   onNextPage: () => void;
   onPreviousPage: () => void;
   size?: "small" | "medium";
-};
+}
 
-export function PaginatedContent({
-  children,
-  contentLabel,
-  currentPage,
-  disabled = false,
-  hasNextPage,
-  hasPreviousPage,
-  isLoading,
-  loadingLabel,
-  onNextPage,
-  onPreviousPage,
-  size = "medium",
-}: PaginatedContentProps) {
+export function PaginatedContent(props: PaginatedContentProps) {
+  const {
+    children,
+    contentLabel,
+    currentPage,
+    disabled = false,
+    hasNextPage,
+    hasPreviousPage,
+    isLoading,
+    loadingLabel,
+    onNextPage,
+    onPreviousPage,
+    size = "medium",
+  } = props;
   const topNavigationRef = useRef<HTMLDivElement>(null);
   const previousPageRef = useRef(currentPage);
   const showNavigation = hasPreviousPage || hasNextPage || isLoading;

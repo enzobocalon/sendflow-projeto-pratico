@@ -18,23 +18,24 @@ import {
 } from "./connection-list-copy";
 import { useConnectionsList } from "./useConnectionsList";
 
-type ConnectionsListProps = {
+interface ConnectionsListProps {
   connections: Connection[];
   connectionsError: string;
   editingConnection: Connection | null;
   isLoadingConnections: boolean;
   onEdit: (connection: Connection) => void;
   onDeletedEditingConnection: () => void;
-};
+}
 
-export const ConnectionsList = ({
-  connections: loadedConnections,
-  connectionsError,
-  editingConnection,
-  isLoadingConnections,
-  onEdit,
-  onDeletedEditingConnection,
-}: ConnectionsListProps) => {
+export function ConnectionsList(props: ConnectionsListProps) {
+  const {
+    connections: loadedConnections,
+    connectionsError,
+    editingConnection,
+    isLoadingConnections,
+    onEdit,
+    onDeletedEditingConnection,
+  } = props;
   const {
     clearDeleteFeedback,
     closeDeleteModal,
@@ -148,4 +149,4 @@ export const ConnectionsList = ({
       />
     </section>
   );
-};
+}

@@ -4,7 +4,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useDelayedFlag } from "../hooks/useDelayedFlag";
 
-type PageNavigationProps = {
+interface PageNavigationProps {
   announceChanges?: boolean;
   ariaLabel: string;
   currentPage: number;
@@ -17,22 +17,23 @@ type PageNavigationProps = {
   onPreviousPage: () => void;
   placement: "bottom" | "top";
   size?: "small" | "medium";
-};
+}
 
-export function PageNavigation({
-  announceChanges = false,
-  ariaLabel,
-  currentPage,
-  disabled = false,
-  hasNextPage,
-  hasPreviousPage,
-  isLoading = false,
-  loadingLabel,
-  onNextPage,
-  onPreviousPage,
-  placement,
-  size = "medium",
-}: PageNavigationProps) {
+export function PageNavigation(props: PageNavigationProps) {
+  const {
+    announceChanges = false,
+    ariaLabel,
+    currentPage,
+    disabled = false,
+    hasNextPage,
+    hasPreviousPage,
+    isLoading = false,
+    loadingLabel,
+    onNextPage,
+    onPreviousPage,
+    placement,
+    size = "medium",
+  } = props;
   const showLoadingIndicator = useDelayedFlag(isLoading);
 
   return (

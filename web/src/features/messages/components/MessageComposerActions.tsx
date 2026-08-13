@@ -6,7 +6,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
 import type { MessageFormValues } from "../types";
 
-type MessageComposerActionsProps = {
+interface MessageComposerActionsProps {
   canChooseSendMode: boolean;
   canSubmit: boolean;
   isEditing: boolean;
@@ -16,19 +16,21 @@ type MessageComposerActionsProps = {
   onSubmitNow: () => void;
   onSubmitScheduled: () => void | Promise<void>;
   sendMode: MessageFormValues["sendMode"];
-};
+}
 
-export function MessageComposerActions({
-  canChooseSendMode,
-  canSubmit,
-  isEditing,
-  isSubmitting,
-  onCancel,
-  onEnableScheduledMode,
-  onSubmitNow,
-  onSubmitScheduled,
-  sendMode,
-}: MessageComposerActionsProps) {
+export function MessageComposerActions(props: MessageComposerActionsProps) {
+  const {
+    canChooseSendMode,
+    canSubmit,
+    isEditing,
+    isSubmitting,
+    onCancel,
+    onEnableScheduledMode,
+    onSubmitNow,
+    onSubmitScheduled,
+    sendMode,
+  } = props;
+
   const isSendingNow = isSubmitting && sendMode === "now";
 
   return (

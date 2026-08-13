@@ -2,11 +2,11 @@ import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 import { useState } from "react";
 
-type FeedbackSnackbarProps = {
+interface FeedbackSnackbarProps {
   message?: string;
   severity: "error" | "success";
   onClose: () => void;
-};
+}
 
 type Feedback = {
   id: number;
@@ -14,11 +14,8 @@ type Feedback = {
   severity: "error" | "success";
 };
 
-export const FeedbackSnackbar = ({
-  message,
-  severity,
-  onClose,
-}: FeedbackSnackbarProps) => {
+export function FeedbackSnackbar(props: FeedbackSnackbarProps) {
+  const { message, severity, onClose } = props;
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -66,4 +63,4 @@ export const FeedbackSnackbar = ({
       </Alert>
     </Snackbar>
   );
-};
+}

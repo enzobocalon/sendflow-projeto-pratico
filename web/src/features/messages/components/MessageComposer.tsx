@@ -10,17 +10,15 @@ import { MessageContactsField } from "./MessageContactsField";
 import { MessageScheduleFields } from "./MessageScheduleFields";
 import { useMessageComposer } from "./useMessageComposer";
 
-type MessageComposerProps = {
+interface MessageComposerProps {
   editingMessage: Message | null;
   onCancel: () => void;
   onSaved: () => void;
-};
+}
 
-export const MessageComposer = ({
-  editingMessage,
-  onCancel,
-  onSaved,
-}: MessageComposerProps) => {
+export function MessageComposer(props: MessageComposerProps) {
+  const { editingMessage, onCancel, onSaved } = props;
+
   const {
     cancelScheduledMode,
     clearFeedback,
@@ -134,4 +132,4 @@ export const MessageComposer = ({
       />
     </section>
   );
-};
+}

@@ -14,19 +14,16 @@ import type { ConnectionsState } from "../../connections/types";
 import { useContactForm } from "./useContactForm";
 import { formatPhone, normalizePhoneInput } from "../../../utils/formatPhone";
 
-type ContactFormProps = {
+interface ContactFormProps {
   connectionsState: ConnectionsState;
   editingContact: Contact | null;
   onCancel: () => void;
   onSaved: () => void;
-};
+}
 
-export const ContactForm = ({
-  connectionsState,
-  editingContact,
-  onCancel,
-  onSaved,
-}: ContactFormProps) => {
+export function ContactForm(props: ContactFormProps) {
+  const { connectionsState, editingContact, onCancel, onSaved } = props;
+
   const isEditing = Boolean(editingContact);
   const {
     clearFeedback,
@@ -155,4 +152,4 @@ export const ContactForm = ({
       />
     </section>
   );
-};
+}

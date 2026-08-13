@@ -7,7 +7,7 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { useId } from "react";
 
-export type DeleteDialogProps = {
+export interface DeleteDialogProps {
   title: string;
   open: boolean;
   onClose: () => void;
@@ -15,17 +15,11 @@ export type DeleteDialogProps = {
   onConfirm: () => void;
   isLoading: boolean;
   onExited?: () => void;
-};
+}
 
-export const DeleteDialog = ({
-  title,
-  open,
-  onClose,
-  onConfirm,
-  isLoading,
-  message,
-  onExited,
-}: DeleteDialogProps) => {
+export function DeleteDialog(props: DeleteDialogProps) {
+  const { title, open, onClose, onConfirm, isLoading, message, onExited } =
+    props;
   const titleId = useId();
   const descriptionId = useId();
 
@@ -63,4 +57,4 @@ export const DeleteDialog = ({
       </DialogActions>
     </Dialog>
   );
-};
+}

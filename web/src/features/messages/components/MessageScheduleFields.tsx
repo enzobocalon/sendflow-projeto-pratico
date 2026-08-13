@@ -5,21 +5,17 @@ import Typography from "@mui/material/Typography";
 import { Controller, type Control } from "react-hook-form";
 import type { MessageFormValues } from "../types";
 
-type MessageScheduleFieldsProps = {
+interface MessageScheduleFieldsProps {
   control: Control<MessageFormValues>;
   dateError?: string;
   disabled: boolean;
   onCancel: () => void;
   timeError?: string;
-};
+}
 
-export function MessageScheduleFields({
-  control,
-  dateError,
-  disabled,
-  onCancel,
-  timeError,
-}: MessageScheduleFieldsProps) {
+export function MessageScheduleFields(props: MessageScheduleFieldsProps) {
+  const { control, dateError, disabled, onCancel, timeError } = props;
+
   return (
     <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-4">
       <div className="mb-3 flex items-center justify-between gap-3">

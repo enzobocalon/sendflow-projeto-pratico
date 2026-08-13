@@ -1,15 +1,14 @@
 import FormHelperText from "@mui/material/FormHelperText";
 
-type FormFieldFeedbackProps = {
+interface FormFieldFeedbackProps {
   error?: boolean;
   message?: string;
-};
+}
 
-export const FormFieldFeedback = ({
-  error = false,
-  message,
-}: FormFieldFeedbackProps) => {
+export function FormFieldFeedback(props: FormFieldFeedbackProps) {
+  const { error = false, message } = props;
+
   if (!message) return null;
 
   return <FormHelperText error={error}>{message}</FormHelperText>;
-};
+}

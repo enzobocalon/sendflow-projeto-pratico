@@ -15,17 +15,19 @@ import type { ReactNode } from "react";
 import type { User } from "firebase/auth";
 import { useAuth } from "../../hooks/useAuth";
 
-type PrivateLayoutProps = {
+interface PrivateLayoutProps {
   children: ReactNode;
   user: User;
-};
+}
 
 const getInitial = (user: User) => {
   const label = user.displayName || user.email || "S";
   return label.slice(0, 1).toUpperCase();
 };
 
-export const PrivateLayout = ({ children, user }: PrivateLayoutProps) => {
+export function PrivateLayout(props: PrivateLayoutProps) {
+  const { children, user } = props;
+
   const { logout } = useAuth();
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
 
@@ -115,4 +117,4 @@ export const PrivateLayout = ({ children, user }: PrivateLayoutProps) => {
       </Container>
     </Box>
   );
-};
+}

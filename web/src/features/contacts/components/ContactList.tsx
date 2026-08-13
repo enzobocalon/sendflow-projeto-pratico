@@ -20,19 +20,20 @@ import {
 import { useContactsList } from "./useContactsList";
 import { formatPhone } from "../../../utils/formatPhone";
 
-type ContactsListProps = {
+interface ContactsListProps {
   connectionsState: ConnectionsState;
   editContact: (contact: Contact) => void;
   editingContact: Contact | null;
   onDeletedEditingContact: () => void;
-};
+}
 
-export const ContactsList = ({
-  connectionsState,
-  editContact,
-  editingContact,
-  onDeletedEditingContact,
-}: ContactsListProps) => {
+export function ContactsList(props: ContactsListProps) {
+  const {
+    connectionsState,
+    editContact,
+    editingContact,
+    onDeletedEditingContact,
+  } = props;
   const {
     clearDeleteFeedback,
     closeDeleteModal,
@@ -162,4 +163,4 @@ export const ContactsList = ({
       />
     </section>
   );
-};
+}

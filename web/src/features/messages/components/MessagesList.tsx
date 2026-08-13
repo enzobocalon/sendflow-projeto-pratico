@@ -31,17 +31,15 @@ const statusColor = {
   sent: "success",
 } as const;
 
-type MessagesListProps = {
+interface MessagesListProps {
   editingMessage: Message | null;
   onDeletedEditingMessage: () => void;
   onEdit: (message: Message) => void;
-};
+}
 
-export const MessagesList = ({
-  editingMessage,
-  onDeletedEditingMessage,
-  onEdit,
-}: MessagesListProps) => {
+export function MessagesList(props: MessagesListProps) {
+  const { editingMessage, onDeletedEditingMessage, onEdit } = props;
+
   const {
     clearDeleteFeedback,
     clearDeleteModal,
@@ -206,4 +204,4 @@ export const MessagesList = ({
       />
     </section>
   );
-};
+}

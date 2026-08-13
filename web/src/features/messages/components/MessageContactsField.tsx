@@ -13,10 +13,10 @@ import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import { formatPhone } from "../../../utils/formatPhone";
 import type { MessageFormValues } from "../types";
 
-type MessageContactsFieldProps = {
+interface MessageContactsFieldProps {
   connectionId: string;
   control: Control<MessageFormValues>;
-};
+}
 
 const getEmptyContactsMessage = (
   connectionId: string,
@@ -42,10 +42,9 @@ const getSelectedContactsMessage = (selectedContactsCount: number) => {
   return `${selectedContactsCount} contato${plural} selecionado${plural}`;
 };
 
-export function MessageContactsField({
-  connectionId,
-  control,
-}: MessageContactsFieldProps) {
+export function MessageContactsField(props: MessageContactsFieldProps) {
+  const { connectionId, control } = props;
+
   const [contactSearchTerm, setContactSearchTerm] = useState("");
   const debouncedContactSearchTerm = useDebouncedValue(contactSearchTerm);
   const { isSubmitting } = useFormState({ control });

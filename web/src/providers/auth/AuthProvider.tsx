@@ -12,11 +12,13 @@ import { AuthContext } from "./AuthContext";
 import { auth } from "../../lib/firebase";
 import type { LoginPayload, RegisterAccountPayload } from "./types";
 
-type AuthProviderProps = {
+interface AuthProviderProps {
   children: ReactNode;
-};
+}
 
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export function AuthProvider(props: AuthProviderProps) {
+  const { children } = props;
+
   const [authLoading, setAuthLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -77,4 +79,4 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+}

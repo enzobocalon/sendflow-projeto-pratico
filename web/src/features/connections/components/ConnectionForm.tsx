@@ -10,19 +10,16 @@ import type { Connection } from "../types";
 import { useConnectionForm } from "./useConnectionForm";
 import { MAX_CONNECTIONS_PER_USER } from "@sendflow/shared";
 
-type ConnectionFormProps = {
+interface ConnectionFormProps {
   connectionsCount: number;
   editingConnection: Connection | null;
   onCancel: () => void;
   onSaved: () => void;
-};
+}
 
-export const ConnectionForm = ({
-  connectionsCount,
-  editingConnection,
-  onCancel,
-  onSaved,
-}: ConnectionFormProps) => {
+export function ConnectionForm(props: ConnectionFormProps) {
+  const { connectionsCount, editingConnection, onCancel, onSaved } = props;
+
   const isEditing = Boolean(editingConnection);
   const {
     clearFeedback,
@@ -98,4 +95,4 @@ export const ConnectionForm = ({
       />
     </section>
   );
-};
+}

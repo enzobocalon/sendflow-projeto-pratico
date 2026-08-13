@@ -10,7 +10,7 @@ import { getConnectionFieldFeedback } from "../utils/connection-field-feedback";
 
 type ConnectionField = ControllerRenderProps<FieldValues, "connectionId">;
 
-type ConnectionSelectFieldProps = {
+interface ConnectionSelectFieldProps {
   connections: Connection[];
   connectionsError: string;
   emptyMessage: string;
@@ -19,18 +19,19 @@ type ConnectionSelectFieldProps = {
   labelId: string;
   isLoadingConnections: boolean;
   onChange?: (event: SelectChangeEvent<string>) => void;
-};
+}
 
-export const ConnectionSelectField = ({
-  connections,
-  connectionsError,
-  emptyMessage,
-  field,
-  fieldError,
-  labelId,
-  isLoadingConnections,
-  onChange,
-}: ConnectionSelectFieldProps) => {
+export function ConnectionSelectField(props: ConnectionSelectFieldProps) {
+  const {
+    connections,
+    connectionsError,
+    emptyMessage,
+    field,
+    fieldError,
+    labelId,
+    isLoadingConnections,
+    onChange,
+  } = props;
   const hasConnections = connections.length > 0;
   const feedback = getConnectionFieldFeedback({
     connectionsError,
@@ -76,4 +77,4 @@ export const ConnectionSelectField = ({
       <FormFieldFeedback error={feedback.error} message={feedback.message} />
     </FormControl>
   );
-};
+}

@@ -2,17 +2,15 @@ import LinearProgress from "@mui/material/LinearProgress";
 import type { ReactNode } from "react";
 import { useDelayedFlag } from "../hooks/useDelayedFlag";
 
-type PaginationTransitionProps = {
+interface PaginationTransitionProps {
   children: ReactNode;
   isLoading: boolean;
   loadingLabel: string;
-};
+}
 
-export function PaginationTransition({
-  children,
-  isLoading,
-  loadingLabel,
-}: PaginationTransitionProps) {
+export function PaginationTransition(props: PaginationTransitionProps) {
+  const { children, isLoading, loadingLabel } = props;
+
   const showLoadingIndicator = useDelayedFlag(isLoading);
 
   return (
