@@ -38,18 +38,16 @@ export const useConnectionsList = ({
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebouncedValue(searchTerm);
   const {
-    clearDeleteDialog: clearDeleteModal,
     clearDeleteFeedback,
-    closeDeleteDialog: closeDeleteModal,
-    confirmDelete: confirmDeleteConnection,
     deleteError,
     deleteSuccess,
-    isDeleteDialogOpen,
     isDeleting,
-    itemToDelete: connectionToDelete,
     requestDelete: requestDeleteConnection,
   } = useDelete<Connection>({
     deleteItem: (connection) => deleteConnection(connection.id),
+    dialogTitle: "Excluir conexão?",
+    getDialogMessage: (connection) =>
+      `Tem certeza que deseja excluir a conexão "${connection.name}"? Esta ação não pode ser desfeita.`,
     getErrorMessage: getDeleteConnectionErrorMessage,
     onDeleted: (connection) => {
       if (editingConnection?.id === connection.id) {
@@ -72,15 +70,10 @@ export const useConnectionsList = ({
 
   return {
     clearDeleteFeedback,
-    closeDeleteModal,
-    clearDeleteModal,
-    confirmDeleteConnection,
-    connectionToDelete,
     connections: filteredConnections,
     deleteError,
     deleteSuccess,
     error: connectionsError,
-    isDeleteDialogOpen,
     isDeleting,
     isLoading: isLoadingConnections,
     requestDeleteConnection,

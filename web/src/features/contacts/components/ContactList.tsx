@@ -12,7 +12,6 @@ import { PaginatedContent } from "../../../components/PaginatedContent";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Contact } from "../types";
 import type { ConnectionsState } from "../../connections/types";
-import { DeleteDialog } from "../../../components/DeleteDialog";
 import {
   getContactsListEmptyState,
   getContactsListSubtitle,
@@ -36,10 +35,6 @@ export function ContactsList(props: ContactsListProps) {
   } = props;
   const {
     clearDeleteFeedback,
-    closeDeleteModal,
-    clearDeleteModal,
-    confirmDeleteContact,
-    contactToDelete,
     contacts,
     currentPage,
     deleteError,
@@ -49,7 +44,6 @@ export function ContactsList(props: ContactsListProps) {
     goToPreviousPage,
     hasNextPage,
     hasPreviousPage,
-    isDeleteDialogOpen,
     isDeleting,
     isLoading,
     isPageChanging,
@@ -145,16 +139,6 @@ export function ContactsList(props: ContactsListProps) {
           </Stack>
         </PaginatedContent>
       )}
-
-      <DeleteDialog
-        title="Excluir contato?"
-        open={isDeleteDialogOpen}
-        onClose={closeDeleteModal}
-        onExited={clearDeleteModal}
-        onConfirm={confirmDeleteContact}
-        isLoading={isDeleting}
-        message={`Tem certeza que deseja excluir o contato ${contactToDelete?.name}? Esta ação não pode ser desfeita.`}
-      />
 
       <FeedbackSnackbar
         message={deleteSuccess || deleteError}

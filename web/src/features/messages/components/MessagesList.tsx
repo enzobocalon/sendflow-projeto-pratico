@@ -12,7 +12,6 @@ import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { EmptyState } from "../../../components/EmptyState";
-import { DeleteDialog } from "../../../components/DeleteDialog";
 import { FeedbackSnackbar } from "../../../components/FeedbackSnackbar";
 import { PaginatedContent } from "../../../components/PaginatedContent";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
@@ -42,9 +41,6 @@ export function MessagesList(props: MessagesListProps) {
 
   const {
     clearDeleteFeedback,
-    clearDeleteModal,
-    closeDeleteModal,
-    confirmDeleteMessage,
     currentPage,
     deleteError,
     deleteSuccess,
@@ -56,7 +52,6 @@ export function MessagesList(props: MessagesListProps) {
     hasNextPage,
     hasPreviousPage,
     isDeleting,
-    isDeleteDialogOpen,
     isLoading,
     isPageChanging,
     messages,
@@ -186,16 +181,6 @@ export function MessagesList(props: MessagesListProps) {
           <ListItemText>Excluir</ListItemText>
         </MenuItem>
       </Menu>
-
-      <DeleteDialog
-        title="Excluir mensagem?"
-        open={isDeleteDialogOpen}
-        onClose={closeDeleteModal}
-        onExited={clearDeleteModal}
-        onConfirm={confirmDeleteMessage}
-        isLoading={isDeleting}
-        message={`Tem certeza que deseja excluir esta mensagem? Esta ação não pode ser desfeita.`}
-      />
 
       <FeedbackSnackbar
         message={deleteSuccess || deleteError}

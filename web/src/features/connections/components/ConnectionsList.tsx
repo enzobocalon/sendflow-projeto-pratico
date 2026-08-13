@@ -11,7 +11,6 @@ import { EmptyState } from "../../../components/EmptyState";
 import { FeedbackSnackbar } from "../../../components/FeedbackSnackbar";
 import { SectionTitle } from "../../dashboard/components/SectionTitle";
 import type { Connection } from "../types";
-import { DeleteDialog } from "../../../components/DeleteDialog";
 import {
   getConnectionsListEmptyState,
   getConnectionsListSubtitle,
@@ -38,15 +37,10 @@ export function ConnectionsList(props: ConnectionsListProps) {
   } = props;
   const {
     clearDeleteFeedback,
-    closeDeleteModal,
-    clearDeleteModal,
-    confirmDeleteConnection,
-    connectionToDelete,
     connections,
     deleteError,
     deleteSuccess,
     error,
-    isDeleteDialogOpen,
     isDeleting,
     isLoading,
     requestDeleteConnection,
@@ -131,16 +125,6 @@ export function ConnectionsList(props: ConnectionsListProps) {
           ))}
         </Stack>
       )}
-
-      <DeleteDialog
-        title="Excluir conexão?"
-        open={isDeleteDialogOpen}
-        onClose={closeDeleteModal}
-        onExited={clearDeleteModal}
-        onConfirm={confirmDeleteConnection}
-        isLoading={isDeleting}
-        message={`Tem certeza que deseja excluir a conexão "${connectionToDelete?.name}"? Esta ação não pode ser desfeita.`}
-      />
 
       <FeedbackSnackbar
         message={deleteSuccess || deleteError}

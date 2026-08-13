@@ -1,52 +1,56 @@
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import { useId } from "react";
+import { useId, useState } from "react";
+import { useDialog } from "../../providers/dialog";
 
 export interface DeleteDialogProps {
   title: string;
-  open: boolean;
-  onClose: () => void;
   message: string;
-  onConfirm: () => void;
-  isLoading: boolean;
-  onExited?: () => void;
+  onConfirm: () => Promise<boolean>;
 }
 
 export function DeleteDialog(props: DeleteDialogProps) {
-  const { title, open, onClose, onConfirm, isLoading, message, onExited } =
-    props;
+  const { title, message, onConfirm } = props;
+  const { closeDialog } = useDialog();
+  const [isLoading, setIsLoading] = useState(false);
+
   const titleId = useId();
   const descriptionId = useId();
 
+  const handleClose = () => {
+    if (!isLoading) closeDialog();
+  };
+
+  const handleConfirm = async () => {
+    setIsLoading(true);
+
+    try {
+      const didConfirm = await onConfirm();
+
+      if (didConfirm) closeDialog();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      aria-labelledby={titleId}
-      aria-describedby={descriptionId}
-      slotProps={{
-        transition: {
-          onExited,
-        },
-      }}
-    >
+    <>
       <DialogTitle id={titleId}>{title}</DialogTitle>
       <DialogContent>
         <DialogContentText id={descriptionId}>{message}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={isLoading}>
+        <Button onClick={handleClose} disabled={isLoading}>
           Cancelar
         </Button>
         <Button
           color="error"
           variant="contained"
-          onClick={onConfirm}
+          onClick={handleConfirm}
           disabled={isLoading}
           startIcon={
             isLoading ? <CircularProgress color="inherit" size={18} /> : null
@@ -55,6 +59,6 @@ export function DeleteDialog(props: DeleteDialogProps) {
           {isLoading ? "Excluindo..." : "Excluir"}
         </Button>
       </DialogActions>
-    </Dialog>
+    </>
   );
 }

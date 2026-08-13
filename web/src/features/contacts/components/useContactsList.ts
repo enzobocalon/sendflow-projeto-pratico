@@ -21,18 +21,16 @@ export const useContactsList = ({
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebouncedValue(searchTerm);
   const {
-    clearDeleteDialog: clearDeleteModal,
     clearDeleteFeedback,
-    closeDeleteDialog: closeDeleteModal,
-    confirmDelete: confirmDeleteContact,
     deleteError,
     deleteSuccess,
-    isDeleteDialogOpen,
     isDeleting,
-    itemToDelete: contactToDelete,
     requestDelete: requestDeleteContact,
   } = useDelete<Contact>({
     deleteItem: (contact) => deleteContact(contact.id),
+    dialogTitle: "Excluir contato?",
+    getDialogMessage: (contact) =>
+      `Tem certeza que deseja excluir o contato ${contact.name}? Esta ação não pode ser desfeita.`,
     getErrorMessage: (error) =>
       getFirebaseErrorMessage(error, "Não foi possível excluir o contato."),
     onDeleted: (contact) => {
@@ -73,10 +71,6 @@ export const useContactsList = ({
 
   return {
     clearDeleteFeedback,
-    closeDeleteModal,
-    clearDeleteModal,
-    confirmDeleteContact,
-    contactToDelete,
     contacts: contactsWithConnectionNames,
     currentPage,
     deleteError,
@@ -86,7 +80,6 @@ export const useContactsList = ({
     goToPreviousPage,
     hasNextPage,
     hasPreviousPage,
-    isDeleteDialogOpen,
     isDeleting,
     isLoading: isLoadingContacts || isLoadingConnections,
     isPageChanging,

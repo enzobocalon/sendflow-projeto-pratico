@@ -37,17 +37,16 @@ export function useMessagesList({
     status: filter,
   });
   const {
-    clearDeleteDialog: clearDeleteModal,
     clearDeleteFeedback,
-    closeDeleteDialog: closeDeleteModal,
-    confirmDelete: confirmDeleteMessage,
     deleteError,
     deleteSuccess,
-    isDeleteDialogOpen,
     isDeleting,
     requestDelete: requestDeleteMessage,
   } = useDelete<Message>({
     deleteItem: (message) => deleteMessage(message.id),
+    dialogTitle: "Excluir mensagem?",
+    getDialogMessage: () =>
+      "Tem certeza que deseja excluir esta mensagem? Esta ação não pode ser desfeita.",
     getErrorMessage: (error) =>
       getFirebaseErrorMessage(error, "Não foi possível excluir a mensagem."),
     onDeleted: (message) => {
@@ -105,7 +104,6 @@ export function useMessagesList({
   };
 
   return {
-    clearDeleteModal,
     clearDeleteFeedback,
     currentPage,
     messages: formattedMessages,
@@ -120,10 +118,7 @@ export function useMessagesList({
     goToPreviousPage,
     hasNextPage,
     hasPreviousPage,
-    closeDeleteModal,
-    confirmDeleteMessage,
     isDeleting,
-    isDeleteDialogOpen,
     requestDeleteMessage,
     handleEdit,
     handleDelete,
