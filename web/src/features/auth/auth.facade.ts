@@ -1,9 +1,6 @@
 import { FirebaseError } from "firebase/app";
 
-import type {
-  LoginPayload,
-  RegisterAccountPayload,
-} from "./services/auth.service";
+import type { LoginPayload, RegisterAccountPayload } from "./auth.service";
 
 interface HandleAuthenticationParams {
   isRegistering: boolean;

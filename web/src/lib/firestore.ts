@@ -1,6 +1,6 @@
 import { FirebaseError } from "firebase/app";
 
-import { getAuthenticatedUser } from "@/features/auth/services/auth.service";
+import { getAuthenticatedUser } from "@/features/auth/auth.service";
 
 type FirestoreErrorCode =
   | "failed-precondition"

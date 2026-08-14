@@ -9,7 +9,7 @@ import {
   registerAccount as registerAccountWithService,
   type LoginPayload,
   type RegisterAccountPayload,
-} from "../services/auth.service";
+} from "../auth.service";
 import { AuthContext } from "./auth-context";
 
 interface AuthProviderProps {
