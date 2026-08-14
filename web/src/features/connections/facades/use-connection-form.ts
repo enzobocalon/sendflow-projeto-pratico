@@ -31,6 +31,7 @@ export function useConnectionForm(params: UseConnectionFormParams) {
   const { connectionsCount, editingConnection, onSaved } = params;
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  
   const hasReachedConnectionsLimit =
     !editingConnection && connectionsCount >= MAX_CONNECTIONS_PER_USER;
 

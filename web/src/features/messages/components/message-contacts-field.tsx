@@ -49,11 +49,13 @@ export function MessageContactsField(props: MessageContactsFieldProps) {
 
   const [contactSearchTerm, setContactSearchTerm] = useState("");
   const debouncedContactSearchTerm = useDebouncedValue(contactSearchTerm);
+
   const { isSubmitting } = useFormState({ control });
   const {
     field: contactIdsField,
     fieldState: { error: contactIdsError },
   } = useController({ control, name: "contactIds" });
+
   const {
     contacts,
     currentPage,
@@ -68,9 +70,11 @@ export function MessageContactsField(props: MessageContactsFieldProps) {
     enabled: Boolean(connectionId),
     searchTerm: debouncedContactSearchTerm,
   });
+
   const hasContacts = contacts.length > 0;
   const selectedContactsCount = contactIdsField.value.length;
   const hasSelectedContacts = selectedContactsCount > 0;
+  
   const clearSelection = () => {
     contactIdsField.onChange([]);
     setContactSearchTerm("");

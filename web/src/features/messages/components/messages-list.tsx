@@ -45,6 +45,7 @@ export function MessagesList(props: MessagesListProps) {
     onDeletedEditingMessage,
     onEdit,
   });
+  
   const emptyState = getMessagesListEmptyState(state.filter);
 
   return (

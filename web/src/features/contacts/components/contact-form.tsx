@@ -32,6 +32,7 @@ export function ContactForm(props: ContactFormProps) {
     editingContact,
     onSaved,
   });
+  
   const hasConnections = state.connections.length > 0;
 
   return (

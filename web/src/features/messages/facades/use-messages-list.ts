@@ -3,7 +3,6 @@ import { useMemo, useState, type MouseEvent } from "react";
 
 import { useDelete } from "@/facades/use-delete";
 import { formatMessageDate } from "@/utils/dates";
-import { getFirebaseErrorMessage } from "@/utils/firebase-error";
 
 import { deleteMessage, type Message } from "../models/message.model";
 import { useMessages } from "../models/use-messages";
@@ -34,22 +33,19 @@ export function useMessagesList(params: UseMessagesListParams) {
   } = useMessages({
     status: filter,
   });
+  const handleDeletedMessage = (message: Message) => {
+    if (editingMessage?.id === message.id) {
+      onDeletedEditingMessage();
+    }
+  };
   const {
     state: { feedback, isDeleting },
     actions: { clearFeedback, requestDelete: requestDeleteMessage },
   } = useDelete<Message>({
-    deleteItem: (message) => deleteMessage(message.id),
-    dialogTitle: "Excluir mensagem?",
-    getDialogMessage: () =>
+    confirmationMessage:
       "Tem certeza que deseja excluir esta mensagem? Esta ação não pode ser desfeita.",
-    getErrorMessage: (error) =>
-      getFirebaseErrorMessage(error, "Não foi possível excluir a mensagem."),
-    onDeleted: (message) => {
-      if (editingMessage?.id === message.id) {
-        onDeletedEditingMessage();
-      }
-    },
-    successMessage: "Mensagem excluída com sucesso.",
+    handleDelete: deleteMessage,
+    onDeleted: handleDeletedMessage,
   });
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [selectedMessage, setSelectedMessage] =

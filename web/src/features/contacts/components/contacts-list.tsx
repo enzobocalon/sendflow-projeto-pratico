@@ -34,6 +34,7 @@ export function ContactsList(props: ContactsListProps) {
     editingContact,
     onDeletedEditingContact,
   } = props;
+  
   const { state, actions } = useContactsList({
     connectionsState,
     editingContact,

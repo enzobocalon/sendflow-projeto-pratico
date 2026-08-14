@@ -27,6 +27,7 @@ export function useContactForm(params: UseContactFormParams) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const { connections, isLoading: isLoadingConnections } = connectionsState;
+  
   const {
     control,
     formState: { errors, isSubmitting },

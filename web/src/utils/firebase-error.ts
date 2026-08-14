@@ -35,9 +35,15 @@ export const getFirebaseErrorMessage = (
   fallbackMessage: string,
 ): string => {
   const errorCode = getFirebaseErrorCode(error);
+  const errorDetail = getFirebaseErrorDetail(error);
+
+  if (errorCode === "firestore/failed-precondition" && errorDetail) {
+    return errorDetail;
+  }
+
   const knownMessage = errorCode ? fallbackByCode[errorCode] : undefined;
 
   if (knownMessage) return knownMessage;
 
-  return getFirebaseErrorDetail(error) ?? fallbackMessage;
+  return errorDetail ?? fallbackMessage;
 };

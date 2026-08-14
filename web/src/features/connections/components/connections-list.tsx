@@ -34,6 +34,7 @@ export function ConnectionsList(props: ConnectionsListProps) {
     onEdit,
     onDeletedEditingConnection,
   } = props;
+  
   const { state, actions } = useConnectionsList({
     connections,
     editingConnection,
