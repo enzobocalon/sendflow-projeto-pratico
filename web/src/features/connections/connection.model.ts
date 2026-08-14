@@ -5,7 +5,6 @@ import {
   endAt,
   getDoc,
   getDocs,
-  limit,
   onSnapshot,
   orderBy,
   query,
@@ -17,18 +16,16 @@ import {
   type CollectionReference,
   type DocumentData,
   type DocumentSnapshot,
-  type FirestoreError,
   type QueryConstraint,
   type Timestamp,
 } from "firebase/firestore";
 
 import { collectionPaths } from "@/config/collection-paths";
 import { BusinessRuleError } from "@/errors/business-rule.error";
+import { getHasContactsByConnection } from "@/features/contacts/contact.model";
+import { getHasMessagesByConnection } from "@/features/messages/message.model";
 import { db } from "@/lib/firebase";
-import {
-  createFirestoreError,
-  requireAuthenticatedUserId,
-} from "@/lib/firestore";
+import { requireAuthenticatedUserId } from "@/lib/firestore";
 import { updateUsageInTransaction } from "@/models/usage.model";
 
 export interface Connection {
@@ -58,7 +55,7 @@ interface UpdateConnectionInput extends CreateConnectionInput {
 }
 
 interface GetConnectionsRealtimeParams {
-  onError: (error: FirestoreError) => void;
+  onError: () => void;
   onValue: (connections: Connection[]) => void;
   searchTerm?: string;
   userId: string;
@@ -85,7 +82,7 @@ const assertOwnedConnection = (
   const connection = snapshot.data();
 
   if (!snapshot.exists() || connection?.userId !== userId) {
-    throw createFirestoreError("permission-denied", "Conexão inválida.");
+    throw new Error("Conexão inválida.");
   }
 
   return mapConnectionDocument(snapshot);
@@ -98,7 +95,7 @@ const assertOwnedActiveConnection = (
   const connection = assertOwnedConnection(snapshot, userId);
 
   if (!isActiveConnection(connection)) {
-    throw createFirestoreError("permission-denied", "Conexão inválida.");
+    throw new Error("Conexão inválida.");
   }
 
   return connection;
@@ -167,9 +164,7 @@ export const getConnectionsRealtime = (
 
 export const createConnection = async (params: CreateConnectionInput) => {
   const { name: rawName } = params;
-  const userId = requireAuthenticatedUserId(
-    "Faça login para cadastrar uma conexão.",
-  );
+  const userId = requireAuthenticatedUserId();
   const name = rawName.trim();
   const connectionRef = doc(connectionsCollection);
 
@@ -193,7 +188,7 @@ export const createConnection = async (params: CreateConnectionInput) => {
 
 export const upsertConnection = async (params: UpdateConnectionInput) => {
   const { connectionId, name: rawName } = params;
-  requireAuthenticatedUserId("Faça login para continuar.");
+  requireAuthenticatedUserId();
   const name = rawName.trim();
 
   await updateDoc(doc(connectionsCollection, connectionId), {
@@ -203,27 +198,10 @@ export const upsertConnection = async (params: UpdateConnectionInput) => {
   });
 };
 
-const hasLinkedResource = async (
-  collectionName: "contacts" | "messages",
-  connectionId: string,
-  userId: string,
-) => {
-  const snapshot = await getDocs(
-    query(
-      collection(db, collectionPaths[collectionName]),
-      where("userId", "==", userId),
-      where("connectionId", "==", connectionId),
-      limit(1),
-    ),
-  );
-
-  return !snapshot.empty;
-};
-
 const getLinkedResourceError = async (connectionId: string, userId: string) => {
   const [hasContacts, hasMessages] = await Promise.all([
-    hasLinkedResource("contacts", connectionId, userId),
-    hasLinkedResource("messages", connectionId, userId),
+    getHasContactsByConnection(connectionId, userId),
+    getHasMessagesByConnection(connectionId, userId),
   ]);
 
   if (hasContacts) {
@@ -255,7 +233,7 @@ const restoreArchivedConnection = (connectionId: string, userId: string) =>
   });
 
 export const deleteConnection = async (connectionId: string) => {
-  const userId = requireAuthenticatedUserId("Faça login para continuar.");
+  const userId = requireAuthenticatedUserId();
 
   const linkedResourceError = await getLinkedResourceError(
     connectionId,

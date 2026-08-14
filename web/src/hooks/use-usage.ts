@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { useAuth } from "@/features/auth/hooks/use-auth";
+import { useAuth } from "@/features/auth/use-auth";
 import {
   emptyUsageCounters,
   getUsageRealtime,

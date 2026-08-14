@@ -5,7 +5,7 @@ import Paper from "@mui/material/Paper";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
-import { useAuthPage } from "./hooks";
+import { useAuthPage } from "./use-auth-page";
 
 export function AuthPage() {
   const { state, form, actions } = useAuthPage();

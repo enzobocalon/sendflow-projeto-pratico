@@ -3,6 +3,7 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
   limit,
   onSnapshot,
   orderBy,
@@ -16,7 +17,6 @@ import {
   type DocumentData,
   type DocumentSnapshot,
   type FieldValue,
-  type FirestoreError,
   type QueryConstraint,
   type QueryDocumentSnapshot,
   type QuerySnapshot,
@@ -25,11 +25,9 @@ import {
 
 import { collectionPaths } from "@/config/collection-paths";
 import { BusinessRuleError } from "@/errors/business-rule.error";
+import { getAreContactsValidForConnection } from "@/features/contacts/contact.model";
 import { db } from "@/lib/firebase";
-import {
-  createFirestoreError,
-  requireAuthenticatedUserId,
-} from "@/lib/firestore";
+import { requireAuthenticatedUserId } from "@/lib/firestore";
 import { updateUsageInTransaction } from "@/models/usage.model";
 
 export interface Message {
@@ -114,22 +112,14 @@ const validateContactsInTransaction = async (
   connectionId: string,
   userId: string,
 ) => {
-  const snapshots = await Promise.all(
-    contactIds.map((contactId) =>
-      transaction.get(doc(collection(db, collectionPaths.contacts), contactId)),
-    ),
+  const contactsAreValid = await getAreContactsValidForConnection(
+    transaction,
+    contactIds,
+    connectionId,
+    userId,
   );
-  const allContactsAreValid = snapshots.every((snapshot) => {
-    const contact = snapshot.data();
 
-    return (
-      snapshot.exists() &&
-      contact?.userId === userId &&
-      contact.connectionId === connectionId
-    );
-  });
-
-  if (!allContactsAreValid) {
+  if (!contactsAreValid) {
     throw new BusinessRuleError("A mensagem possui contatos inválidos.");
   }
 };
@@ -146,7 +136,7 @@ export const getMessage = async (messageId: string, userId: string) => {
   const message = snapshot.data();
 
   if (!snapshot.exists() || message?.userId !== userId) {
-    throw createFirestoreError("permission-denied", "Mensagem inválida.");
+    throw new Error("Mensagem inválida.");
   }
 
   return mapMessageDocument(snapshot);
@@ -172,8 +162,24 @@ const createMessagesPageQuery = (params: GetMessagesPageRealtimeParams) => {
 export const getMessagesPageRealtime = (
   params: GetMessagesPageRealtimeParams,
   onValue: (snapshot: QuerySnapshot<DocumentData>) => void,
-  onError: (error: FirestoreError) => void,
+  onError: () => void,
 ) => onSnapshot(createMessagesPageQuery(params), onValue, onError);
+
+export const getHasMessagesByConnection = async (
+  connectionId: string,
+  userId: string,
+) => {
+  const snapshot = await getDocs(
+    query(
+      messagesCollection,
+      where("userId", "==", userId),
+      where("connectionId", "==", connectionId),
+      limit(1),
+    ),
+  );
+
+  return !snapshot.empty;
+};
 
 export const createMessage = async (params: CreateMessageInput) => {
   const {
@@ -182,9 +188,7 @@ export const createMessage = async (params: CreateMessageInput) => {
     content: rawContent,
     status,
   } = params;
-  const userId = requireAuthenticatedUserId(
-    "Faça login para salvar uma mensagem.",
-  );
+  const userId = requireAuthenticatedUserId();
   const connectionId = rawConnectionId.trim();
   const contactIds = rawContactIds.map((contactId) => contactId.trim());
   const content = rawContent.trim();
@@ -226,9 +230,7 @@ export const upsertMessage = async (params: UpdateMessageInput) => {
     messageId: rawMessageId,
     status,
   } = params;
-  const userId = requireAuthenticatedUserId(
-    "Faça login para salvar uma mensagem.",
-  );
+  const userId = requireAuthenticatedUserId();
   const connectionId = rawConnectionId.trim();
   const contactIds = rawContactIds.map((contactId) => contactId.trim());
   const content = rawContent.trim();
@@ -241,7 +243,7 @@ export const upsertMessage = async (params: UpdateMessageInput) => {
     const messageSnapshot = await transaction.get(messageRef);
 
     if (!messageSnapshot.exists() || messageSnapshot.data().userId !== userId) {
-      throw createFirestoreError("permission-denied", "Mensagem inválida.");
+      throw new Error("Mensagem inválida.");
     }
 
     if (messageSnapshot.data().status === "sent") {
@@ -271,7 +273,7 @@ export const upsertMessage = async (params: UpdateMessageInput) => {
 };
 
 export const deleteMessage = async (messageId: string) => {
-  const userId = requireAuthenticatedUserId("Faça login para continuar.");
+  const userId = requireAuthenticatedUserId();
   const normalizedMessageId = messageId.trim();
 
   await runTransaction(db, async (transaction) => {
@@ -281,7 +283,7 @@ export const deleteMessage = async (messageId: string) => {
     if (!messageSnapshot.exists()) return;
 
     if (messageSnapshot.data().userId !== userId) {
-      throw createFirestoreError("permission-denied", "Mensagem inválida.");
+      throw new Error("Mensagem inválida.");
     }
 
     const isScheduled = messageSnapshot.data().status === "scheduled";

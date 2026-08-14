@@ -5,6 +5,9 @@ import {
   doc,
   endAt,
   getDoc,
+  getDocs,
+  limit,
+  onSnapshot,
   orderBy,
   query,
   runTransaction,
@@ -13,24 +16,19 @@ import {
   startAt,
   updateDoc,
   where,
-  limit,
-  onSnapshot,
   type CollectionReference,
   type DocumentData,
   type DocumentSnapshot,
-  type FirestoreError,
   type QueryConstraint,
   type QueryDocumentSnapshot,
   type QuerySnapshot,
   type Timestamp,
+  type Transaction,
 } from "firebase/firestore";
 
 import { collectionPaths } from "@/config/collection-paths";
 import { db } from "@/lib/firebase";
-import {
-  createFirestoreError,
-  requireAuthenticatedUserId,
-} from "@/lib/firestore";
+import { requireAuthenticatedUserId } from "@/lib/firestore";
 import { updateUsageInTransaction } from "@/models/usage.model";
 
 export interface Contact {
@@ -83,7 +81,7 @@ export const getContact = async (contactId: string, userId: string) => {
   const contact = snapshot.data();
 
   if (!snapshot.exists() || contact?.userId !== userId) {
-    throw createFirestoreError("permission-denied", "Contato inválido.");
+    throw new Error("Contato inválido.");
   }
 
   return mapContactDocument(snapshot);
@@ -115,8 +113,47 @@ const createContactsPageQuery = (params: GetContactsPageRealtimeParams) => {
 export const getContactsPageRealtime = (
   params: GetContactsPageRealtimeParams,
   onValue: (snapshot: QuerySnapshot<DocumentData>) => void,
-  onError: (error: FirestoreError) => void,
+  onError: () => void,
 ) => onSnapshot(createContactsPageQuery(params), onValue, onError);
+
+export const getHasContactsByConnection = async (
+  connectionId: string,
+  userId: string,
+) => {
+  const snapshot = await getDocs(
+    query(
+      contactsCollection,
+      where("userId", "==", userId),
+      where("connectionId", "==", connectionId),
+      limit(1),
+    ),
+  );
+
+  return !snapshot.empty;
+};
+
+export const getAreContactsValidForConnection = async (
+  transaction: Transaction,
+  contactIds: string[],
+  connectionId: string,
+  userId: string,
+) => {
+  const snapshots = await Promise.all(
+    contactIds.map((contactId) =>
+      transaction.get(doc(contactsCollection, contactId)),
+    ),
+  );
+
+  return snapshots.every((snapshot) => {
+    const contact = snapshot.data();
+
+    return (
+      snapshot.exists() &&
+      contact?.userId === userId &&
+      contact.connectionId === connectionId
+    );
+  });
+};
 
 export const createContact = async (params: CreateContactInput) => {
   const {
@@ -124,9 +161,7 @@ export const createContact = async (params: CreateContactInput) => {
     name: rawName,
     phone: rawPhone,
   } = params;
-  const userId = requireAuthenticatedUserId(
-    "Faça login para salvar um contato.",
-  );
+  const userId = requireAuthenticatedUserId();
   const connectionId = rawConnectionId.trim();
   const name = rawName.trim();
   const phone = normalizePhone(rawPhone.trim());
@@ -156,7 +191,7 @@ export const upsertContact = async (params: UpdateContactInput) => {
     name: rawName,
     phone: rawPhone,
   } = params;
-  requireAuthenticatedUserId("Faça login para salvar um contato.");
+  requireAuthenticatedUserId();
   const connectionId = rawConnectionId.trim();
   const contactId = rawContactId.trim();
   const name = rawName.trim();
@@ -173,7 +208,7 @@ export const upsertContact = async (params: UpdateContactInput) => {
 };
 
 export const deleteContact = async (contactId: string) => {
-  const userId = requireAuthenticatedUserId("Faça login para continuar.");
+  const userId = requireAuthenticatedUserId();
   const normalizedContactId = contactId.trim();
 
   await runTransaction(db, async (transaction) => {
@@ -183,7 +218,7 @@ export const deleteContact = async (contactId: string) => {
     if (!contactSnapshot.exists()) return;
 
     if (contactSnapshot.data().userId !== userId) {
-      throw createFirestoreError("permission-denied", "Contato inválido.");
+      throw new Error("Contato inválido.");
     }
 
     await updateUsageInTransaction(transaction, userId, {

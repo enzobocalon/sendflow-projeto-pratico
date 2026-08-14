@@ -1,26 +1,10 @@
-import { FirebaseError } from "firebase/app";
-
 import { getAuthenticatedUser } from "@/features/auth/auth.service";
 
-type FirestoreErrorCode =
-  | "failed-precondition"
-  | "invalid-argument"
-  | "permission-denied"
-  | "resource-exhausted"
-  | "unauthenticated";
-
-export function createFirestoreError(
-  code: FirestoreErrorCode,
-  message: string,
-) {
-  return new FirebaseError(`firestore/${code}`, message);
-}
-
-export function requireAuthenticatedUserId(message: string) {
+export function requireAuthenticatedUserId() {
   const userId = getAuthenticatedUser()?.uid;
 
   if (!userId) {
-    throw createFirestoreError("unauthenticated", message);
+    throw new Error("Usuário não autenticado.");
   }
 
   return userId;

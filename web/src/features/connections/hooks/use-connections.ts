@@ -1,7 +1,7 @@
 import { normalizeSearchText } from "@sendflow/shared";
 import { useEffect, useState } from "react";
 
-import { useAuth } from "@/features/auth/hooks/use-auth";
+import { useAuth } from "@/features/auth/use-auth";
 
 import { getConnectionsRealtime, type Connection } from "../connection.model";
 

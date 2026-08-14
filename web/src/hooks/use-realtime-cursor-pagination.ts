@@ -1,6 +1,5 @@
 import {
   type DocumentData,
-  type FirestoreError,
   type QueryDocumentSnapshot,
   type QuerySnapshot,
   type Unsubscribe,
@@ -29,7 +28,7 @@ interface UseRealtimeCursorPaginationParams<Item> {
     cursor: Cursor,
     resultLimit: number,
     onValue: (snapshot: QuerySnapshot<DocumentData>) => void,
-    onError: (error: FirestoreError) => void,
+    onError: () => void,
   ) => Unsubscribe;
 }
 

@@ -7,7 +7,6 @@ import {
   onSnapshot,
   serverTimestamp,
   type CollectionReference,
-  type FirestoreError,
   type Transaction,
 } from "firebase/firestore";
 
@@ -60,7 +59,7 @@ export const getUsage = async (userId: string) => {
 export const getUsageRealtime = (
   userId: string,
   onValue: (usage: UsageCounters) => void,
-  onError: (error: FirestoreError) => void,
+  onError: () => void,
 ) =>
   onSnapshot(
     getUsageReference(userId),
