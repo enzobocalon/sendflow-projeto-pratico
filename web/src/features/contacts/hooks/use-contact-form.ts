@@ -6,12 +6,9 @@ import { getBusinessRuleErrorMessage } from "@/errors/business-rule.error";
 import type { ConnectionsState } from "@/features/connections/hooks/use-connections";
 import { getFeedback } from "@/utils/feedback";
 
-import { handleSaveContact } from "../facades/contact.facade";
-import type { Contact } from "../models/contact.model";
-import {
-  contactSchema,
-  type ContactFormValues,
-} from "../schemas/contact.schema";
+import { handleSaveContact } from "../contact.facade";
+import type { Contact } from "../contact.model";
+import { contactSchema, type ContactFormValues } from "../contact.schema";
 
 interface UseContactFormParams {
   connectionsState: ConnectionsState;

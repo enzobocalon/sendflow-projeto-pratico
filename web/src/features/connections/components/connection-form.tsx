@@ -10,7 +10,7 @@ import { FeedbackSnackbar } from "@/components/feedback-snackbar";
 import { SectionTitle } from "@/features/dashboard/components/section-title";
 
 import { useConnectionForm } from "../hooks/use-connection-form";
-import type { Connection } from "../models/connection.model";
+import type { Connection } from "../connection.model";
 
 interface ConnectionFormProps {
   connectionsCount: number;

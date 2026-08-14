@@ -5,12 +5,12 @@ import { useForm } from "react-hook-form";
 import {
   getAuthenticationErrorMessage,
   handleAuthentication,
-} from "../facades/auth.facade";
+} from "../auth.facade";
 import {
   loginSchema,
   registerSchema,
   type AuthFormValues,
-} from "../schemas/auth.schema";
+} from "../auth.schema";
 import { useAuth } from "./use-auth";
 
 type AuthMode = "login" | "register";

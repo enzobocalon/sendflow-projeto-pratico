@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import type { Connection } from "../models/connection.model";
+import type { Connection } from "../connection.model";
 import { useConnections } from "./use-connections";
 
 export function useConnectionsPage() {

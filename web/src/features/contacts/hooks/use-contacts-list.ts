@@ -4,7 +4,7 @@ import type { ConnectionsState } from "@/features/connections/hooks/use-connecti
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useDelete } from "@/hooks/use-delete";
 
-import { deleteContact, type Contact } from "../models/contact.model";
+import { deleteContact, type Contact } from "../contact.model";
 import { useContacts } from "./use-contacts";
 
 interface UseContactsListParams {

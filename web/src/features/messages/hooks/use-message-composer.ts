@@ -6,12 +6,9 @@ import { getBusinessRuleErrorMessage } from "@/errors/business-rule.error";
 import { useConnections } from "@/features/connections/hooks/use-connections";
 import { getFeedback } from "@/utils/feedback";
 
-import { handleSaveMessage } from "../facades/message.facade";
-import type { Message } from "../models/message.model";
-import {
-  messageSchema,
-  type MessageFormValues,
-} from "../schemas/message.schema";
+import { handleSaveMessage } from "../message.facade";
+import type { Message } from "../message.model";
+import { messageSchema, type MessageFormValues } from "../message.schema";
 
 interface UseMessageComposerParams {
   editingMessage: Message | null;

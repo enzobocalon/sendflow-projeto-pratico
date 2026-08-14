@@ -6,12 +6,12 @@ import { useForm } from "react-hook-form";
 import { getBusinessRuleErrorMessage } from "@/errors/business-rule.error";
 import { getFeedback } from "@/utils/feedback";
 
-import { handleSaveConnection } from "../facades/connection.facade";
-import type { Connection } from "../models/connection.model";
+import { handleSaveConnection } from "../connection.facade";
+import type { Connection } from "../connection.model";
 import {
   connectionSchema,
   type ConnectionFormValues,
-} from "../schemas/connection.schema";
+} from "../connection.schema";
 
 interface UseConnectionFormParams {
   connectionsCount: number;

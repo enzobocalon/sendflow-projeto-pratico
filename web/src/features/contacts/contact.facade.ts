@@ -1,9 +1,5 @@
-import {
-  createContact,
-  upsertContact,
-  type Contact,
-} from "../models/contact.model";
-import type { ContactFormValues } from "../schemas/contact.schema";
+import { createContact, upsertContact, type Contact } from "./contact.model";
+import type { ContactFormValues } from "./contact.schema";
 
 interface HandleSaveContactParams {
   editingContact: Contact | null;

@@ -3,7 +3,7 @@ import { FirebaseError } from "firebase/app";
 import type {
   LoginPayload,
   RegisterAccountPayload,
-} from "../services/auth.service";
+} from "./services/auth.service";
 
 interface HandleAuthenticationParams {
   isRegistering: boolean;

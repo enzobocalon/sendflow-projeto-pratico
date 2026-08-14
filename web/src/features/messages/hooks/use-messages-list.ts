@@ -4,7 +4,7 @@ import { useMemo, useState, type MouseEvent } from "react";
 import { useDelete } from "@/hooks/use-delete";
 import { formatMessageDate } from "@/utils/dates";
 
-import { deleteMessage, type Message } from "../models/message.model";
+import { deleteMessage, type Message } from "../message.model";
 import { useMessages } from "./use-messages";
 
 export interface MessageListItem extends Message {

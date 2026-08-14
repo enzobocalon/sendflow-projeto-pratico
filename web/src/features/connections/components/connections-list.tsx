@@ -12,7 +12,7 @@ import { FeedbackSnackbar } from "@/components/feedback-snackbar";
 import { SectionTitle } from "@/features/dashboard/components/section-title";
 
 import { useConnectionsList } from "../hooks/use-connections-list";
-import type { Connection } from "../models/connection.model";
+import type { Connection } from "../connection.model";
 import {
   getConnectionsListEmptyState,
   getConnectionsListSubtitle,

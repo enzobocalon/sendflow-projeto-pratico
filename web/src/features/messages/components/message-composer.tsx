@@ -7,7 +7,7 @@ import { FeedbackSnackbar } from "@/components/feedback-snackbar";
 import { SectionTitle } from "@/features/dashboard/components/section-title";
 
 import { useMessageComposer } from "../hooks/use-message-composer";
-import type { Message } from "../models/message.model";
+import type { Message } from "../message.model";
 import { MessageComposerActions } from "./message-composer-actions";
 import { MessageContactsField } from "./message-contacts-field";
 import { MessageScheduleFields } from "./message-schedule-fields";

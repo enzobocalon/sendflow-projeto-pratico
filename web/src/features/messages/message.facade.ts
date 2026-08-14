@@ -1,9 +1,5 @@
-import {
-  createMessage,
-  upsertMessage,
-  type Message,
-} from "../models/message.model";
-import type { MessageFormValues } from "../schemas/message.schema";
+import { createMessage, upsertMessage, type Message } from "./message.model";
+import type { MessageFormValues } from "./message.schema";
 
 interface HandleSaveMessageParams {
   editingMessage: Message | null;

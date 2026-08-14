@@ -14,7 +14,7 @@ import { SectionTitle } from "@/features/dashboard/components/section-title";
 import { formatPhone } from "@/utils/format-phone";
 
 import { useContactsList } from "../hooks/use-contacts-list";
-import type { Contact } from "../models/contact.model";
+import type { Contact } from "../contact.model";
 import {
   getContactsListEmptyState,
   getContactsListSubtitle,

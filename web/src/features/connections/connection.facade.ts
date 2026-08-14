@@ -2,8 +2,8 @@ import {
   createConnection,
   upsertConnection,
   type Connection,
-} from "../models/connection.model";
-import type { ConnectionFormValues } from "../schemas/connection.schema";
+} from "./connection.model";
+import type { ConnectionFormValues } from "./connection.schema";
 
 interface HandleSaveConnectionParams {
   editingConnection: Connection | null;

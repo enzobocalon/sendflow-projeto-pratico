@@ -13,7 +13,7 @@ import { useContacts } from "@/features/contacts/hooks/use-contacts";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { formatPhone } from "@/utils/format-phone";
 
-import type { MessageFormValues } from "../schemas/message.schema";
+import type { MessageFormValues } from "../message.schema";
 
 interface MessageContactsFieldProps {
   connectionId: string;

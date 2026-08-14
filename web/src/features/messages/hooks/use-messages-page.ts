@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import type { Message } from "../models/message.model";
+import type { Message } from "../message.model";
 
 export function useMessagesPage() {
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
