@@ -1,12 +1,4 @@
-import {
-  MAX_MESSAGE_CONTACTS,
-  MESSAGE_CONTENT_MAX_LENGTH,
-  MESSAGE_CONTENT_MIN_LENGTH,
-  hasUniqueValues,
-  isFutureDate,
-  isValidMessageContent,
-  type MessageStatus,
-} from "@sendflow/shared";
+import type { MessageStatus } from "@sendflow/shared";
 import {
   collection,
   doc,
@@ -32,7 +24,7 @@ import {
 } from "firebase/firestore";
 
 import { collectionPaths } from "@/config/collection-paths";
-import { getActiveConnectionInTransaction } from "@/features/connections/models/connection.model";
+import { BusinessRuleError } from "@/errors/business-rule.error";
 import { db } from "@/lib/firebase";
 import {
   createFirestoreError,
@@ -54,17 +46,27 @@ export interface Message {
   userId: string;
 }
 
-interface CreateMessageInput {
+interface MessageInput {
   connectionId: string;
   contactIds: string[];
   content: string;
-  scheduledAt?: Date;
-  status: MessageStatus;
 }
 
-interface UpdateMessageInput extends CreateMessageInput {
-  messageId: string;
+interface ScheduledMessageInput extends MessageInput {
+  scheduledAt: Date;
+  status: "scheduled";
 }
+
+interface SentMessageInput extends MessageInput {
+  scheduledAt?: never;
+  status: "sent";
+}
+
+type CreateMessageInput = ScheduledMessageInput | SentMessageInput;
+
+type UpdateMessageInput = CreateMessageInput & {
+  messageId: string;
+};
 
 type MessageDocument = Omit<Message, "id">;
 
@@ -86,37 +88,11 @@ interface MessageScheduleFields {
   status: MessageStatus;
 }
 
-const validateMessageFields = (content: string, contactIds: string[]) => {
-  if (!isValidMessageContent(content)) {
-    throw createFirestoreError(
-      "invalid-argument",
-      `Informe uma mensagem com ${MESSAGE_CONTENT_MIN_LENGTH} a ${MESSAGE_CONTENT_MAX_LENGTH} caracteres.`,
-    );
-  }
-
-  if (
-    contactIds.length === 0 ||
-    contactIds.length > MAX_MESSAGE_CONTACTS ||
-    contactIds.some((contactId) => !contactId)
-  ) {
-    throw createFirestoreError(
-      "invalid-argument",
-      `Selecione de 1 a ${MAX_MESSAGE_CONTACTS} contatos.`,
-    );
-  }
-
-  if (!hasUniqueValues(contactIds)) {
-    throw createFirestoreError(
-      "invalid-argument",
-      "Existem contatos duplicados.",
-    );
-  }
-};
-
 const getMessageScheduleFields = (
-  status: MessageStatus,
-  scheduledAt?: Date,
+  params: CreateMessageInput,
 ): MessageScheduleFields => {
+  const { status } = params;
+
   if (status === "sent") {
     return {
       scheduledAt: null,
@@ -125,22 +101,8 @@ const getMessageScheduleFields = (
     };
   }
 
-  if (!scheduledAt || Number.isNaN(scheduledAt.getTime())) {
-    throw createFirestoreError(
-      "invalid-argument",
-      "Informe uma data de agendamento válida.",
-    );
-  }
-
-  if (!isFutureDate(scheduledAt)) {
-    throw createFirestoreError(
-      "invalid-argument",
-      "Agende a mensagem para uma data futura.",
-    );
-  }
-
   return {
-    scheduledAt: Timestamp.fromDate(scheduledAt),
+    scheduledAt: Timestamp.fromDate(params.scheduledAt),
     sentAt: null,
     status,
   };
@@ -168,10 +130,7 @@ const validateContactsInTransaction = async (
   });
 
   if (!allContactsAreValid) {
-    throw createFirestoreError(
-      "permission-denied",
-      "A mensagem possui contatos inválidos.",
-    );
+    throw new BusinessRuleError("A mensagem possui contatos inválidos.");
   }
 };
 
@@ -221,7 +180,6 @@ export const createMessage = async (params: CreateMessageInput) => {
     connectionId: rawConnectionId,
     contactIds: rawContactIds,
     content: rawContent,
-    scheduledAt,
     status,
   } = params;
   const userId = requireAuthenticatedUserId(
@@ -231,19 +189,10 @@ export const createMessage = async (params: CreateMessageInput) => {
   const contactIds = rawContactIds.map((contactId) => contactId.trim());
   const content = rawContent.trim();
 
-  if (!connectionId) {
-    throw createFirestoreError(
-      "invalid-argument",
-      "Informe uma conexão válida.",
-    );
-  }
-
-  validateMessageFields(content, contactIds);
-  const scheduleFields = getMessageScheduleFields(status, scheduledAt);
+  const scheduleFields = getMessageScheduleFields(params);
   const messageRef = doc(messagesCollection);
 
   await runTransaction(db, async (transaction) => {
-    await getActiveConnectionInTransaction(transaction, connectionId, userId);
     await validateContactsInTransaction(
       transaction,
       contactIds,
@@ -275,7 +224,6 @@ export const upsertMessage = async (params: UpdateMessageInput) => {
     contactIds: rawContactIds,
     content: rawContent,
     messageId: rawMessageId,
-    scheduledAt,
     status,
   } = params;
   const userId = requireAuthenticatedUserId(
@@ -286,22 +234,7 @@ export const upsertMessage = async (params: UpdateMessageInput) => {
   const content = rawContent.trim();
   const messageId = rawMessageId.trim();
 
-  if (!messageId) {
-    throw createFirestoreError(
-      "invalid-argument",
-      "Informe uma mensagem válida.",
-    );
-  }
-
-  if (!connectionId) {
-    throw createFirestoreError(
-      "invalid-argument",
-      "Informe uma conexão válida.",
-    );
-  }
-
-  validateMessageFields(content, contactIds);
-  const scheduleFields = getMessageScheduleFields(status, scheduledAt);
+  const scheduleFields = getMessageScheduleFields(params);
 
   await runTransaction(db, async (transaction) => {
     const messageRef = doc(messagesCollection, messageId);
@@ -312,13 +245,9 @@ export const upsertMessage = async (params: UpdateMessageInput) => {
     }
 
     if (messageSnapshot.data().status === "sent") {
-      throw createFirestoreError(
-        "failed-precondition",
-        "Mensagens enviadas não podem ser editadas.",
-      );
+      throw new BusinessRuleError("Mensagens enviadas não podem ser editadas.");
     }
 
-    await getActiveConnectionInTransaction(transaction, connectionId, userId);
     await validateContactsInTransaction(
       transaction,
       contactIds,
@@ -345,18 +274,13 @@ export const deleteMessage = async (messageId: string) => {
   const userId = requireAuthenticatedUserId("Faça login para continuar.");
   const normalizedMessageId = messageId.trim();
 
-  if (!normalizedMessageId) {
-    throw createFirestoreError(
-      "invalid-argument",
-      "Informe uma mensagem válida.",
-    );
-  }
-
   await runTransaction(db, async (transaction) => {
     const messageRef = doc(messagesCollection, normalizedMessageId);
     const messageSnapshot = await transaction.get(messageRef);
 
-    if (!messageSnapshot.exists() || messageSnapshot.data().userId !== userId) {
+    if (!messageSnapshot.exists()) return;
+
+    if (messageSnapshot.data().userId !== userId) {
       throw createFirestoreError("permission-denied", "Mensagem inválida.");
     }
 

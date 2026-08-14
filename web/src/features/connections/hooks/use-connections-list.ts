@@ -19,7 +19,7 @@ export function useConnectionsList(params: UseConnectionsListParams) {
     isLoadingConnections,
     onDeletedEditingConnection,
   } = params;
-  
+
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebouncedValue(searchTerm);
 

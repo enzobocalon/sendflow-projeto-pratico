@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
+  MAX_CONNECTIONS_PER_USER,
   MAX_MESSAGE_CONTACTS,
   MESSAGE_CONTENT_MAX_LENGTH,
   NAME_MAX_LENGTH,
@@ -553,6 +554,29 @@ describe("Usage rules", () => {
     await assertSucceeds(
       updateDoc(usageRef, {
         scheduledMessagesCount: 0,
+        updatedAt: serverTimestamp(),
+      }),
+    );
+  });
+
+  it("rejects connection counters above the per-user limit", async () => {
+    await testEnvironment.withSecurityRulesDisabled(async (context) => {
+      await updateDoc(doc(context.firestore(), "usage", OWNER_ID), {
+        connectionsCount: MAX_CONNECTIONS_PER_USER - 1,
+      });
+    });
+
+    const usageRef = doc(ownerFirestore(), "usage", OWNER_ID);
+
+    await assertSucceeds(
+      updateDoc(usageRef, {
+        connectionsCount: MAX_CONNECTIONS_PER_USER,
+        updatedAt: serverTimestamp(),
+      }),
+    );
+    await assertDenied(
+      updateDoc(usageRef, {
+        connectionsCount: MAX_CONNECTIONS_PER_USER + 1,
         updatedAt: serverTimestamp(),
       }),
     );

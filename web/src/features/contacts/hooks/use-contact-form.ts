@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { getBusinessRuleErrorMessage } from "@/errors/business-rule.error";
 import type { ConnectionsState } from "@/features/connections/hooks/use-connections";
 import { getFeedback } from "@/utils/feedback";
 
@@ -59,8 +60,13 @@ export function useContactForm(params: UseContactFormParams) {
           : "Contato criado com sucesso.",
       );
       onSaved();
-    } catch {
-      setError("Não foi possível salvar o contato.");
+    } catch (saveError) {
+      setError(
+        getBusinessRuleErrorMessage(
+          saveError,
+          "Não foi possível salvar o contato.",
+        ),
+      );
     }
   });
 

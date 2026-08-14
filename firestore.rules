@@ -178,6 +178,7 @@ service cloud.firestore {
         && data.userId == userId
         && data.connectionsCount is int
         && data.connectionsCount >= 0
+        && data.connectionsCount <= 100
         && data.contactsCount is int
         && data.contactsCount >= 0
         && data.messagesCount is int

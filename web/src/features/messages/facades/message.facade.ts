@@ -1,5 +1,3 @@
-import type { MessageStatus } from "@sendflow/shared";
-
 import {
   createMessage,
   upsertMessage,
@@ -15,17 +13,23 @@ interface HandleSaveMessageParams {
 export async function handleSaveMessage(params: HandleSaveMessageParams) {
   const { editingMessage, values } = params;
   const isScheduled = values.sendMode === "scheduled";
-  const scheduledAt = isScheduled
-    ? new Date(`${values.scheduledDate}T${values.scheduledTime}`)
-    : undefined;
-  const status: MessageStatus = isScheduled ? "scheduled" : "sent";
-  const messageData = {
+  const commonMessageData = {
     connectionId: values.connectionId,
     contactIds: values.contactIds,
     content: values.content,
-    scheduledAt,
-    status,
   };
+  const messageData = isScheduled
+    ? {
+        ...commonMessageData,
+        scheduledAt: new Date(
+          `${values.scheduledDate}T${values.scheduledTime}`,
+        ),
+        status: "scheduled" as const,
+      }
+    : {
+        ...commonMessageData,
+        status: "sent" as const,
+      };
 
   if (editingMessage) {
     await upsertMessage({

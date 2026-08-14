@@ -1,14 +1,8 @@
-import {
-  MAX_CONNECTIONS_PER_USER,
-  NAME_LENGTH_ERROR_MESSAGE,
-  isValidName,
-  normalizeSearchText,
-} from "@sendflow/shared";
+import { normalizeSearchText } from "@sendflow/shared";
 import {
   collection,
   doc,
   endAt,
-  getCountFromServer,
   getDoc,
   getDocs,
   limit,
@@ -18,6 +12,7 @@ import {
   runTransaction,
   serverTimestamp,
   startAt,
+  updateDoc,
   where,
   type CollectionReference,
   type DocumentData,
@@ -25,10 +20,10 @@ import {
   type FirestoreError,
   type QueryConstraint,
   type Timestamp,
-  type Transaction,
 } from "firebase/firestore";
 
 import { collectionPaths } from "@/config/collection-paths";
+import { BusinessRuleError } from "@/errors/business-rule.error";
 import { db } from "@/lib/firebase";
 import {
   createFirestoreError,
@@ -124,18 +119,6 @@ export const getConnection = async (connectionId: string, userId: string) => {
   return assertOwnedConnection(snapshot, userId);
 };
 
-export const getActiveConnectionInTransaction = async (
-  transaction: Transaction,
-  connectionId: string,
-  userId: string,
-) => {
-  const snapshot = await transaction.get(
-    doc(connectionsCollection, connectionId),
-  );
-
-  return assertOwnedActiveConnection(snapshot, userId);
-};
-
 const createConnectionsQuery = ({
   searchTerm = "",
   userId,
@@ -182,44 +165,15 @@ export const getConnectionsRealtime = (
   );
 };
 
-export const getConnectionsCount = async (userId: string) => {
-  const ownedConnections = query(
-    connectionsCollection,
-    where("userId", "==", userId),
-  );
-  const archivedConnections = query(
-    ownedConnections,
-    where("status", "==", "archived"),
-  );
-  const [total, archived] = await Promise.all([
-    getCountFromServer(ownedConnections),
-    getCountFromServer(archivedConnections),
-  ]);
-
-  return total.data().count - archived.data().count;
-};
-
 export const createConnection = async (params: CreateConnectionInput) => {
   const { name: rawName } = params;
   const userId = requireAuthenticatedUserId(
     "Faça login para cadastrar uma conexão.",
   );
   const name = rawName.trim();
-
-  if (!isValidName(name)) {
-    throw createFirestoreError("invalid-argument", NAME_LENGTH_ERROR_MESSAGE);
-  }
-
-  const connectionsCount = await getConnectionsCount(userId);
-  if (connectionsCount >= MAX_CONNECTIONS_PER_USER) {
-    throw createFirestoreError(
-      "resource-exhausted",
-      `Limite de ${MAX_CONNECTIONS_PER_USER} conexões atingido.`,
-    );
-  }
+  const connectionRef = doc(connectionsCollection);
 
   await runTransaction(db, async (transaction) => {
-    const connectionRef = doc(connectionsCollection);
     const now = serverTimestamp();
 
     await updateUsageInTransaction(transaction, userId, {
@@ -239,31 +193,13 @@ export const createConnection = async (params: CreateConnectionInput) => {
 
 export const upsertConnection = async (params: UpdateConnectionInput) => {
   const { connectionId, name: rawName } = params;
-  const userId = requireAuthenticatedUserId("Faça login para continuar.");
+  requireAuthenticatedUserId("Faça login para continuar.");
   const name = rawName.trim();
 
-  if (!connectionId.trim()) {
-    throw createFirestoreError(
-      "invalid-argument",
-      "Informe uma conexão válida.",
-    );
-  }
-
-  if (!isValidName(name)) {
-    throw createFirestoreError("invalid-argument", NAME_LENGTH_ERROR_MESSAGE);
-  }
-
-  await runTransaction(db, async (transaction) => {
-    const connectionRef = doc(connectionsCollection, connectionId);
-
-    await getActiveConnectionInTransaction(transaction, connectionId, userId);
-    transaction.update(connectionRef, {
-      archivedAt: null,
-      name,
-      nameNormalized: normalizeSearchText(name),
-      status: "active",
-      updatedAt: serverTimestamp(),
-    });
+  await updateDoc(doc(connectionsCollection, connectionId), {
+    name,
+    nameNormalized: normalizeSearchText(name),
+    updatedAt: serverTimestamp(),
   });
 };
 
@@ -321,26 +257,21 @@ const restoreArchivedConnection = (connectionId: string, userId: string) =>
 export const deleteConnection = async (connectionId: string) => {
   const userId = requireAuthenticatedUserId("Faça login para continuar.");
 
-  if (!connectionId.trim()) {
-    throw createFirestoreError(
-      "invalid-argument",
-      "Informe uma conexão válida.",
-    );
-  }
-
   const linkedResourceError = await getLinkedResourceError(
     connectionId,
     userId,
   );
 
   if (linkedResourceError) {
-    throw createFirestoreError("failed-precondition", linkedResourceError);
+    throw new BusinessRuleError(linkedResourceError);
   }
 
-  await runTransaction(db, async (transaction) => {
+  const didArchive = await runTransaction(db, async (transaction) => {
     const connectionRef = doc(connectionsCollection, connectionId);
+    const snapshot = await transaction.get(connectionRef);
+    const connection = assertOwnedConnection(snapshot, userId);
 
-    await getActiveConnectionInTransaction(transaction, connectionId, userId);
+    if (connection.status === "archived") return false;
     await updateUsageInTransaction(transaction, userId, {
       connectionsCount: -1,
     });
@@ -349,7 +280,10 @@ export const deleteConnection = async (connectionId: string) => {
       status: "archived",
       updatedAt: serverTimestamp(),
     });
+    return true;
   });
+
+  if (!didArchive) return;
 
   const concurrentLinkError = await getLinkedResourceError(
     connectionId,
@@ -358,6 +292,6 @@ export const deleteConnection = async (connectionId: string) => {
 
   if (concurrentLinkError) {
     await restoreArchivedConnection(connectionId, userId);
-    throw createFirestoreError("failed-precondition", concurrentLinkError);
+    throw new BusinessRuleError(concurrentLinkError);
   }
 };

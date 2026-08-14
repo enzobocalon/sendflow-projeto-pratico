@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { getBusinessRuleErrorMessage } from "@/errors/business-rule.error";
 import { openDeleteDialog } from "@/facades/delete.facade";
 import { useDialog } from "@/providers/dialog";
 import type { Feedback } from "@/utils/feedback";
@@ -34,9 +35,12 @@ export function useDelete<Item extends IdentifiableItem>(
         severity: "success",
       });
       return true;
-    } catch {
+    } catch (error) {
       setFeedback({
-        message: "Não foi possível concluir a exclusão.",
+        message: getBusinessRuleErrorMessage(
+          error,
+          "Não foi possível concluir a exclusão.",
+        ),
         severity: "error",
       });
       return false;

@@ -1,10 +1,4 @@
-import {
-  NAME_LENGTH_ERROR_MESSAGE,
-  isValidName,
-  isValidPhone,
-  normalizePhone,
-  normalizeSearchText,
-} from "@sendflow/shared";
+import { normalizePhone, normalizeSearchText } from "@sendflow/shared";
 import {
   collection,
   deleteField,
@@ -17,6 +11,7 @@ import {
   serverTimestamp,
   startAfter,
   startAt,
+  updateDoc,
   where,
   limit,
   onSnapshot,
@@ -31,7 +26,6 @@ import {
 } from "firebase/firestore";
 
 import { collectionPaths } from "@/config/collection-paths";
-import { getActiveConnectionInTransaction } from "@/features/connections/models/connection.model";
 import { db } from "@/lib/firebase";
 import {
   createFirestoreError,
@@ -76,19 +70,6 @@ interface GetContactsPageRealtimeParams {
   searchTerm: string;
   userId: string;
 }
-
-const validateContactFields = (name: string, phone: string) => {
-  if (!isValidName(name)) {
-    throw createFirestoreError("invalid-argument", NAME_LENGTH_ERROR_MESSAGE);
-  }
-
-  if (!isValidPhone(phone)) {
-    throw createFirestoreError(
-      "invalid-argument",
-      "Informe um telefone válido.",
-    );
-  }
-};
 
 export const mapContactDocument = (
   document: DocumentSnapshot<DocumentData>,
@@ -150,19 +131,9 @@ export const createContact = async (params: CreateContactInput) => {
   const name = rawName.trim();
   const phone = normalizePhone(rawPhone.trim());
 
-  if (!connectionId) {
-    throw createFirestoreError(
-      "invalid-argument",
-      "Informe uma conexão válida.",
-    );
-  }
-
-  validateContactFields(name, phone);
-
   const contactRef = doc(contactsCollection);
 
   await runTransaction(db, async (transaction) => {
-    await getActiveConnectionInTransaction(transaction, connectionId, userId);
     await updateUsageInTransaction(transaction, userId, { contactsCount: 1 });
     const now = serverTimestamp();
 
@@ -185,47 +156,19 @@ export const upsertContact = async (params: UpdateContactInput) => {
     name: rawName,
     phone: rawPhone,
   } = params;
-  const userId = requireAuthenticatedUserId(
-    "Faça login para salvar um contato.",
-  );
+  requireAuthenticatedUserId("Faça login para salvar um contato.");
   const connectionId = rawConnectionId.trim();
   const contactId = rawContactId.trim();
   const name = rawName.trim();
   const phone = normalizePhone(rawPhone.trim());
 
-  if (!contactId) {
-    throw createFirestoreError(
-      "invalid-argument",
-      "Informe um contato válido.",
-    );
-  }
-
-  if (!connectionId) {
-    throw createFirestoreError(
-      "invalid-argument",
-      "Informe uma conexão válida.",
-    );
-  }
-
-  validateContactFields(name, phone);
-
-  await runTransaction(db, async (transaction) => {
-    const contactRef = doc(contactsCollection, contactId);
-    const contactSnapshot = await transaction.get(contactRef);
-
-    if (!contactSnapshot.exists() || contactSnapshot.data().userId !== userId) {
-      throw createFirestoreError("permission-denied", "Contato inválido.");
-    }
-
-    await getActiveConnectionInTransaction(transaction, connectionId, userId);
-    transaction.update(contactRef, {
-      connectionId,
-      connectionName: deleteField(),
-      name,
-      nameNormalized: normalizeSearchText(name),
-      phone,
-      updatedAt: serverTimestamp(),
-    });
+  await updateDoc(doc(contactsCollection, contactId), {
+    connectionId,
+    connectionName: deleteField(),
+    name,
+    nameNormalized: normalizeSearchText(name),
+    phone,
+    updatedAt: serverTimestamp(),
   });
 };
 
@@ -233,18 +176,13 @@ export const deleteContact = async (contactId: string) => {
   const userId = requireAuthenticatedUserId("Faça login para continuar.");
   const normalizedContactId = contactId.trim();
 
-  if (!normalizedContactId) {
-    throw createFirestoreError(
-      "invalid-argument",
-      "Informe um contato válido.",
-    );
-  }
-
   await runTransaction(db, async (transaction) => {
     const contactRef = doc(contactsCollection, normalizedContactId);
     const contactSnapshot = await transaction.get(contactRef);
 
-    if (!contactSnapshot.exists() || contactSnapshot.data().userId !== userId) {
+    if (!contactSnapshot.exists()) return;
+
+    if (contactSnapshot.data().userId !== userId) {
       throw createFirestoreError("permission-denied", "Contato inválido.");
     }
 

@@ -3,6 +3,7 @@ import { MAX_CONNECTIONS_PER_USER } from "@sendflow/shared";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { getBusinessRuleErrorMessage } from "@/errors/business-rule.error";
 import { getFeedback } from "@/utils/feedback";
 
 import { handleSaveConnection } from "../facades/connection.facade";
@@ -64,8 +65,13 @@ export function useConnectionForm(params: UseConnectionFormParams) {
           : "Conexão criada com sucesso.",
       );
       onSaved();
-    } catch {
-      setError("Não foi possível salvar a conexão.");
+    } catch (saveError) {
+      setError(
+        getBusinessRuleErrorMessage(
+          saveError,
+          "Não foi possível salvar a conexão.",
+        ),
+      );
     }
   });
 

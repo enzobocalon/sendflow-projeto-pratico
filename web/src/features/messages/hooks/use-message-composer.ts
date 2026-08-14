@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
+import { getBusinessRuleErrorMessage } from "@/errors/business-rule.error";
 import { useConnections } from "@/features/connections/hooks/use-connections";
 import { getFeedback } from "@/utils/feedback";
 
@@ -97,8 +98,13 @@ export function useMessageComposer(params: UseMessageComposerParams) {
             : "Mensagem enviada com sucesso.",
       );
       onSaved();
-    } catch {
-      setFormError("Não foi possível salvar a mensagem.");
+    } catch (saveError) {
+      setFormError(
+        getBusinessRuleErrorMessage(
+          saveError,
+          "Não foi possível salvar a mensagem.",
+        ),
+      );
     }
   });
 

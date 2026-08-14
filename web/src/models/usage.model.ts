@@ -1,3 +1,4 @@
+import { MAX_CONNECTIONS_PER_USER } from "@sendflow/shared";
 import {
   collection,
   doc,
@@ -11,6 +12,7 @@ import {
 } from "firebase/firestore";
 
 import { collectionPaths } from "@/config/collection-paths";
+import { BusinessRuleError } from "@/errors/business-rule.error";
 import { db } from "@/lib/firebase";
 
 export interface UsageCounters {
@@ -74,6 +76,15 @@ export const updateUsageInTransaction = async (
   const usageReference = getUsageReference(userId);
   const usageSnapshot = await transaction.get(usageReference);
   const now = serverTimestamp();
+  const currentUsage = mapUsageCounters(usageSnapshot.data() ?? {});
+  const nextConnectionsCount =
+    currentUsage.connectionsCount + (changes.connectionsCount ?? 0);
+
+  if (nextConnectionsCount > MAX_CONNECTIONS_PER_USER) {
+    throw new BusinessRuleError(
+      `Limite de ${MAX_CONNECTIONS_PER_USER} conexões atingido.`,
+    );
+  }
 
   if (!usageSnapshot.exists()) {
     const initialUsage: UsageCounters = {
