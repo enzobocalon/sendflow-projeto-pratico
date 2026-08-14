@@ -27,22 +27,12 @@ export function ContactForm(props: ContactFormProps) {
   const { connectionsState, editingContact, onCancel, onSaved } = props;
 
   const isEditing = Boolean(editingContact);
-  const {
-    clearFeedback,
-    connections,
-    control,
-    error,
-    errors,
-    isLoadingConnections,
-    isSubmitting,
-    success,
-    submitContact,
-  } = useContactForm({
+  const { state, form, actions } = useContactForm({
     connectionsState,
     editingContact,
     onSaved,
   });
-  const hasConnections = connections.length > 0;
+  const hasConnections = state.connections.length > 0;
 
   return (
     <section className="rounded-lg border border-slate-200 p-5">
@@ -59,25 +49,25 @@ export function ContactForm(props: ContactFormProps) {
         spacing={2.5}
         className="mt-5"
         component="form"
-        onSubmit={submitContact}
+        onSubmit={actions.submitContact}
       >
         <Controller
           name="name"
-          control={control}
+          control={form.control}
           render={({ field }) => (
             <TextField
               {...field}
               label="Nome"
               placeholder="Nome do contato"
-              error={Boolean(errors.name)}
-              helperText={errors.name?.message}
+              error={Boolean(form.errors.name)}
+              helperText={form.errors.name?.message}
               fullWidth
             />
           )}
         />
         <Controller
           name="phone"
-          control={control}
+          control={form.control}
           render={({ field }) => (
             <TextField
               {...field}
@@ -87,8 +77,8 @@ export function ContactForm(props: ContactFormProps) {
               }
               label="Telefone"
               type="tel"
-              error={Boolean(errors.phone)}
-              helperText={errors.phone?.message}
+              error={Boolean(form.errors.phone)}
+              helperText={form.errors.phone?.message}
               placeholder="(00) 00000-0000"
               fullWidth
             />
@@ -96,15 +86,15 @@ export function ContactForm(props: ContactFormProps) {
         />
         <Controller
           name="connectionId"
-          control={control}
+          control={form.control}
           render={({ field }) => (
             <ConnectionSelectField
-              connections={connections}
+              connections={state.connections}
               emptyMessage="Cadastre uma conexão antes de criar contatos."
               field={field}
-              fieldError={errors.connectionId?.message}
+              fieldError={form.errors.connectionId?.message}
               labelId="contact-connection-label"
-              isLoadingConnections={isLoadingConnections}
+              isLoadingConnections={state.isLoadingConnections}
             />
           )}
         />
@@ -114,7 +104,7 @@ export function ContactForm(props: ContactFormProps) {
             variant="contained"
             type="submit"
             startIcon={
-              isSubmitting ? (
+              form.isSubmitting ? (
                 <CircularProgress color="inherit" size={18} />
               ) : isEditing ? (
                 <SaveOutlinedIcon />
@@ -122,9 +112,11 @@ export function ContactForm(props: ContactFormProps) {
                 <AddIcon />
               )
             }
-            disabled={isSubmitting || isLoadingConnections || !hasConnections}
+            disabled={
+              form.isSubmitting || state.isLoadingConnections || !hasConnections
+            }
           >
-            {isSubmitting
+            {form.isSubmitting
               ? "Salvando..."
               : isEditing
                 ? "Salvar alterações"
@@ -137,7 +129,7 @@ export function ContactForm(props: ContactFormProps) {
               type="button"
               startIcon={<CloseIcon />}
               onClick={onCancel}
-              disabled={isSubmitting}
+              disabled={form.isSubmitting}
             >
               Cancelar
             </Button>
@@ -146,9 +138,9 @@ export function ContactForm(props: ContactFormProps) {
       </Stack>
 
       <FeedbackSnackbar
-        message={success || error}
-        onClose={clearFeedback}
-        severity={success ? "success" : "error"}
+        message={state.feedback?.message ?? ""}
+        onClose={actions.clearFeedback}
+        severity={state.feedback?.severity ?? "success"}
       />
     </section>
   );

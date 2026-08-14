@@ -7,6 +7,7 @@ import {
   getFirebaseErrorCode,
   getFirebaseErrorMessage,
 } from "@/utils/firebase-error";
+import { getFeedback } from "@/utils/feedback";
 
 import {
   createConnection,
@@ -98,13 +99,11 @@ export function useConnectionForm(params: UseConnectionFormParams) {
   };
 
   return {
-    clearFeedback,
-    control,
-    error,
-    errors,
-    hasReachedConnectionsLimit,
-    isSubmitting,
-    success,
-    submitConnection,
+    state: {
+      feedback: getFeedback(success, error),
+      hasReachedConnectionsLimit,
+    },
+    form: { control, errors, isSubmitting },
+    actions: { clearFeedback, submitConnection },
   };
 }

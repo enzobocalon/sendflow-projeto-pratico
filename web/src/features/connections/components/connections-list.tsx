@@ -28,32 +28,21 @@ interface ConnectionsListProps {
 
 export function ConnectionsList(props: ConnectionsListProps) {
   const {
-    connections: loadedConnections,
+    connections,
     editingConnection,
     isLoadingConnections,
     onEdit,
     onDeletedEditingConnection,
   } = props;
-  const {
-    clearDeleteFeedback,
+  const { state, actions } = useConnectionsList({
     connections,
-    deleteError,
-    deleteSuccess,
-    isDeleting,
-    isLoading,
-    requestDeleteConnection,
-    searchTerm,
-    setSearchTerm,
-    totalConnections,
-  } = useConnectionsList({
-    connections: loadedConnections,
     editingConnection,
     isLoadingConnections,
     onDeletedEditingConnection,
   });
 
-  const hasSearch = Boolean(searchTerm.trim());
-  const subtitle = getConnectionsListSubtitle(totalConnections);
+  const hasSearch = Boolean(state.searchTerm.trim());
+  const subtitle = getConnectionsListSubtitle(state.totalConnections);
   const emptyState = getConnectionsListEmptyState(hasSearch);
 
   return (
@@ -63,22 +52,22 @@ export function ConnectionsList(props: ConnectionsListProps) {
         <TextField
           size="small"
           label="Buscar conexão"
-          value={searchTerm}
-          onChange={(event) => setSearchTerm(event.target.value)}
-          disabled={isDeleting}
+          value={state.searchTerm}
+          onChange={(event) => actions.setSearchTerm(event.target.value)}
+          disabled={state.isDeleting}
           className="md:w-52"
         />
       </div>
 
-      {isLoading ? (
+      {state.isLoading ? (
         <div className="grid min-h-40 place-items-center rounded-lg border border-dashed border-slate-200">
           <CircularProgress aria-label="Carregando conexões" />
         </div>
       ) : (
         <Stack spacing={1.5}>
-          {connections.length === 0 && <EmptyState {...emptyState} />}
+          {state.connections.length === 0 && <EmptyState {...emptyState} />}
 
-          {connections.map((connection) => (
+          {state.connections.map((connection) => (
             <Paper
               key={connection.id}
               elevation={0}
@@ -98,15 +87,15 @@ export function ConnectionsList(props: ConnectionsListProps) {
                     aria-label="Editar conexão"
                     size="small"
                     onClick={() => onEdit(connection)}
-                    disabled={isDeleting}
+                    disabled={state.isDeleting}
                   >
                     <EditOutlinedIcon fontSize="small" />
                   </IconButton>
                   <IconButton
                     aria-label="Excluir conexão"
                     size="small"
-                    onClick={() => requestDeleteConnection(connection)}
-                    disabled={isDeleting}
+                    onClick={() => actions.requestDeleteConnection(connection)}
+                    disabled={state.isDeleting}
                   >
                     <DeleteOutlineIcon fontSize="small" />
                   </IconButton>
@@ -118,9 +107,9 @@ export function ConnectionsList(props: ConnectionsListProps) {
       )}
 
       <FeedbackSnackbar
-        message={deleteSuccess || deleteError}
-        onClose={clearDeleteFeedback}
-        severity={deleteSuccess ? "success" : "error"}
+        message={state.feedback?.message ?? ""}
+        onClose={actions.clearFeedback}
+        severity={state.feedback?.severity ?? "success"}
       />
     </section>
   );

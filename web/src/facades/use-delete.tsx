@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { DeleteDialog } from "@/components/delete-dialog";
 import { useDialog } from "@/providers/dialog";
+import type { Feedback } from "@/utils/feedback";
 
 interface UseDeleteParams<Item> {
   deleteItem: (item: Item) => Promise<unknown>;
@@ -22,22 +23,20 @@ export function useDelete<Item>(params: UseDeleteParams<Item>) {
     successMessage,
   } = params;
   const { openDialog } = useDialog();
-  const [deleteError, setDeleteError] = useState("");
-  const [deleteSuccess, setDeleteSuccess] = useState("");
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const confirmDelete = async (item: Item) => {
-    setDeleteError("");
-    setDeleteSuccess("");
+    setFeedback(null);
     setIsDeleting(true);
 
     try {
       await deleteItem(item);
       onDeleted?.(item);
-      setDeleteSuccess(successMessage);
+      setFeedback({ message: successMessage, severity: "success" });
       return true;
     } catch (error) {
-      setDeleteError(getErrorMessage(error));
+      setFeedback({ message: getErrorMessage(error), severity: "error" });
       return false;
     } finally {
       setIsDeleting(false);
@@ -45,8 +44,7 @@ export function useDelete<Item>(params: UseDeleteParams<Item>) {
   };
 
   const requestDelete = (item: Item) => {
-    setDeleteError("");
-    setDeleteSuccess("");
+    setFeedback(null);
 
     openDialog({
       fullWidth: true,
@@ -61,16 +59,10 @@ export function useDelete<Item>(params: UseDeleteParams<Item>) {
     });
   };
 
-  const clearDeleteFeedback = () => {
-    setDeleteError("");
-    setDeleteSuccess("");
-  };
+  const clearFeedback = () => setFeedback(null);
 
   return {
-    clearDeleteFeedback,
-    deleteError,
-    deleteSuccess,
-    isDeleting,
-    requestDelete,
+    state: { feedback, isDeleting },
+    actions: { clearFeedback, requestDelete },
   };
 }

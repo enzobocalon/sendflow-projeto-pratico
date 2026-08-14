@@ -5,6 +5,7 @@ import { useForm, useWatch } from "react-hook-form";
 
 import { useConnections } from "@/features/connections/models/use-connections";
 import { getFirebaseErrorMessage } from "@/utils/firebase-error";
+import { getFeedback } from "@/utils/feedback";
 
 import {
   createMessage,
@@ -170,21 +171,22 @@ export function useMessageComposer(params: UseMessageComposerParams) {
   };
 
   return {
-    clearFeedback,
-    clearSelectedContacts,
-    connections,
-    isLoadingConnections,
-    control,
-    errors,
-    isSubmitting,
-    formError,
-    selectedContactsCount: selectedContactIds.length,
-    selectedConnectionId,
-    sendMode,
-    success,
-    cancelScheduledMode,
-    enableScheduledMode,
-    submitScheduled,
-    submitNow,
+    state: {
+      connections,
+      feedback: getFeedback(success, formError),
+      isLoadingConnections,
+      selectedContactsCount: selectedContactIds.length,
+      selectedConnectionId,
+      sendMode,
+    },
+    form: { control, errors, isSubmitting },
+    actions: {
+      cancelScheduledMode,
+      clearFeedback,
+      clearSelectedContacts,
+      enableScheduledMode,
+      submitNow,
+      submitScheduled,
+    },
   };
 }

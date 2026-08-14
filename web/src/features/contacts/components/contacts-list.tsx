@@ -34,31 +34,14 @@ export function ContactsList(props: ContactsListProps) {
     editingContact,
     onDeletedEditingContact,
   } = props;
-  const {
-    clearDeleteFeedback,
-    contacts,
-    currentPage,
-    deleteError,
-    deleteSuccess,
-    goToNextPage,
-    goToPreviousPage,
-    hasNextPage,
-    hasPreviousPage,
-    isDeleting,
-    isLoading,
-    isPageChanging,
-    requestDeleteContact,
-    searchTerm,
-    setSearchTerm,
-    totalContacts,
-  } = useContactsList({
+  const { state, actions } = useContactsList({
     connectionsState,
     editingContact,
     onDeletedEditingContact,
   });
 
-  const hasSearch = Boolean(searchTerm.trim());
-  const subtitle = getContactsListSubtitle(totalContacts, hasSearch);
+  const hasSearch = Boolean(state.searchTerm.trim());
+  const subtitle = getContactsListSubtitle(state.totalContacts, hasSearch);
   const emptyState = getContactsListEmptyState(hasSearch);
 
   return (
@@ -68,33 +51,33 @@ export function ContactsList(props: ContactsListProps) {
         <TextField
           size="small"
           label="Buscar contato"
-          value={searchTerm}
-          onChange={(event) => setSearchTerm(event.target.value)}
-          disabled={isDeleting}
+          value={state.searchTerm}
+          onChange={(event) => actions.setSearchTerm(event.target.value)}
+          disabled={state.isDeleting}
           className="md:w-52"
         />
       </div>
 
-      {isLoading ? (
+      {state.isLoading ? (
         <div className="grid min-h-40 place-items-center rounded-lg border border-dashed border-slate-200">
           <CircularProgress aria-label="Carregando contatos" />
         </div>
       ) : (
         <PaginatedContent
           contentLabel="contatos"
-          currentPage={currentPage}
-          disabled={isDeleting}
-          hasNextPage={hasNextPage}
-          hasPreviousPage={hasPreviousPage}
-          isLoading={isPageChanging}
+          currentPage={state.currentPage}
+          disabled={state.isDeleting}
+          hasNextPage={state.hasNextPage}
+          hasPreviousPage={state.hasPreviousPage}
+          isLoading={state.isPageChanging}
           loadingLabel="Carregando contatos da próxima página"
-          onNextPage={goToNextPage}
-          onPreviousPage={goToPreviousPage}
+          onNextPage={actions.goToNextPage}
+          onPreviousPage={actions.goToPreviousPage}
         >
           <Stack spacing={1.5}>
-            {contacts.length === 0 && <EmptyState {...emptyState} />}
+            {state.contacts.length === 0 && <EmptyState {...emptyState} />}
 
-            {contacts.map((contact) => (
+            {state.contacts.map((contact) => (
               <div
                 key={contact.id}
                 className="flex items-center justify-between rounded-lg border border-slate-200 p-4"
@@ -115,15 +98,15 @@ export function ContactsList(props: ContactsListProps) {
                     color={
                       editingContact?.id === contact.id ? "primary" : "default"
                     }
-                    disabled={isDeleting || isPageChanging}
+                    disabled={state.isDeleting || state.isPageChanging}
                   >
                     <EditOutlinedIcon fontSize="small" />
                   </IconButton>
                   <IconButton
                     aria-label="Excluir contato"
                     size="small"
-                    onClick={() => requestDeleteContact(contact)}
-                    disabled={isDeleting || isPageChanging}
+                    onClick={() => actions.requestDeleteContact(contact)}
+                    disabled={state.isDeleting || state.isPageChanging}
                   >
                     <DeleteOutlineIcon fontSize="small" />
                   </IconButton>
@@ -135,9 +118,9 @@ export function ContactsList(props: ContactsListProps) {
       )}
 
       <FeedbackSnackbar
-        message={deleteSuccess || deleteError}
-        onClose={clearDeleteFeedback}
-        severity={deleteSuccess ? "success" : "error"}
+        message={state.feedback?.message ?? ""}
+        onClose={actions.clearFeedback}
+        severity={state.feedback?.severity ?? "success"}
       />
     </section>
   );

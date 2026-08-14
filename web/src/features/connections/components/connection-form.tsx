@@ -23,16 +23,7 @@ export function ConnectionForm(props: ConnectionFormProps) {
   const { connectionsCount, editingConnection, onCancel, onSaved } = props;
 
   const isEditing = Boolean(editingConnection);
-  const {
-    clearFeedback,
-    control,
-    error,
-    errors,
-    hasReachedConnectionsLimit,
-    isSubmitting,
-    success,
-    submitConnection,
-  } = useConnectionForm({
+  const { state, form, actions } = useConnectionForm({
     connectionsCount,
     editingConnection,
     onSaved,
@@ -49,24 +40,24 @@ export function ConnectionForm(props: ConnectionFormProps) {
         component="form"
         spacing={2.5}
         className="mt-5"
-        onSubmit={submitConnection}
+        onSubmit={actions.submitConnection}
       >
         <Controller
-          control={control}
+          control={form.control}
           name="name"
           render={({ field }) => (
             <TextField
               {...field}
               label="Nome da conexão"
               placeholder="Ex: WhatsApp Comercial"
-              error={Boolean(errors.name)}
-              helperText={errors.name?.message}
+              error={Boolean(form.errors.name)}
+              helperText={form.errors.name?.message}
               fullWidth
             />
           )}
         />
 
-        {hasReachedConnectionsLimit && (
+        {state.hasReachedConnectionsLimit && (
           <Alert severity="warning">
             Limite de {MAX_CONNECTIONS_PER_USER} conexões atingido. Exclua uma
             conexão para cadastrar outra.
@@ -78,9 +69,9 @@ export function ConnectionForm(props: ConnectionFormProps) {
             type="submit"
             variant="contained"
             startIcon={<AddIcon />}
-            disabled={isSubmitting || hasReachedConnectionsLimit}
+            disabled={form.isSubmitting || state.hasReachedConnectionsLimit}
           >
-            {isSubmitting ? "Salvando..." : "Salvar conexão"}
+            {form.isSubmitting ? "Salvando..." : "Salvar conexão"}
           </Button>
           {isEditing && (
             <Button type="button" variant="outlined" onClick={onCancel}>
@@ -91,9 +82,9 @@ export function ConnectionForm(props: ConnectionFormProps) {
       </Stack>
 
       <FeedbackSnackbar
-        message={success || error}
-        onClose={clearFeedback}
-        severity={success ? "success" : "error"}
+        message={state.feedback?.message ?? ""}
+        onClose={actions.clearFeedback}
+        severity={state.feedback?.severity ?? "success"}
       />
     </section>
   );

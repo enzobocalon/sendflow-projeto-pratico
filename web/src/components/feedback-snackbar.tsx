@@ -2,21 +2,21 @@ import { useState } from "react";
 import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 
+import type { Feedback } from "@/utils/feedback";
+
 interface FeedbackSnackbarProps {
   message?: string;
-  severity: "error" | "success";
+  severity: Feedback["severity"];
   onClose: () => void;
 }
 
-interface Feedback {
+interface DisplayedFeedback extends Feedback {
   id: number;
-  message: string;
-  severity: "error" | "success";
 }
 
 export function FeedbackSnackbar(props: FeedbackSnackbarProps) {
   const { message, severity, onClose } = props;
-  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [feedback, setFeedback] = useState<DisplayedFeedback | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
   const [prevMessage, setPrevMessage] = useState(message);

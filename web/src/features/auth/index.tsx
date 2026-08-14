@@ -8,15 +8,7 @@ import Typography from "@mui/material/Typography";
 import { useAuthPage } from "./facades";
 
 export function AuthPage() {
-  const {
-    error,
-    errors,
-    isRegistering,
-    isSubmitting,
-    register,
-    submitAuth,
-    switchMode,
-  } = useAuthPage();
+  const { state, form, actions } = useAuthPage();
 
   return (
     <main className="grid min-h-screen bg-slate-100 px-4 py-8 text-slate-950 lg:grid-cols-[1.1fr_0.9fr] lg:px-10">
@@ -54,23 +46,23 @@ export function AuthPage() {
             variant="h5"
             className="font-semibold text-slate-900"
           >
-            {isRegistering ? "Criar conta" : "Entrar"}
+            {state.isRegistering ? "Criar conta" : "Entrar"}
           </Typography>
           <Typography className="mt-1.5 text-slate-500" variant="body2">
-            {isRegistering
+            {state.isRegistering
               ? "Cadastre seu acesso para começar a organizar o broadcast."
               : "Acesse sua área para continuar o gerenciamento."}
           </Typography>
 
-          <form className="mt-6 grid gap-4" onSubmit={submitAuth}>
-            {isRegistering && (
+          <form className="mt-6 grid gap-4" onSubmit={actions.submitAuth}>
+            {state.isRegistering && (
               <TextField
                 label="Nome"
                 autoComplete="name"
-                error={Boolean(errors.name)}
-                helperText={errors.name?.message}
+                error={Boolean(form.errors.name)}
+                helperText={form.errors.name?.message}
                 fullWidth
-                {...register("name")}
+                {...form.register("name")}
               />
             )}
 
@@ -78,36 +70,38 @@ export function AuthPage() {
               label="E-mail"
               type="email"
               autoComplete="email"
-              error={Boolean(errors.email)}
-              helperText={errors.email?.message}
+              error={Boolean(form.errors.email)}
+              helperText={form.errors.email?.message}
               required
               fullWidth
-              {...register("email")}
+              {...form.register("email")}
             />
 
             <TextField
               label="Senha"
               type="password"
-              autoComplete={isRegistering ? "new-password" : "current-password"}
-              error={Boolean(errors.password)}
-              helperText={errors.password?.message}
+              autoComplete={
+                state.isRegistering ? "new-password" : "current-password"
+              }
+              error={Boolean(form.errors.password)}
+              helperText={form.errors.password?.message}
               required
               fullWidth
-              {...register("password")}
+              {...form.register("password")}
             />
 
-            {error && <Alert severity="error">{error}</Alert>}
+            {state.error && <Alert severity="error">{state.error}</Alert>}
 
             <Button
               type="submit"
               variant="contained"
               size="large"
-              disabled={isSubmitting}
+              disabled={state.isSubmitting}
               className="mt-1"
             >
-              {isSubmitting
+              {state.isSubmitting
                 ? "Aguarde..."
-                : isRegistering
+                : state.isRegistering
                   ? "Cadastrar"
                   : "Entrar"}
             </Button>
@@ -115,8 +109,13 @@ export function AuthPage() {
 
           <Divider className="my-6" />
 
-          <Button type="button" variant="text" fullWidth onClick={switchMode}>
-            {isRegistering ? "Já tenho uma conta" : "Criar uma conta"}
+          <Button
+            type="button"
+            variant="text"
+            fullWidth
+            onClick={actions.switchMode}
+          >
+            {state.isRegistering ? "Já tenho uma conta" : "Criar uma conta"}
           </Button>
         </Paper>
       </section>

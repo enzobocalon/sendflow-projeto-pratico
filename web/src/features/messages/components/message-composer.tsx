@@ -21,32 +21,17 @@ interface MessageComposerProps {
 export function MessageComposer(props: MessageComposerProps) {
   const { editingMessage, onCancel, onSaved } = props;
 
-  const {
-    cancelScheduledMode,
-    clearFeedback,
-    clearSelectedContacts,
-    connections,
-    control,
-    enableScheduledMode,
-    errors,
-    formError,
-    isLoadingConnections,
-    isSubmitting,
-    selectedContactsCount,
-    selectedConnectionId,
-    sendMode,
-    submitNow,
-    submitScheduled,
-    success,
-  } = useMessageComposer({
+  const { state, form, actions } = useMessageComposer({
     editingMessage,
     onSaved,
   });
   const isEditing = Boolean(editingMessage);
-  const hasConnections = connections.length > 0;
+  const hasConnections = state.connections.length > 0;
   const canChooseSendMode =
-    !isLoadingConnections && hasConnections && Boolean(selectedConnectionId);
-  const canSubmit = canChooseSendMode && selectedContactsCount > 0;
+    !state.isLoadingConnections &&
+    hasConnections &&
+    Boolean(state.selectedConnectionId);
+  const canSubmit = canChooseSendMode && state.selectedContactsCount > 0;
 
   return (
     <section className="rounded-lg border border-slate-200 p-5">
@@ -62,18 +47,18 @@ export function MessageComposer(props: MessageComposerProps) {
       <Stack spacing={2.5} className="mt-5">
         <Controller
           name="connectionId"
-          control={control}
+          control={form.control}
           render={({ field }) => (
             <ConnectionSelectField
-              connections={connections}
+              connections={state.connections}
               emptyMessage="Cadastre uma conexão antes de preparar mensagens."
               field={field}
-              fieldError={errors.connectionId?.message}
+              fieldError={form.errors.connectionId?.message}
               labelId="message-connection-label"
-              isLoadingConnections={isLoadingConnections}
+              isLoadingConnections={state.isLoadingConnections}
               onChange={(event) => {
                 field.onChange(event);
-                clearSelectedContacts();
+                actions.clearSelectedContacts();
               }}
             />
           )}
@@ -81,7 +66,7 @@ export function MessageComposer(props: MessageComposerProps) {
 
         <Controller
           name="content"
-          control={control}
+          control={form.control}
           render={({ field }) => (
             <TextField
               {...field}
@@ -89,26 +74,26 @@ export function MessageComposer(props: MessageComposerProps) {
               minRows={4}
               multiline
               placeholder="Digite a mensagem para os contatos selecionados"
-              error={Boolean(errors.content)}
-              helperText={errors.content?.message}
+              error={Boolean(form.errors.content)}
+              helperText={form.errors.content?.message}
               fullWidth
             />
           )}
         />
 
         <MessageContactsField
-          key={selectedConnectionId}
-          connectionId={selectedConnectionId}
-          control={control}
+          key={state.selectedConnectionId}
+          connectionId={state.selectedConnectionId}
+          control={form.control}
         />
 
-        {sendMode === "scheduled" && (
+        {state.sendMode === "scheduled" && (
           <MessageScheduleFields
-            control={control}
-            dateError={errors.scheduledDate?.message}
-            disabled={isSubmitting}
-            onCancel={cancelScheduledMode}
-            timeError={errors.scheduledTime?.message}
+            control={form.control}
+            dateError={form.errors.scheduledDate?.message}
+            disabled={form.isSubmitting}
+            onCancel={actions.cancelScheduledMode}
+            timeError={form.errors.scheduledTime?.message}
           />
         )}
 
@@ -116,19 +101,19 @@ export function MessageComposer(props: MessageComposerProps) {
           canChooseSendMode={canChooseSendMode}
           canSubmit={canSubmit}
           isEditing={isEditing}
-          isSubmitting={isSubmitting}
+          isSubmitting={form.isSubmitting}
           onCancel={onCancel}
-          onEnableScheduledMode={enableScheduledMode}
-          onSubmitNow={submitNow}
-          onSubmitScheduled={submitScheduled}
-          sendMode={sendMode}
+          onEnableScheduledMode={actions.enableScheduledMode}
+          onSubmitNow={actions.submitNow}
+          onSubmitScheduled={actions.submitScheduled}
+          sendMode={state.sendMode}
         />
       </Stack>
 
       <FeedbackSnackbar
-        message={success || formError}
-        onClose={clearFeedback}
-        severity={success ? "success" : "error"}
+        message={state.feedback?.message ?? ""}
+        onClose={actions.clearFeedback}
+        severity={state.feedback?.severity ?? "success"}
       />
     </section>
   );

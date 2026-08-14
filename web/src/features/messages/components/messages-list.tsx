@@ -40,33 +40,12 @@ interface MessagesListProps {
 export function MessagesList(props: MessagesListProps) {
   const { editingMessage, onDeletedEditingMessage, onEdit } = props;
 
-  const {
-    clearDeleteFeedback,
-    currentPage,
-    deleteError,
-    deleteSuccess,
-    filter,
-    goToNextPage,
-    goToPreviousPage,
-    handleFilterChange,
-    hasNextPage,
-    hasPreviousPage,
-    isDeleting,
-    isLoading,
-    isPageChanging,
-    messages,
-    handleDelete,
-    handleEdit,
-    menuAnchor,
-    openMenu,
-    closeMenu,
-    selectedMessage,
-  } = useMessagesList({
+  const { state, actions } = useMessagesList({
     editingMessage,
     onDeletedEditingMessage,
     onEdit,
   });
-  const emptyState = getMessagesListEmptyState(filter);
+  const emptyState = getMessagesListEmptyState(state.filter);
 
   return (
     <section>
@@ -75,29 +54,32 @@ export function MessagesList(props: MessagesListProps) {
           title="Histórico de mensagens"
           subtitle="Acompanhe mensagens enviadas e agendadas."
         />
-        <MessageFilters filter={filter} onFilterChange={handleFilterChange} />
+        <MessageFilters
+          filter={state.filter}
+          onFilterChange={actions.handleFilterChange}
+        />
       </div>
 
-      {isLoading ? (
+      {state.isLoading ? (
         <div className="grid min-h-40 place-items-center rounded-lg border border-dashed border-slate-200">
           <CircularProgress aria-label="Carregando mensagens" />
         </div>
       ) : (
         <PaginatedContent
           contentLabel="mensagens"
-          currentPage={currentPage}
-          disabled={isDeleting}
-          hasNextPage={hasNextPage}
-          hasPreviousPage={hasPreviousPage}
-          isLoading={isPageChanging}
+          currentPage={state.currentPage}
+          disabled={state.isDeleting}
+          hasNextPage={state.hasNextPage}
+          hasPreviousPage={state.hasPreviousPage}
+          isLoading={state.isPageChanging}
           loadingLabel="Carregando mensagens da próxima página"
-          onNextPage={goToNextPage}
-          onPreviousPage={goToPreviousPage}
+          onNextPage={actions.goToNextPage}
+          onPreviousPage={actions.goToPreviousPage}
         >
           <Stack spacing={1.5}>
-            {messages.length === 0 && <EmptyState {...emptyState} />}
+            {state.messages.length === 0 && <EmptyState {...emptyState} />}
 
-            {messages.map((message) => (
+            {state.messages.map((message) => (
               <div
                 key={message.id}
                 className="rounded-lg border border-slate-200 p-4"
@@ -139,8 +121,8 @@ export function MessagesList(props: MessagesListProps) {
                   <IconButton
                     aria-label="Mais ações"
                     size="small"
-                    onClick={(event) => openMenu(event, message)}
-                    disabled={isDeleting || isPageChanging}
+                    onClick={(event) => actions.openMenu(event, message)}
+                    disabled={state.isDeleting || state.isPageChanging}
                   >
                     <MoreVertIcon fontSize="small" />
                   </IconButton>
@@ -152,23 +134,23 @@ export function MessagesList(props: MessagesListProps) {
       )}
 
       <Menu
-        anchorEl={menuAnchor}
-        open={Boolean(menuAnchor)}
-        onClose={closeMenu}
+        anchorEl={state.menuAnchor}
+        open={Boolean(state.menuAnchor)}
+        onClose={actions.closeMenu}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         disableScrollLock
       >
         <MenuItem
-          onClick={handleEdit}
-          disabled={selectedMessage?.status === "sent"}
+          onClick={actions.handleEdit}
+          disabled={state.selectedMessage?.status === "sent"}
         >
           <ListItemIcon>
             <EditOutlinedIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Editar</ListItemText>
         </MenuItem>
-        <MenuItem onClick={handleDelete}>
+        <MenuItem onClick={actions.handleDelete}>
           <ListItemIcon>
             <DeleteOutlineIcon color="error" fontSize="small" />
           </ListItemIcon>
@@ -177,9 +159,9 @@ export function MessagesList(props: MessagesListProps) {
       </Menu>
 
       <FeedbackSnackbar
-        message={deleteSuccess || deleteError}
-        onClose={clearDeleteFeedback}
-        severity={deleteSuccess ? "success" : "error"}
+        message={state.feedback?.message ?? ""}
+        onClose={actions.clearFeedback}
+        severity={state.feedback?.severity ?? "success"}
       />
     </section>
   );

@@ -38,11 +38,8 @@ export function useConnectionsList(params: UseConnectionsListParams) {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebouncedValue(searchTerm);
   const {
-    clearDeleteFeedback,
-    deleteError,
-    deleteSuccess,
-    isDeleting,
-    requestDelete: requestDeleteConnection,
+    state: { feedback, isDeleting },
+    actions: { clearFeedback, requestDelete: requestDeleteConnection },
   } = useDelete<Connection>({
     deleteItem: (connection) => deleteConnection(connection.id),
     dialogTitle: "Excluir conexão?",
@@ -69,15 +66,18 @@ export function useConnectionsList(params: UseConnectionsListParams) {
   }, [connections, debouncedSearchTerm]);
 
   return {
-    clearDeleteFeedback,
-    connections: filteredConnections,
-    deleteError,
-    deleteSuccess,
-    isDeleting,
-    isLoading: isLoadingConnections,
-    requestDeleteConnection,
-    searchTerm,
-    setSearchTerm,
-    totalConnections: filteredConnections.length,
+    state: {
+      connections: filteredConnections,
+      feedback,
+      isDeleting,
+      isLoading: isLoadingConnections,
+      searchTerm,
+      totalConnections: filteredConnections.length,
+    },
+    actions: {
+      clearFeedback,
+      requestDeleteConnection,
+      setSearchTerm,
+    },
   };
 }

@@ -35,11 +35,8 @@ export function useMessagesList(params: UseMessagesListParams) {
     status: filter,
   });
   const {
-    clearDeleteFeedback,
-    deleteError,
-    deleteSuccess,
-    isDeleting,
-    requestDelete: requestDeleteMessage,
+    state: { feedback, isDeleting },
+    actions: { clearFeedback, requestDelete: requestDeleteMessage },
   } = useDelete<Message>({
     deleteItem: (message) => deleteMessage(message.id),
     dialogTitle: "Excluir mensagem?",
@@ -102,26 +99,28 @@ export function useMessagesList(params: UseMessagesListParams) {
   };
 
   return {
-    clearDeleteFeedback,
-    currentPage,
-    messages: formattedMessages,
-    deleteError,
-    deleteSuccess,
-    isLoading,
-    isPageChanging,
-    handleFilterChange,
-    filter,
-    goToNextPage,
-    goToPreviousPage,
-    hasNextPage,
-    hasPreviousPage,
-    isDeleting,
-    requestDeleteMessage,
-    handleEdit,
-    handleDelete,
-    openMenu,
-    menuAnchor,
-    closeMenu,
-    selectedMessage,
+    state: {
+      currentPage,
+      feedback,
+      filter,
+      hasNextPage,
+      hasPreviousPage,
+      isDeleting,
+      isLoading,
+      isPageChanging,
+      menuAnchor,
+      messages: formattedMessages,
+      selectedMessage,
+    },
+    actions: {
+      clearFeedback,
+      closeMenu,
+      goToNextPage,
+      goToPreviousPage,
+      handleDelete,
+      handleEdit,
+      handleFilterChange,
+      openMenu,
+    },
   };
 }

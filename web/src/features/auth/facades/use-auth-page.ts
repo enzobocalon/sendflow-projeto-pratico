@@ -85,12 +85,8 @@ export function useAuthPage() {
   };
 
   return {
-    error,
-    errors,
-    isRegistering,
-    isSubmitting,
-    register,
-    submitAuth,
-    switchMode,
+    state: { error, isRegistering, isSubmitting },
+    form: { errors, register },
+    actions: { submitAuth, switchMode },
   };
 }

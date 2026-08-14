@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 
 import type { ConnectionsState } from "@/features/connections/models/use-connections";
 import { getFirebaseErrorMessage } from "@/utils/firebase-error";
+import { getFeedback } from "@/utils/feedback";
 
 import {
   createContact,
@@ -89,14 +90,12 @@ export function useContactForm(params: UseContactFormParams) {
   };
 
   return {
-    clearFeedback,
-    connections,
-    control,
-    error,
-    errors,
-    isLoadingConnections,
-    isSubmitting,
-    success,
-    submitContact,
+    state: {
+      connections,
+      feedback: getFeedback(success, error),
+      isLoadingConnections,
+    },
+    form: { control, errors, isSubmitting },
+    actions: { clearFeedback, submitContact },
   };
 }

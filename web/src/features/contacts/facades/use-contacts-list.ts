@@ -19,11 +19,8 @@ export function useContactsList(params: UseContactsListParams) {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebouncedValue(searchTerm);
   const {
-    clearDeleteFeedback,
-    deleteError,
-    deleteSuccess,
-    isDeleting,
-    requestDelete: requestDeleteContact,
+    state: { feedback, isDeleting },
+    actions: { clearFeedback, requestDelete: requestDeleteContact },
   } = useDelete<Contact>({
     deleteItem: (contact) => deleteContact(contact.id),
     dialogTitle: "Excluir contato?",
@@ -63,21 +60,24 @@ export function useContactsList(params: UseContactsListParams) {
   }, [connections, contacts]);
 
   return {
-    clearDeleteFeedback,
-    contacts: contactsWithConnectionNames,
-    currentPage,
-    deleteError,
-    deleteSuccess,
-    goToNextPage,
-    goToPreviousPage,
-    hasNextPage,
-    hasPreviousPage,
-    isDeleting,
-    isLoading: isLoadingContacts || isLoadingConnections,
-    isPageChanging,
-    requestDeleteContact,
-    searchTerm,
-    setSearchTerm,
-    totalContacts: contacts.length,
+    state: {
+      contacts: contactsWithConnectionNames,
+      currentPage,
+      feedback,
+      hasNextPage,
+      hasPreviousPage,
+      isDeleting,
+      isLoading: isLoadingContacts || isLoadingConnections,
+      isPageChanging,
+      searchTerm,
+      totalContacts: contacts.length,
+    },
+    actions: {
+      clearFeedback,
+      goToNextPage,
+      goToPreviousPage,
+      requestDeleteContact,
+      setSearchTerm,
+    },
   };
 }
