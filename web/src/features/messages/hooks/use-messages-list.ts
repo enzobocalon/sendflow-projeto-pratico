@@ -1,11 +1,11 @@
 import type { MessageStatus } from "@sendflow/shared";
 import { useMemo, useState, type MouseEvent } from "react";
 
-import { useDelete } from "@/facades/use-delete";
+import { useDelete } from "@/hooks/use-delete";
 import { formatMessageDate } from "@/utils/dates";
 
 import { deleteMessage, type Message } from "../models/message.model";
-import { useMessages } from "../models/use-messages";
+import { useMessages } from "./use-messages";
 
 export interface MessageListItem extends Message {
   date: string;
@@ -30,14 +30,14 @@ export function useMessagesList(params: UseMessagesListParams) {
     isLoading,
     isPageChanging,
     messages,
-  } = useMessages({
-    status: filter,
-  });
+  } = useMessages({ status: filter });
+
   const handleDeletedMessage = (message: Message) => {
     if (editingMessage?.id === message.id) {
       onDeletedEditingMessage();
     }
   };
+
   const {
     state: { feedback, isDeleting },
     actions: { clearFeedback, requestDelete: requestDeleteMessage },

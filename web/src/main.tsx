@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { App } from "@/application.tsx";
-import { AuthProvider } from "@/providers/auth";
+import { AuthProvider } from "@/features/auth/providers";
 import { DialogProvider } from "@/providers/dialog";
 
 import "./index.css";

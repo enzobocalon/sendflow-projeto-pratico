@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
 
-import { useDelete } from "@/facades/use-delete";
-import type { ConnectionsState } from "@/features/connections/models/use-connections";
+import type { ConnectionsState } from "@/features/connections/hooks/use-connections";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useDelete } from "@/hooks/use-delete";
 
 import { deleteContact, type Contact } from "../models/contact.model";
-import { useContacts } from "../models/use-contacts";
+import { useContacts } from "./use-contacts";
 
 interface UseContactsListParams {
   connectionsState: ConnectionsState;
@@ -17,12 +17,13 @@ export function useContactsList(params: UseContactsListParams) {
   const { connectionsState, editingContact, onDeletedEditingContact } = params;
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebouncedValue(searchTerm);
-  
+
   const handleDeletedContact = (contact: Contact) => {
     if (editingContact?.id === contact.id) {
       onDeletedEditingContact();
     }
   };
+
   const {
     state: { feedback, isDeleting },
     actions: { clearFeedback, requestDelete: requestDeleteContact },

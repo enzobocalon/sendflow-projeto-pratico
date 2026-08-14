@@ -16,7 +16,7 @@ import { FeedbackSnackbar } from "@/components/feedback-snackbar";
 import { PaginatedContent } from "@/components/paginated-content";
 import { SectionTitle } from "@/features/dashboard/components/section-title";
 
-import { useMessagesList } from "../facades/use-messages-list";
+import { useMessagesList } from "../hooks/use-messages-list";
 import type { Message } from "../models/message.model";
 import { MessageFilters } from "./message-filters";
 import { getMessagesListEmptyState } from "./message-list-copy";
@@ -45,7 +45,7 @@ export function MessagesList(props: MessagesListProps) {
     onDeletedEditingMessage,
     onEdit,
   });
-  
+
   const emptyState = getMessagesListEmptyState(state.filter);
 
   return (

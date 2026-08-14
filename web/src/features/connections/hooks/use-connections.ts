@@ -1,9 +1,12 @@
 import { normalizeSearchText } from "@sendflow/shared";
 import { useEffect, useState } from "react";
 
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 
-import { getConnectionsRealtime, type Connection } from "./connection.model";
+import {
+  getConnectionsRealtime,
+  type Connection,
+} from "../models/connection.model";
 
 interface UseConnectionsParams {
   enabled?: boolean;

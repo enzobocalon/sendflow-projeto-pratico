@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/empty-state";
 import { FeedbackSnackbar } from "@/components/feedback-snackbar";
 import { SectionTitle } from "@/features/dashboard/components/section-title";
 
-import { useConnectionsList } from "../facades/use-connections-list";
+import { useConnectionsList } from "../hooks/use-connections-list";
 import type { Connection } from "../models/connection.model";
 import {
   getConnectionsListEmptyState,
@@ -34,7 +34,7 @@ export function ConnectionsList(props: ConnectionsListProps) {
     onEdit,
     onDeletedEditingConnection,
   } = props;
-  
+
   const { state, actions } = useConnectionsList({
     connections,
     editingConnection,

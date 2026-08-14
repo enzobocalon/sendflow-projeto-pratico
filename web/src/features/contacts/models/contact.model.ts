@@ -30,13 +30,13 @@ import {
   type Timestamp,
 } from "firebase/firestore";
 
+import { collectionPaths } from "@/config/collection-paths";
 import { getActiveConnectionInTransaction } from "@/features/connections/models/connection.model";
 import { db } from "@/lib/firebase";
 import {
-  createFirestoreServiceError,
+  createFirestoreError,
   requireAuthenticatedUserId,
-} from "@/lib/firestore-service";
-import { collectionPaths } from "@/models/collection-paths";
+} from "@/lib/firestore";
 import { updateUsageInTransaction } from "@/models/usage.model";
 
 export interface Contact {
@@ -79,14 +79,11 @@ interface GetContactsPageRealtimeParams {
 
 const validateContactFields = (name: string, phone: string) => {
   if (!isValidName(name)) {
-    throw createFirestoreServiceError(
-      "invalid-argument",
-      NAME_LENGTH_ERROR_MESSAGE,
-    );
+    throw createFirestoreError("invalid-argument", NAME_LENGTH_ERROR_MESSAGE);
   }
 
   if (!isValidPhone(phone)) {
-    throw createFirestoreServiceError(
+    throw createFirestoreError(
       "invalid-argument",
       "Informe um telefone válido.",
     );
@@ -105,7 +102,7 @@ export const getContact = async (contactId: string, userId: string) => {
   const contact = snapshot.data();
 
   if (!snapshot.exists() || contact?.userId !== userId) {
-    throw createFirestoreServiceError("permission-denied", "Contato inválido.");
+    throw createFirestoreError("permission-denied", "Contato inválido.");
   }
 
   return mapContactDocument(snapshot);
@@ -154,7 +151,7 @@ export const createContact = async (params: CreateContactInput) => {
   const phone = normalizePhone(rawPhone.trim());
 
   if (!connectionId) {
-    throw createFirestoreServiceError(
+    throw createFirestoreError(
       "invalid-argument",
       "Informe uma conexão válida.",
     );
@@ -197,14 +194,14 @@ export const upsertContact = async (params: UpdateContactInput) => {
   const phone = normalizePhone(rawPhone.trim());
 
   if (!contactId) {
-    throw createFirestoreServiceError(
+    throw createFirestoreError(
       "invalid-argument",
       "Informe um contato válido.",
     );
   }
 
   if (!connectionId) {
-    throw createFirestoreServiceError(
+    throw createFirestoreError(
       "invalid-argument",
       "Informe uma conexão válida.",
     );
@@ -217,10 +214,7 @@ export const upsertContact = async (params: UpdateContactInput) => {
     const contactSnapshot = await transaction.get(contactRef);
 
     if (!contactSnapshot.exists() || contactSnapshot.data().userId !== userId) {
-      throw createFirestoreServiceError(
-        "permission-denied",
-        "Contato inválido.",
-      );
+      throw createFirestoreError("permission-denied", "Contato inválido.");
     }
 
     await getActiveConnectionInTransaction(transaction, connectionId, userId);
@@ -240,7 +234,7 @@ export const deleteContact = async (contactId: string) => {
   const normalizedContactId = contactId.trim();
 
   if (!normalizedContactId) {
-    throw createFirestoreServiceError(
+    throw createFirestoreError(
       "invalid-argument",
       "Informe um contato válido.",
     );
@@ -251,10 +245,7 @@ export const deleteContact = async (contactId: string) => {
     const contactSnapshot = await transaction.get(contactRef);
 
     if (!contactSnapshot.exists() || contactSnapshot.data().userId !== userId) {
-      throw createFirestoreServiceError(
-        "permission-denied",
-        "Contato inválido.",
-      );
+      throw createFirestoreError("permission-denied", "Contato inválido.");
     }
 
     await updateUsageInTransaction(transaction, userId, {

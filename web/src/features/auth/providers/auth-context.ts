@@ -1,15 +1,10 @@
 import type { User } from "firebase/auth";
+import { createContext } from "react";
 
-export interface RegisterAccountPayload {
-  email: string;
-  name?: string;
-  password: string;
-}
-
-export interface LoginPayload {
-  email: string;
-  password: string;
-}
+import type {
+  LoginPayload,
+  RegisterAccountPayload,
+} from "../services/auth.service";
 
 export interface AuthContextValue {
   loading: boolean;
@@ -18,3 +13,5 @@ export interface AuthContextValue {
   registerAccount: (payload: RegisterAccountPayload) => Promise<void>;
   user: User | null;
 }
+
+export const AuthContext = createContext<AuthContextValue | null>(null);

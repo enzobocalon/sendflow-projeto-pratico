@@ -31,13 +31,13 @@ import {
   type Transaction,
 } from "firebase/firestore";
 
+import { collectionPaths } from "@/config/collection-paths";
 import { getActiveConnectionInTransaction } from "@/features/connections/models/connection.model";
 import { db } from "@/lib/firebase";
 import {
-  createFirestoreServiceError,
+  createFirestoreError,
   requireAuthenticatedUserId,
-} from "@/lib/firestore-service";
-import { collectionPaths } from "@/models/collection-paths";
+} from "@/lib/firestore";
 import { updateUsageInTransaction } from "@/models/usage.model";
 
 export interface Message {
@@ -88,7 +88,7 @@ interface MessageScheduleFields {
 
 const validateMessageFields = (content: string, contactIds: string[]) => {
   if (!isValidMessageContent(content)) {
-    throw createFirestoreServiceError(
+    throw createFirestoreError(
       "invalid-argument",
       `Informe uma mensagem com ${MESSAGE_CONTENT_MIN_LENGTH} a ${MESSAGE_CONTENT_MAX_LENGTH} caracteres.`,
     );
@@ -99,14 +99,14 @@ const validateMessageFields = (content: string, contactIds: string[]) => {
     contactIds.length > MAX_MESSAGE_CONTACTS ||
     contactIds.some((contactId) => !contactId)
   ) {
-    throw createFirestoreServiceError(
+    throw createFirestoreError(
       "invalid-argument",
       `Selecione de 1 a ${MAX_MESSAGE_CONTACTS} contatos.`,
     );
   }
 
   if (!hasUniqueValues(contactIds)) {
-    throw createFirestoreServiceError(
+    throw createFirestoreError(
       "invalid-argument",
       "Existem contatos duplicados.",
     );
@@ -126,14 +126,14 @@ const getMessageScheduleFields = (
   }
 
   if (!scheduledAt || Number.isNaN(scheduledAt.getTime())) {
-    throw createFirestoreServiceError(
+    throw createFirestoreError(
       "invalid-argument",
       "Informe uma data de agendamento válida.",
     );
   }
 
   if (!isFutureDate(scheduledAt)) {
-    throw createFirestoreServiceError(
+    throw createFirestoreError(
       "invalid-argument",
       "Agende a mensagem para uma data futura.",
     );
@@ -168,7 +168,7 @@ const validateContactsInTransaction = async (
   });
 
   if (!allContactsAreValid) {
-    throw createFirestoreServiceError(
+    throw createFirestoreError(
       "permission-denied",
       "A mensagem possui contatos inválidos.",
     );
@@ -187,10 +187,7 @@ export const getMessage = async (messageId: string, userId: string) => {
   const message = snapshot.data();
 
   if (!snapshot.exists() || message?.userId !== userId) {
-    throw createFirestoreServiceError(
-      "permission-denied",
-      "Mensagem inválida.",
-    );
+    throw createFirestoreError("permission-denied", "Mensagem inválida.");
   }
 
   return mapMessageDocument(snapshot);
@@ -235,7 +232,7 @@ export const createMessage = async (params: CreateMessageInput) => {
   const content = rawContent.trim();
 
   if (!connectionId) {
-    throw createFirestoreServiceError(
+    throw createFirestoreError(
       "invalid-argument",
       "Informe uma conexão válida.",
     );
@@ -290,14 +287,14 @@ export const upsertMessage = async (params: UpdateMessageInput) => {
   const messageId = rawMessageId.trim();
 
   if (!messageId) {
-    throw createFirestoreServiceError(
+    throw createFirestoreError(
       "invalid-argument",
       "Informe uma mensagem válida.",
     );
   }
 
   if (!connectionId) {
-    throw createFirestoreServiceError(
+    throw createFirestoreError(
       "invalid-argument",
       "Informe uma conexão válida.",
     );
@@ -311,14 +308,11 @@ export const upsertMessage = async (params: UpdateMessageInput) => {
     const messageSnapshot = await transaction.get(messageRef);
 
     if (!messageSnapshot.exists() || messageSnapshot.data().userId !== userId) {
-      throw createFirestoreServiceError(
-        "permission-denied",
-        "Mensagem inválida.",
-      );
+      throw createFirestoreError("permission-denied", "Mensagem inválida.");
     }
 
     if (messageSnapshot.data().status === "sent") {
-      throw createFirestoreServiceError(
+      throw createFirestoreError(
         "failed-precondition",
         "Mensagens enviadas não podem ser editadas.",
       );
@@ -352,7 +346,7 @@ export const deleteMessage = async (messageId: string) => {
   const normalizedMessageId = messageId.trim();
 
   if (!normalizedMessageId) {
-    throw createFirestoreServiceError(
+    throw createFirestoreError(
       "invalid-argument",
       "Informe uma mensagem válida.",
     );
@@ -363,10 +357,7 @@ export const deleteMessage = async (messageId: string) => {
     const messageSnapshot = await transaction.get(messageRef);
 
     if (!messageSnapshot.exists() || messageSnapshot.data().userId !== userId) {
-      throw createFirestoreServiceError(
-        "permission-denied",
-        "Mensagem inválida.",
-      );
+      throw createFirestoreError("permission-denied", "Mensagem inválida.");
     }
 
     const isScheduled = messageSnapshot.data().status === "scheduled";

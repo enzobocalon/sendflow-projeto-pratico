@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import type { Connection } from "../models/connection.model";
-import { useConnections } from "../models/use-connections";
+import { useConnections } from "./use-connections";
 
 export function useConnectionsPage() {
   const { connections, isLoading: isLoadingConnections } = useConnections();

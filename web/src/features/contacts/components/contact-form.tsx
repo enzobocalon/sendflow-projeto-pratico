@@ -9,11 +9,11 @@ import { Controller } from "react-hook-form";
 
 import { ConnectionSelectField } from "@/components/connection-select-field";
 import { FeedbackSnackbar } from "@/components/feedback-snackbar";
-import type { ConnectionsState } from "@/features/connections/models/use-connections";
+import type { ConnectionsState } from "@/features/connections/hooks/use-connections";
 import { SectionTitle } from "@/features/dashboard/components/section-title";
 import { formatPhone, normalizePhoneInput } from "@/utils/format-phone";
 
-import { useContactForm } from "../facades/use-contact-form";
+import { useContactForm } from "../hooks/use-contact-form";
 import type { Contact } from "../models/contact.model";
 
 interface ContactFormProps {
@@ -32,7 +32,7 @@ export function ContactForm(props: ContactFormProps) {
     editingContact,
     onSaved,
   });
-  
+
   const hasConnections = state.connections.length > 0;
 
   return (

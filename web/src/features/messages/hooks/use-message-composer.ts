@@ -1,17 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { MessageStatus } from "@sendflow/shared";
 import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
-import { useConnections } from "@/features/connections/models/use-connections";
-import { getFirebaseErrorMessage } from "@/utils/firebase-error";
+import { useConnections } from "@/features/connections/hooks/use-connections";
 import { getFeedback } from "@/utils/feedback";
 
-import {
-  createMessage,
-  upsertMessage,
-  type Message,
-} from "../models/message.model";
+import { handleSaveMessage } from "../facades/message.facade";
+import type { Message } from "../models/message.model";
 import {
   messageSchema,
   type MessageFormValues,
@@ -69,7 +64,6 @@ export function useMessageComposer(params: UseMessageComposerParams) {
     control,
     name: "connectionId",
   });
-
   const sendMode = useWatch({
     control,
     name: "sendMode",
@@ -86,31 +80,13 @@ export function useMessageComposer(params: UseMessageComposerParams) {
 
   const submitMessage = handleSubmit(async (values) => {
     setSuccess("");
-
     setFormError("");
 
     try {
-      const isScheduled = values.sendMode === "scheduled";
-      const scheduledAt = isScheduled
-        ? new Date(`${values.scheduledDate}T${values.scheduledTime}`)
-        : undefined;
-      const status: MessageStatus = isScheduled ? "scheduled" : "sent";
-      const messageData = {
-        connectionId: values.connectionId,
-        contactIds: values.contactIds,
-        content: values.content,
-        scheduledAt,
-        status,
-      };
-
-      if (editingMessage) {
-        await upsertMessage({
-          ...messageData,
-          messageId: editingMessage.id,
-        });
-      } else {
-        await createMessage(messageData);
-      }
+      const { isScheduled } = await handleSaveMessage({
+        editingMessage,
+        values,
+      });
 
       reset();
       setSuccess(
@@ -121,12 +97,15 @@ export function useMessageComposer(params: UseMessageComposerParams) {
             : "Mensagem enviada com sucesso.",
       );
       onSaved();
-    } catch (error) {
-      setFormError(
-        getFirebaseErrorMessage(error, "Não foi possível salvar a mensagem."),
-      );
+    } catch {
+      setFormError("Não foi possível salvar a mensagem.");
     }
   });
+
+  const clearSchedule = () => {
+    setValue("scheduledDate", "");
+    setValue("scheduledTime", "");
+  };
 
   const submitNow = () => {
     setValue("sendMode", "now");
@@ -144,12 +123,8 @@ export function useMessageComposer(params: UseMessageComposerParams) {
     if (!isValidScheduleData) {
       return;
     }
-    await submitMessage();
-  };
 
-  const clearSchedule = () => {
-    setValue("scheduledDate", "");
-    setValue("scheduledTime", "");
+    await submitMessage();
   };
 
   const clearSelectedContacts = () => {

@@ -6,7 +6,7 @@ import Paper from "@mui/material/Paper";
 import Skeleton from "@mui/material/Skeleton";
 import Typography from "@mui/material/Typography";
 
-import { useDashboardSummary } from "../facades/use-dashboard-summary";
+import { useDashboardSummary } from "../hooks/use-dashboard-summary";
 
 const summaryItems = [
   { icon: GroupsOutlinedIcon, label: "Conexões", key: "connections" },

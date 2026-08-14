@@ -9,7 +9,7 @@ import { Controller } from "react-hook-form";
 import { FeedbackSnackbar } from "@/components/feedback-snackbar";
 import { SectionTitle } from "@/features/dashboard/components/section-title";
 
-import { useConnectionForm } from "../facades/use-connection-form";
+import { useConnectionForm } from "../hooks/use-connection-form";
 import type { Connection } from "../models/connection.model";
 
 interface ConnectionFormProps {

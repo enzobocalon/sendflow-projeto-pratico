@@ -10,9 +10,8 @@ import {
   type Transaction,
 } from "firebase/firestore";
 
+import { collectionPaths } from "@/config/collection-paths";
 import { db } from "@/lib/firebase";
-
-import { collectionPaths } from "./collection-paths";
 
 export interface UsageCounters {
   connectionsCount: number;

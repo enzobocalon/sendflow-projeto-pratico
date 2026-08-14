@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 
-import { useAuth } from "@/hooks/use-auth";
-
+import { useAuth } from "@/features/auth/hooks/use-auth";
 import {
   emptyUsageCounters,
   getUsageRealtime,
   type UsageCounters,
-} from "./usage.model";
+} from "@/models/usage.model";
 
 export function useUsage() {
   const { user } = useAuth();

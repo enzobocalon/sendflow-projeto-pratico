@@ -1,1 +1,4 @@
-export { useAuthPage } from "./use-auth-page";
+export {
+  getAuthenticationErrorMessage,
+  handleAuthentication,
+} from "./auth.facade";

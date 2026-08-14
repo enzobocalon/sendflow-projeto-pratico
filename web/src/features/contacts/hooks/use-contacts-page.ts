@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { useConnections } from "@/features/connections/models/use-connections";
+import { useConnections } from "@/features/connections/hooks/use-connections";
 
 import type { Contact } from "../models/contact.model";
 

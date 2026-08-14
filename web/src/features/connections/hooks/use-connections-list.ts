@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
-import { useDelete } from "@/facades/use-delete";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useDelete } from "@/hooks/use-delete";
 
 import { deleteConnection, type Connection } from "../models/connection.model";
 
@@ -19,9 +19,10 @@ export function useConnectionsList(params: UseConnectionsListParams) {
     isLoadingConnections,
     onDeletedEditingConnection,
   } = params;
-  const [searchTerm, setSearchTerm] = useState("");
   
+  const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebouncedValue(searchTerm);
+
   const handleDeletedConnection = (connection: Connection) => {
     if (editingConnection?.id === connection.id) {
       onDeletedEditingConnection();

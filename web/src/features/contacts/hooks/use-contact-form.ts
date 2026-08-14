@@ -2,15 +2,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
-import type { ConnectionsState } from "@/features/connections/models/use-connections";
-import { getFirebaseErrorMessage } from "@/utils/firebase-error";
+import type { ConnectionsState } from "@/features/connections/hooks/use-connections";
 import { getFeedback } from "@/utils/feedback";
 
-import {
-  createContact,
-  upsertContact,
-  type Contact,
-} from "../models/contact.model";
+import { handleSaveContact } from "../facades/contact.facade";
+import type { Contact } from "../models/contact.model";
 import {
   contactSchema,
   type ContactFormValues,
@@ -27,7 +23,7 @@ export function useContactForm(params: UseContactFormParams) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const { connections, isLoading: isLoadingConnections } = connectionsState;
-  
+
   const {
     control,
     formState: { errors, isSubmitting },
@@ -50,27 +46,12 @@ export function useContactForm(params: UseContactFormParams) {
     });
   }, [editingContact, reset]);
 
-  const submitContact = handleSubmit(async ({ connectionId, name, phone }) => {
+  const submitContact = handleSubmit(async (values) => {
     setSuccess("");
-
     setError("");
 
     try {
-      if (editingContact) {
-        await upsertContact({
-          contactId: editingContact.id,
-          connectionId,
-          name,
-          phone,
-        });
-      } else {
-        await createContact({
-          connectionId,
-          name,
-          phone,
-        });
-      }
-
+      await handleSaveContact({ editingContact, values });
       reset();
       setSuccess(
         editingContact
@@ -78,10 +59,8 @@ export function useContactForm(params: UseContactFormParams) {
           : "Contato criado com sucesso.",
       );
       onSaved();
-    } catch (error) {
-      setError(
-        getFirebaseErrorMessage(error, "Não foi possível salvar o contato."),
-      );
+    } catch {
+      setError("Não foi possível salvar o contato.");
     }
   });
 

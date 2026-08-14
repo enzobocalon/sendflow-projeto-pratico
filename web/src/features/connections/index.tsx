@@ -1,6 +1,6 @@
 import { ConnectionForm } from "./components/connection-form";
 import { ConnectionsList } from "./components/connections-list";
-import { useConnectionsPage } from "./facades/use-connections-page";
+import { useConnectionsPage } from "./hooks/use-connections-page";
 
 export function ConnectionsPage() {
   const {

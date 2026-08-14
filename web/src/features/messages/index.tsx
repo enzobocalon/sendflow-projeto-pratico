@@ -1,6 +1,6 @@
 import { MessageComposer } from "./components/message-composer";
 import { MessagesList } from "./components/messages-list";
-import { useMessagesPage } from "./facades/use-messages-page";
+import { useMessagesPage } from "./hooks/use-messages-page";
 
 export function MessagesPage() {
   const { cancelEditMessage, editMessage, editingMessage } = useMessagesPage();

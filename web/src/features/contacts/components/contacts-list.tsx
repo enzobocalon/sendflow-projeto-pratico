@@ -9,11 +9,11 @@ import Typography from "@mui/material/Typography";
 import { EmptyState } from "@/components/empty-state";
 import { FeedbackSnackbar } from "@/components/feedback-snackbar";
 import { PaginatedContent } from "@/components/paginated-content";
-import type { ConnectionsState } from "@/features/connections/models/use-connections";
+import type { ConnectionsState } from "@/features/connections/hooks/use-connections";
 import { SectionTitle } from "@/features/dashboard/components/section-title";
 import { formatPhone } from "@/utils/format-phone";
 
-import { useContactsList } from "../facades/use-contacts-list";
+import { useContactsList } from "../hooks/use-contacts-list";
 import type { Contact } from "../models/contact.model";
 import {
   getContactsListEmptyState,
@@ -34,7 +34,7 @@ export function ContactsList(props: ContactsListProps) {
     editingContact,
     onDeletedEditingContact,
   } = props;
-  
+
   const { state, actions } = useContactsList({
     connectionsState,
     editingContact,

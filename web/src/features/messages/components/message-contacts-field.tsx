@@ -9,7 +9,7 @@ import { type Control, useController, useFormState } from "react-hook-form";
 
 import { FormFieldFeedback } from "@/components/form-field-feedback";
 import { PaginatedContent } from "@/components/paginated-content";
-import { useContacts } from "@/features/contacts/models/use-contacts";
+import { useContacts } from "@/features/contacts/hooks/use-contacts";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { formatPhone } from "@/utils/format-phone";
 
@@ -74,7 +74,7 @@ export function MessageContactsField(props: MessageContactsFieldProps) {
   const hasContacts = contacts.length > 0;
   const selectedContactsCount = contactIdsField.value.length;
   const hasSelectedContacts = selectedContactsCount > 0;
-  
+
   const clearSelection = () => {
     contactIdsField.onChange([]);
     setContactSearchTerm("");

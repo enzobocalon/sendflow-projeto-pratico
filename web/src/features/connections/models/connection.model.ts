@@ -28,12 +28,12 @@ import {
   type Transaction,
 } from "firebase/firestore";
 
+import { collectionPaths } from "@/config/collection-paths";
 import { db } from "@/lib/firebase";
 import {
-  createFirestoreServiceError,
+  createFirestoreError,
   requireAuthenticatedUserId,
-} from "@/lib/firestore-service";
-import { collectionPaths } from "@/models/collection-paths";
+} from "@/lib/firestore";
 import { updateUsageInTransaction } from "@/models/usage.model";
 
 export interface Connection {
@@ -90,7 +90,7 @@ const assertOwnedConnection = (
   const connection = snapshot.data();
 
   if (!snapshot.exists() || connection?.userId !== userId) {
-    throw createFirestoreServiceError("permission-denied", "Conexão inválida.");
+    throw createFirestoreError("permission-denied", "Conexão inválida.");
   }
 
   return mapConnectionDocument(snapshot);
@@ -103,7 +103,7 @@ const assertOwnedActiveConnection = (
   const connection = assertOwnedConnection(snapshot, userId);
 
   if (!isActiveConnection(connection)) {
-    throw createFirestoreServiceError("permission-denied", "Conexão inválida.");
+    throw createFirestoreError("permission-denied", "Conexão inválida.");
   }
 
   return connection;
@@ -207,15 +207,12 @@ export const createConnection = async (params: CreateConnectionInput) => {
   const name = rawName.trim();
 
   if (!isValidName(name)) {
-    throw createFirestoreServiceError(
-      "invalid-argument",
-      NAME_LENGTH_ERROR_MESSAGE,
-    );
+    throw createFirestoreError("invalid-argument", NAME_LENGTH_ERROR_MESSAGE);
   }
 
   const connectionsCount = await getConnectionsCount(userId);
   if (connectionsCount >= MAX_CONNECTIONS_PER_USER) {
-    throw createFirestoreServiceError(
+    throw createFirestoreError(
       "resource-exhausted",
       `Limite de ${MAX_CONNECTIONS_PER_USER} conexões atingido.`,
     );
@@ -246,17 +243,14 @@ export const upsertConnection = async (params: UpdateConnectionInput) => {
   const name = rawName.trim();
 
   if (!connectionId.trim()) {
-    throw createFirestoreServiceError(
+    throw createFirestoreError(
       "invalid-argument",
       "Informe uma conexão válida.",
     );
   }
 
   if (!isValidName(name)) {
-    throw createFirestoreServiceError(
-      "invalid-argument",
-      NAME_LENGTH_ERROR_MESSAGE,
-    );
+    throw createFirestoreError("invalid-argument", NAME_LENGTH_ERROR_MESSAGE);
   }
 
   await runTransaction(db, async (transaction) => {
@@ -328,7 +322,7 @@ export const deleteConnection = async (connectionId: string) => {
   const userId = requireAuthenticatedUserId("Faça login para continuar.");
 
   if (!connectionId.trim()) {
-    throw createFirestoreServiceError(
+    throw createFirestoreError(
       "invalid-argument",
       "Informe uma conexão válida.",
     );
@@ -340,10 +334,7 @@ export const deleteConnection = async (connectionId: string) => {
   );
 
   if (linkedResourceError) {
-    throw createFirestoreServiceError(
-      "failed-precondition",
-      linkedResourceError,
-    );
+    throw createFirestoreError("failed-precondition", linkedResourceError);
   }
 
   await runTransaction(db, async (transaction) => {
@@ -367,9 +358,6 @@ export const deleteConnection = async (connectionId: string) => {
 
   if (concurrentLinkError) {
     await restoreArchivedConnection(connectionId, userId);
-    throw createFirestoreServiceError(
-      "failed-precondition",
-      concurrentLinkError,
-    );
+    throw createFirestoreError("failed-precondition", concurrentLinkError);
   }
 };

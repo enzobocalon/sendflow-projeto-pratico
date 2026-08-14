@@ -6,7 +6,7 @@ import { ConnectionSelectField } from "@/components/connection-select-field";
 import { FeedbackSnackbar } from "@/components/feedback-snackbar";
 import { SectionTitle } from "@/features/dashboard/components/section-title";
 
-import { useMessageComposer } from "../facades/use-message-composer";
+import { useMessageComposer } from "../hooks/use-message-composer";
 import type { Message } from "../models/message.model";
 import { MessageComposerActions } from "./message-composer-actions";
 import { MessageContactsField } from "./message-contacts-field";

@@ -1,8 +1,7 @@
 import { useState } from "react";
 
-import { DeleteDialog } from "@/components/delete-dialog";
+import { openDeleteDialog } from "@/facades/delete.facade";
 import { useDialog } from "@/providers/dialog";
-import { getFirebaseErrorMessage } from "@/utils/firebase-error";
 import type { Feedback } from "@/utils/feedback";
 
 interface IdentifiableItem {
@@ -35,13 +34,11 @@ export function useDelete<Item extends IdentifiableItem>(
         severity: "success",
       });
       return true;
-    } catch (error) {
-      const message = getFirebaseErrorMessage(
-        error,
-        "Não foi possível concluir a exclusão.",
-      );
-
-      setFeedback({ message, severity: "error" });
+    } catch {
+      setFeedback({
+        message: "Não foi possível concluir a exclusão.",
+        severity: "error",
+      });
       return false;
     } finally {
       setIsDeleting(false);
@@ -50,21 +47,11 @@ export function useDelete<Item extends IdentifiableItem>(
 
   const requestDelete = (item: Item) => {
     setFeedback(null);
-    const message =
-      typeof confirmationMessage === "function"
-        ? confirmationMessage(item)
-        : confirmationMessage;
-
-    openDialog({
-      fullWidth: true,
-      maxWidth: "xs",
-      children: (
-        <DeleteDialog
-          title="Confirmar exclusão"
-          message={message}
-          onConfirm={() => confirmDelete(item)}
-        />
-      ),
+    openDeleteDialog({
+      confirmationMessage,
+      handleConfirm: confirmDelete,
+      item,
+      openDialog,
     });
   };
 

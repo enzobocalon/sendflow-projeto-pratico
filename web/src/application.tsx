@@ -1,8 +1,8 @@
 import CircularProgress from "@mui/material/CircularProgress";
 
 import { AuthPage } from "@/features/auth";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 import { Dashboard } from "@/features/dashboard";
-import { useAuth } from "@/hooks/use-auth";
 import { PrivateLayout } from "@/layouts";
 
 export function App() {
