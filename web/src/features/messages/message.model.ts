@@ -26,9 +26,9 @@ import {
 import { collectionPaths } from "@/config/collection-paths";
 import { BusinessRuleError } from "@/errors/business-rule.error";
 import { getAreContactsValidForConnection } from "@/features/contacts/contact.model";
+import { updateUsageInTransaction } from "@/features/usage/usage.model";
 import { db } from "@/lib/firebase";
 import { requireAuthenticatedUserId } from "@/lib/firestore";
-import { updateUsageInTransaction } from "@/models/usage.model";
 
 export interface Message {
   connectionId: string;

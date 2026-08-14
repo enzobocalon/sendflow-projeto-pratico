@@ -24,9 +24,9 @@ import { collectionPaths } from "@/config/collection-paths";
 import { BusinessRuleError } from "@/errors/business-rule.error";
 import { getHasContactsByConnection } from "@/features/contacts/contact.model";
 import { getHasMessagesByConnection } from "@/features/messages/message.model";
+import { updateUsageInTransaction } from "@/features/usage/usage.model";
 import { db } from "@/lib/firebase";
 import { requireAuthenticatedUserId } from "@/lib/firestore";
-import { updateUsageInTransaction } from "@/models/usage.model";
 
 export interface Connection {
   archivedAt?: Timestamp | null;

@@ -1,7 +1,7 @@
-import { useUsage } from "@/hooks/use-usage";
-import { emptyUsageCounters } from "@/models/usage.model";
+import type { UsageCounters } from "@/features/usage/usage.model";
+import { useUsage } from "@/features/usage/use-usage";
 
-const mapSummary = (usage: typeof emptyUsageCounters) => ({
+const mapSummary = (usage: UsageCounters) => ({
   connections: usage.connectionsCount,
   contacts: usage.contactsCount,
   messages: usage.messagesCount,

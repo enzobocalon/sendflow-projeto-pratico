@@ -27,9 +27,9 @@ import {
 } from "firebase/firestore";
 
 import { collectionPaths } from "@/config/collection-paths";
+import { updateUsageInTransaction } from "@/features/usage/usage.model";
 import { db } from "@/lib/firebase";
 import { requireAuthenticatedUserId } from "@/lib/firestore";
-import { updateUsageInTransaction } from "@/models/usage.model";
 
 export interface Contact {
   connectionId: string;
