@@ -5,7 +5,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import type { SelectChangeEvent } from "@mui/material/Select";
 
-import type { Connection } from "@/features/connections/connection.model";
+import type { Connection } from "@/features/connections/connections.model";
 import { getConnectionFieldFeedback } from "@/utils/connection-field-feedback";
 
 import { FormFieldFeedback } from "./form-field-feedback";

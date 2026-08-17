@@ -7,7 +7,7 @@ import {
   getDueScheduledMessagesInTransaction,
   getScheduledMessageCountsByUser,
   updateMessagesAsSentInTransaction,
-} from "./message.model";
+} from "./messages.model";
 
 const DUE_MESSAGES_LIMIT = 250;
 

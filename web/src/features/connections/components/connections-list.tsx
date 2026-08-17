@@ -11,11 +11,11 @@ import { EmptyState } from "@/components/empty-state";
 import { SectionTitle } from "@/features/dashboard/components/section-title";
 
 import { useConnectionsList } from "../hooks/use-connections-list";
-import type { Connection } from "../connection.model";
+import type { Connection } from "../connections.model";
 import {
   getConnectionsListEmptyState,
   getConnectionsListSubtitle,
-} from "./connection-list-copy";
+} from "./connections-list-copy";
 
 interface ConnectionsListProps {
   connections: Connection[];

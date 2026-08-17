@@ -16,9 +16,9 @@ import { PaginatedContent } from "@/components/paginated-content";
 import { SectionTitle } from "@/features/dashboard/components/section-title";
 
 import { useMessagesList } from "../hooks/use-messages-list";
-import type { Message } from "../message.model";
+import type { Message } from "../messages.model";
 import { MessageFilters } from "./message-filters";
-import { getMessagesListEmptyState } from "./message-list-copy";
+import { getMessagesListEmptyState } from "./messages-list-copy";
 
 const statusLabel = {
   scheduled: "Agendada",

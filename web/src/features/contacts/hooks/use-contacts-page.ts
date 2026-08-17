@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { useConnections } from "@/features/connections/hooks/use-connections";
 
-import type { Contact } from "../contact.model";
+import type { Contact } from "../contacts.model";
 
 export function useContactsPage() {
   const [editingContact, setEditingContact] = useState<Contact | null>(null);

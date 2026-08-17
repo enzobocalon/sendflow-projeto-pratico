@@ -7,9 +7,9 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import { useState } from "react";
 
-import { ConnectionsPage } from "@/features/connections";
-import { ContactsPage } from "@/features/contacts";
-import { MessagesPage } from "@/features/messages";
+import { ConnectionsPage } from "@/features/connections/connections-page";
+import { ContactsPage } from "@/features/contacts/contacts-page";
+import { MessagesPage } from "@/features/messages/messages-page";
 
 import { PageHeader } from "./components/page-header";
 import { WorkflowSummary } from "./components/workflow-summary";

@@ -1,4 +1,4 @@
-import type { Message } from "@/features/messages/message.model";
+import type { Message } from "@/features/messages/messages.model";
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",

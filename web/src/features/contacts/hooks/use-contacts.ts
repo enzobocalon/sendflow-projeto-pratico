@@ -5,7 +5,7 @@ import { useCallback } from "react";
 import { useAuth } from "@/features/auth/use-auth";
 import { useRealtimeCursorPagination } from "@/hooks/use-realtime-cursor-pagination";
 
-import { getContactsPageRealtime, mapContactDocument } from "../contact.model";
+import { getContactsPageRealtime, mapContactDocument } from "../contacts.model";
 
 interface UseContactsParams {
   connectionId?: string;

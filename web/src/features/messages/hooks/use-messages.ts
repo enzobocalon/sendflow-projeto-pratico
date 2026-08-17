@@ -5,7 +5,7 @@ import { useCallback } from "react";
 import { useAuth } from "@/features/auth/use-auth";
 import { useRealtimeCursorPagination } from "@/hooks/use-realtime-cursor-pagination";
 
-import { getMessagesPageRealtime, mapMessageDocument } from "../message.model";
+import { getMessagesPageRealtime, mapMessageDocument } from "../messages.model";
 
 interface UseMessagesParams {
   enabled?: boolean;

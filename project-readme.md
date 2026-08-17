@@ -45,8 +45,8 @@ Os hooks reativos atuais usam os listeners nativos do Firestore. A adoção de
 RxJS fica reservada para uma etapa posterior.
 
 Os arquivos usam `kebab-case`. Arquivos que representam uma camada de uma
-entidade usam o nome da entidade no singular e a camada como sufixo, por
-exemplo `connection.model.ts`, `contact.schema.ts` e `message.service.ts`.
+entidade usam o nome da entidade no plural e a camada como sufixo, por
+exemplo `connections.model.ts`, `contacts.schema.ts` e `messages.model.ts`.
 Arquivos que representam coleções preservam o plural semântico, como
 `connections-list.tsx` e `use-connections.ts`.
 

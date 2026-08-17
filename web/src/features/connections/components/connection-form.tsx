@@ -9,7 +9,7 @@ import { Controller } from "react-hook-form";
 import { SectionTitle } from "@/features/dashboard/components/section-title";
 
 import { useConnectionForm } from "../hooks/use-connection-form";
-import type { Connection } from "../connection.model";
+import type { Connection } from "../connections.model";
 
 interface ConnectionFormProps {
   connectionsCount: number;

@@ -5,7 +5,7 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
 
-import type { MessageFormValues } from "../message.schema";
+import type { MessageFormValues } from "../messages.schema";
 
 interface MessageComposerActionsProps {
   canChooseSendMode: boolean;

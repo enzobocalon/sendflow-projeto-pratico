@@ -13,7 +13,7 @@ import { SectionTitle } from "@/features/dashboard/components/section-title";
 import { formatPhone, normalizePhoneInput } from "@/utils/format-phone";
 
 import { useContactForm } from "../hooks/use-contact-form";
-import type { Contact } from "../contact.model";
+import type { Contact } from "../contacts.model";
 
 interface ContactFormProps {
   connectionsState: ConnectionsState;

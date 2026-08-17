@@ -13,11 +13,11 @@ import { SectionTitle } from "@/features/dashboard/components/section-title";
 import { formatPhone } from "@/utils/format-phone";
 
 import { useContactsList } from "../hooks/use-contacts-list";
-import type { Contact } from "../contact.model";
+import type { Contact } from "../contacts.model";
 import {
   getContactsListEmptyState,
   getContactsListSubtitle,
-} from "./contact-list-copy";
+} from "./contacts-list-copy";
 
 interface ContactsListProps {
   connectionsState: ConnectionsState;

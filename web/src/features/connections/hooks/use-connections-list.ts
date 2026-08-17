@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useDelete } from "@/hooks/use-delete";
 
-import { deleteConnection, type Connection } from "../connection.model";
+import { deleteConnection, type Connection } from "../connections.model";
 
 interface UseConnectionsListParams {
   connections: Connection[];

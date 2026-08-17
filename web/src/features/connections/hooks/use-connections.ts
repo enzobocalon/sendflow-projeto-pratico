@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 import { useAuth } from "@/features/auth/use-auth";
 
-import { getConnectionsRealtime, type Connection } from "../connection.model";
+import { getConnectionsRealtime, type Connection } from "../connections.model";
 
 interface UseConnectionsParams {
   enabled?: boolean;
