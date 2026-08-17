@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { getBusinessRuleErrorMessage } from "@/errors/business-rule.error";
 import { openDeleteDialog } from "@/facades/delete.facade";
-import { useDialog } from "@/providers/dialog";
+import { useDialog } from "@/providers/dialog/dialog-context";
 import type { Feedback } from "@/utils/feedback";
 
 interface IdentifiableItem {

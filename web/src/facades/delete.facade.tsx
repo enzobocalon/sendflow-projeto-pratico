@@ -1,5 +1,5 @@
 import { DeleteDialog } from "@/components/delete-dialog";
-import type { OpenDialogOptions } from "@/providers/dialog";
+import type { OpenDialogOptions } from "@/providers/dialog/dialog-context";
 
 interface OpenDeleteDialogParams<Item> {
   confirmationMessage: string | ((item: Item) => string);

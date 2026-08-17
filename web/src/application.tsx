@@ -3,7 +3,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { AuthPage } from "@/features/auth";
 import { useAuth } from "@/features/auth/use-auth";
 import { Dashboard } from "@/features/dashboard";
-import { PrivateLayout } from "@/layouts";
+import { PrivateLayout } from "@/layouts/private";
 
 export function App() {
   const { user, loading } = useAuth();

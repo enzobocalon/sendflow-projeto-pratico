@@ -6,7 +6,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 
-import { useDialog } from "@/providers/dialog";
+import { useDialog } from "@/providers/dialog/dialog-context";
 
 export interface DeleteDialogProps {
   title: string;
