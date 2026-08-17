@@ -16,7 +16,6 @@ import {
   type CollectionReference,
   type DocumentData,
   type DocumentSnapshot,
-  type FieldValue,
   type QueryConstraint,
   type QueryDocumentSnapshot,
   type QuerySnapshot,
@@ -68,11 +67,6 @@ type UpdateMessageInput = CreateMessageInput & {
 
 type MessageDocument = Omit<Message, "id">;
 
-const messagesCollection = collection(
-  db,
-  collectionPaths.messages,
-) as CollectionReference<MessageDocument, MessageDocument>;
-
 interface GetMessagesPageRealtimeParams {
   cursor: QueryDocumentSnapshot<DocumentData> | null;
   resultLimit: number;
@@ -80,15 +74,12 @@ interface GetMessagesPageRealtimeParams {
   userId: string;
 }
 
-interface MessageScheduleFields {
-  scheduledAt: Timestamp | null;
-  sentAt: FieldValue | null;
-  status: MessageStatus;
-}
+const messagesCollection = collection(
+  db,
+  collectionPaths.messages,
+) as CollectionReference<MessageDocument, MessageDocument>;
 
-const getMessageScheduleFields = (
-  params: CreateMessageInput,
-): MessageScheduleFields => {
+const getMessageScheduleFields = (params: CreateMessageInput) => {
   const { status } = params;
 
   if (status === "sent") {

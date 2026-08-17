@@ -46,11 +46,6 @@ interface ContactDocument extends Omit<Contact, "id"> {
   connectionName?: string;
 }
 
-const contactsCollection = collection(
-  db,
-  collectionPaths.contacts,
-) as CollectionReference<ContactDocument, ContactDocument>;
-
 interface CreateContactInput {
   connectionId: Contact["connectionId"];
   name: Contact["name"];
@@ -68,6 +63,11 @@ interface GetContactsPageRealtimeParams {
   searchTerm: string;
   userId: string;
 }
+
+const contactsCollection = collection(
+  db,
+  collectionPaths.contacts,
+) as CollectionReference<ContactDocument, ContactDocument>;
 
 export const mapContactDocument = (
   document: DocumentSnapshot<DocumentData>,

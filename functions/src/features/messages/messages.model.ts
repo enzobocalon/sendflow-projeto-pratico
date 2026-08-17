@@ -20,7 +20,7 @@ export interface Message {
   userId: string;
 }
 
-export type MessageDocument = QueryDocumentSnapshot<Message>;
+export interface MessageDocument extends QueryDocumentSnapshot<Message> {}
 
 const messagesCollection = db.collection(
   "messages",

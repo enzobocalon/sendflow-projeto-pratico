@@ -41,11 +41,6 @@ export interface Connection {
 
 type ConnectionDocument = Omit<Connection, "id">;
 
-const connectionsCollection = collection(
-  db,
-  collectionPaths.connections,
-) as CollectionReference<ConnectionDocument, ConnectionDocument>;
-
 interface CreateConnectionInput {
   name: Connection["name"];
 }
@@ -54,17 +49,20 @@ interface UpdateConnectionInput extends CreateConnectionInput {
   connectionId: string;
 }
 
-interface GetConnectionsRealtimeParams {
-  onError: () => void;
-  onValue: (connections: Connection[]) => void;
-  searchTerm?: string;
-  userId: string;
-}
-
 interface GetConnectionsParams {
   searchTerm?: string;
   userId: string;
 }
+
+interface GetConnectionsRealtimeParams extends GetConnectionsParams {
+  onError: () => void;
+  onValue: (connections: Connection[]) => void;
+}
+
+const connectionsCollection = collection(
+  db,
+  collectionPaths.connections,
+) as CollectionReference<ConnectionDocument, ConnectionDocument>;
 
 const isActiveConnection = (data: DocumentData) => data.status !== "archived";
 
