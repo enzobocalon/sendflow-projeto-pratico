@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
 import { getBusinessRuleErrorMessage } from "@/errors/business-rule.error";
 import type { ConnectionsState } from "@/features/connections/hooks/use-connections";
-import { getFeedback } from "@/utils/feedback";
+import { useFeedback } from "@/providers/feedback/use-feedback";
 
 import { handleSaveContact } from "../contact.facade";
 import type { Contact } from "../contact.model";
@@ -18,8 +18,7 @@ interface UseContactFormParams {
 
 export function useContactForm(params: UseContactFormParams) {
   const { connectionsState, editingContact, onSaved } = params;
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const { showError, showSuccess } = useFeedback();
   const { connections, isLoading: isLoadingConnections } = connectionsState;
 
   const {
@@ -45,20 +44,17 @@ export function useContactForm(params: UseContactFormParams) {
   }, [editingContact, reset]);
 
   const submitContact = handleSubmit(async (values) => {
-    setSuccess("");
-    setError("");
-
     try {
       await handleSaveContact({ editingContact, values });
       reset();
-      setSuccess(
+      showSuccess(
         editingContact
           ? "Contato atualizado com sucesso."
           : "Contato criado com sucesso.",
       );
       onSaved();
     } catch (saveError) {
-      setError(
+      showError(
         getBusinessRuleErrorMessage(
           saveError,
           "Não foi possível salvar o contato.",
@@ -67,18 +63,12 @@ export function useContactForm(params: UseContactFormParams) {
     }
   });
 
-  const clearFeedback = () => {
-    setError("");
-    setSuccess("");
-  };
-
   return {
     state: {
       connections,
-      feedback: getFeedback(success, error),
       isLoadingConnections,
     },
     form: { control, errors, isSubmitting },
-    actions: { clearFeedback, submitContact },
+    actions: { submitContact },
   };
 }

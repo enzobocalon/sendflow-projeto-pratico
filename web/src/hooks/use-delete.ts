@@ -3,7 +3,7 @@ import { useState } from "react";
 import { getBusinessRuleErrorMessage } from "@/errors/business-rule.error";
 import { openDeleteDialog } from "@/facades/delete.facade";
 import { useDialog } from "@/providers/dialog/dialog-context";
-import type { Feedback } from "@/utils/feedback";
+import { useFeedback } from "@/providers/feedback/use-feedback";
 
 interface IdentifiableItem {
   id: string;
@@ -20,29 +20,24 @@ export function useDelete<Item extends IdentifiableItem>(
 ) {
   const { confirmationMessage, handleDelete, onDeleted } = params;
   const { openDialog } = useDialog();
-  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const { showError, showSuccess } = useFeedback();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const confirmDelete = async (item: Item) => {
-    setFeedback(null);
     setIsDeleting(true);
 
     try {
       await handleDelete(item.id);
       onDeleted?.(item);
-      setFeedback({
-        message: "Exclusão concluída com sucesso.",
-        severity: "success",
-      });
+      showSuccess("Exclusão concluída com sucesso.");
       return true;
     } catch (error) {
-      setFeedback({
-        message: getBusinessRuleErrorMessage(
+      showError(
+        getBusinessRuleErrorMessage(
           error,
           "Não foi possível concluir a exclusão.",
         ),
-        severity: "error",
-      });
+      );
       return false;
     } finally {
       setIsDeleting(false);
@@ -50,7 +45,6 @@ export function useDelete<Item extends IdentifiableItem>(
   };
 
   const requestDelete = (item: Item) => {
-    setFeedback(null);
     openDeleteDialog({
       confirmationMessage,
       handleConfirm: confirmDelete,
@@ -59,10 +53,8 @@ export function useDelete<Item extends IdentifiableItem>(
     });
   };
 
-  const clearFeedback = () => setFeedback(null);
-
   return {
-    state: { feedback, isDeleting },
-    actions: { clearFeedback, requestDelete },
+    state: { isDeleting },
+    actions: { requestDelete },
   };
 }

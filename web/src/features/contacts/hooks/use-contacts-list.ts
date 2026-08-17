@@ -25,8 +25,8 @@ export function useContactsList(params: UseContactsListParams) {
   };
 
   const {
-    state: { feedback, isDeleting },
-    actions: { clearFeedback, requestDelete: requestDeleteContact },
+    state: { isDeleting },
+    actions: { requestDelete: requestDeleteContact },
   } = useDelete<Contact>({
     confirmationMessage: (contact) =>
       `Tem certeza que deseja excluir o contato "${contact.name}"? Esta ação não pode ser desfeita.`,
@@ -61,7 +61,6 @@ export function useContactsList(params: UseContactsListParams) {
     state: {
       contacts: contactsWithConnectionNames,
       currentPage,
-      feedback,
       hasNextPage,
       hasPreviousPage,
       isDeleting,
@@ -71,7 +70,6 @@ export function useContactsList(params: UseContactsListParams) {
       totalContacts: contacts.length,
     },
     actions: {
-      clearFeedback,
       goToNextPage,
       goToPreviousPage,
       requestDeleteContact,

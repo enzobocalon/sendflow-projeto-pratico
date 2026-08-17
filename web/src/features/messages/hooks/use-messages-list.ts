@@ -39,8 +39,8 @@ export function useMessagesList(params: UseMessagesListParams) {
   };
 
   const {
-    state: { feedback, isDeleting },
-    actions: { clearFeedback, requestDelete: requestDeleteMessage },
+    state: { isDeleting },
+    actions: { requestDelete: requestDeleteMessage },
   } = useDelete<Message>({
     confirmationMessage:
       "Tem certeza que deseja excluir esta mensagem? Esta ação não pode ser desfeita.",
@@ -97,7 +97,6 @@ export function useMessagesList(params: UseMessagesListParams) {
   return {
     state: {
       currentPage,
-      feedback,
       filter,
       hasNextPage,
       hasPreviousPage,
@@ -109,7 +108,6 @@ export function useMessagesList(params: UseMessagesListParams) {
       selectedMessage,
     },
     actions: {
-      clearFeedback,
       closeMenu,
       goToNextPage,
       goToPreviousPage,

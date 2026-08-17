@@ -8,7 +8,6 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
 import { EmptyState } from "@/components/empty-state";
-import { FeedbackSnackbar } from "@/components/feedback-snackbar";
 import { SectionTitle } from "@/features/dashboard/components/section-title";
 
 import { useConnectionsList } from "../hooks/use-connections-list";
@@ -106,12 +105,6 @@ export function ConnectionsList(props: ConnectionsListProps) {
           ))}
         </Stack>
       )}
-
-      <FeedbackSnackbar
-        message={state.feedback?.message ?? ""}
-        onClose={actions.clearFeedback}
-        severity={state.feedback?.severity ?? "success"}
-      />
     </section>
   );
 }

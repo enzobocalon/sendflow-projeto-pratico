@@ -6,7 +6,6 @@ import TextField from "@mui/material/TextField";
 import { MAX_CONNECTIONS_PER_USER } from "@sendflow/shared";
 import { Controller } from "react-hook-form";
 
-import { FeedbackSnackbar } from "@/components/feedback-snackbar";
 import { SectionTitle } from "@/features/dashboard/components/section-title";
 
 import { useConnectionForm } from "../hooks/use-connection-form";
@@ -80,12 +79,6 @@ export function ConnectionForm(props: ConnectionFormProps) {
           )}
         </Stack>
       </Stack>
-
-      <FeedbackSnackbar
-        message={state.feedback?.message ?? ""}
-        onClose={actions.clearFeedback}
-        severity={state.feedback?.severity ?? "success"}
-      />
     </section>
   );
 }

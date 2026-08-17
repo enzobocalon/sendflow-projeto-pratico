@@ -2,32 +2,32 @@ import { useState } from "react";
 import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 
-import type { Feedback } from "@/utils/feedback";
+import type { FeedbackSeverity } from "@/providers/feedback/feedback-context";
 
 interface FeedbackSnackbarProps {
+  feedbackId?: number;
   message?: string;
-  severity: Feedback["severity"];
+  severity: FeedbackSeverity;
   onClose: () => void;
 }
 
-interface DisplayedFeedback extends Feedback {
+interface DisplayedFeedback {
   id: number;
+  message: string;
+  severity: FeedbackSeverity;
 }
 
 export function FeedbackSnackbar(props: FeedbackSnackbarProps) {
-  const { message, severity, onClose } = props;
+  const { feedbackId, message, severity, onClose } = props;
   const [feedback, setFeedback] = useState<DisplayedFeedback | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [previousFeedbackId, setPreviousFeedbackId] = useState(feedbackId);
 
-  const [prevMessage, setPrevMessage] = useState(message);
-  const [prevSeverity, setPrevSeverity] = useState(severity);
+  if (feedbackId !== previousFeedbackId) {
+    setPreviousFeedbackId(feedbackId);
 
-  if (message !== prevMessage || severity !== prevSeverity) {
-    setPrevMessage(message);
-    setPrevSeverity(severity);
-
-    if (message) {
-      setFeedback((prev) => ({ id: (prev?.id ?? 0) + 1, message, severity }));
+    if (feedbackId && message) {
+      setFeedback({ id: feedbackId, message, severity });
       setIsOpen(true);
     } else {
       setIsOpen(false);
@@ -54,6 +54,7 @@ export function FeedbackSnackbar(props: FeedbackSnackbarProps) {
       anchorOrigin={{ vertical: "top", horizontal: "right" }}
     >
       <Alert
+        key={feedback?.id}
         onClose={handleClose}
         severity={feedback?.severity ?? "success"}
         variant="filled"

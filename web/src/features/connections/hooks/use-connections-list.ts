@@ -30,8 +30,8 @@ export function useConnectionsList(params: UseConnectionsListParams) {
   };
 
   const {
-    state: { feedback, isDeleting },
-    actions: { clearFeedback, requestDelete: requestDeleteConnection },
+    state: { isDeleting },
+    actions: { requestDelete: requestDeleteConnection },
   } = useDelete<Connection>({
     confirmationMessage: (connection) =>
       `Tem certeza que deseja excluir a conexão "${connection.name}"? Esta ação não pode ser desfeita.`,
@@ -54,14 +54,12 @@ export function useConnectionsList(params: UseConnectionsListParams) {
   return {
     state: {
       connections: filteredConnections,
-      feedback,
       isDeleting,
       isLoading: isLoadingConnections,
       searchTerm,
       totalConnections: filteredConnections.length,
     },
     actions: {
-      clearFeedback,
       requestDeleteConnection,
       setSearchTerm,
     },

@@ -8,7 +8,6 @@ import TextField from "@mui/material/TextField";
 import { Controller } from "react-hook-form";
 
 import { ConnectionSelectField } from "@/components/connection-select-field";
-import { FeedbackSnackbar } from "@/components/feedback-snackbar";
 import type { ConnectionsState } from "@/features/connections/hooks/use-connections";
 import { SectionTitle } from "@/features/dashboard/components/section-title";
 import { formatPhone, normalizePhoneInput } from "@/utils/format-phone";
@@ -137,12 +136,6 @@ export function ContactForm(props: ContactFormProps) {
           )}
         </Stack>
       </Stack>
-
-      <FeedbackSnackbar
-        message={state.feedback?.message ?? ""}
-        onClose={actions.clearFeedback}
-        severity={state.feedback?.severity ?? "success"}
-      />
     </section>
   );
 }

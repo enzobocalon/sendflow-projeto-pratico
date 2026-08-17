@@ -7,7 +7,6 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
 import { EmptyState } from "@/components/empty-state";
-import { FeedbackSnackbar } from "@/components/feedback-snackbar";
 import { PaginatedContent } from "@/components/paginated-content";
 import type { ConnectionsState } from "@/features/connections/hooks/use-connections";
 import { SectionTitle } from "@/features/dashboard/components/section-title";
@@ -117,12 +116,6 @@ export function ContactsList(props: ContactsListProps) {
           </Stack>
         </PaginatedContent>
       )}
-
-      <FeedbackSnackbar
-        message={state.feedback?.message ?? ""}
-        onClose={actions.clearFeedback}
-        severity={state.feedback?.severity ?? "success"}
-      />
     </section>
   );
 }

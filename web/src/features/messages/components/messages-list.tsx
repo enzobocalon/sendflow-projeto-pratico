@@ -12,7 +12,6 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
 import { EmptyState } from "@/components/empty-state";
-import { FeedbackSnackbar } from "@/components/feedback-snackbar";
 import { PaginatedContent } from "@/components/paginated-content";
 import { SectionTitle } from "@/features/dashboard/components/section-title";
 
@@ -158,12 +157,6 @@ export function MessagesList(props: MessagesListProps) {
           <ListItemText>Excluir</ListItemText>
         </MenuItem>
       </Menu>
-
-      <FeedbackSnackbar
-        message={state.feedback?.message ?? ""}
-        onClose={actions.clearFeedback}
-        severity={state.feedback?.severity ?? "success"}
-      />
     </section>
   );
 }

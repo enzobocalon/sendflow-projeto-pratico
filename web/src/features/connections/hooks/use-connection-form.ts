@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MAX_CONNECTIONS_PER_USER } from "@sendflow/shared";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
 import { getBusinessRuleErrorMessage } from "@/errors/business-rule.error";
-import { getFeedback } from "@/utils/feedback";
+import { useFeedback } from "@/providers/feedback/use-feedback";
 
 import { handleSaveConnection } from "../connection.facade";
 import type { Connection } from "../connection.model";
@@ -23,8 +23,7 @@ const connectionsLimitError = `Limite de ${MAX_CONNECTIONS_PER_USER} conexões a
 
 export function useConnectionForm(params: UseConnectionFormParams) {
   const { connectionsCount, editingConnection, onSaved } = params;
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const { showError, showSuccess } = useFeedback();
   const hasReachedConnectionsLimit =
     !editingConnection && connectionsCount >= MAX_CONNECTIONS_PER_USER;
 
@@ -47,26 +46,22 @@ export function useConnectionForm(params: UseConnectionFormParams) {
   }, [editingConnection, reset]);
 
   const submitConnection = handleSubmit(async (values) => {
-    setSuccess("");
-
     if (hasReachedConnectionsLimit) {
-      setError(connectionsLimitError);
+      showError(connectionsLimitError);
       return;
     }
-
-    setError("");
 
     try {
       await handleSaveConnection({ editingConnection, values });
       reset();
-      setSuccess(
+      showSuccess(
         editingConnection
           ? "Conexão atualizada com sucesso."
           : "Conexão criada com sucesso.",
       );
       onSaved();
     } catch (saveError) {
-      setError(
+      showError(
         getBusinessRuleErrorMessage(
           saveError,
           "Não foi possível salvar a conexão.",
@@ -75,17 +70,9 @@ export function useConnectionForm(params: UseConnectionFormParams) {
     }
   });
 
-  const clearFeedback = () => {
-    setError("");
-    setSuccess("");
-  };
-
   return {
-    state: {
-      feedback: getFeedback(success, error),
-      hasReachedConnectionsLimit,
-    },
+    state: { hasReachedConnectionsLimit },
     form: { control, errors, isSubmitting },
-    actions: { clearFeedback, submitConnection },
+    actions: { submitConnection },
   };
 }

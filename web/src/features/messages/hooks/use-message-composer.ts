@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { getBusinessRuleErrorMessage } from "@/errors/business-rule.error";
 import { useConnections } from "@/features/connections/hooks/use-connections";
-import { getFeedback } from "@/utils/feedback";
+import { useFeedback } from "@/providers/feedback/use-feedback";
 
 import { handleSaveMessage } from "../message.facade";
 import type { Message } from "../message.model";
@@ -43,8 +43,7 @@ const getMessageFormValues = (message: Message | null): MessageFormValues => {
 
 export function useMessageComposer(params: UseMessageComposerParams) {
   const { editingMessage, onSaved } = params;
-  const [formError, setFormError] = useState("");
-  const [success, setSuccess] = useState("");
+  const { showError, showSuccess } = useFeedback();
   const { connections, isLoading: isLoadingConnections } = useConnections();
   const {
     control,
@@ -77,9 +76,6 @@ export function useMessageComposer(params: UseMessageComposerParams) {
   }, [editingMessage, reset]);
 
   const submitMessage = handleSubmit(async (values) => {
-    setSuccess("");
-    setFormError("");
-
     try {
       const { isScheduled } = await handleSaveMessage({
         editingMessage,
@@ -87,7 +83,7 @@ export function useMessageComposer(params: UseMessageComposerParams) {
       });
 
       reset();
-      setSuccess(
+      showSuccess(
         editingMessage
           ? "Mensagem atualizada com sucesso."
           : isScheduled
@@ -96,7 +92,7 @@ export function useMessageComposer(params: UseMessageComposerParams) {
       );
       onSaved();
     } catch (saveError) {
-      setFormError(
+      showError(
         getBusinessRuleErrorMessage(
           saveError,
           "Não foi possível salvar a mensagem.",
@@ -143,15 +139,9 @@ export function useMessageComposer(params: UseMessageComposerParams) {
     clearSchedule();
   };
 
-  const clearFeedback = () => {
-    setFormError("");
-    setSuccess("");
-  };
-
   return {
     state: {
       connections,
-      feedback: getFeedback(success, formError),
       isLoadingConnections,
       selectedContactsCount: selectedContactIds.length,
       selectedConnectionId,
@@ -160,7 +150,6 @@ export function useMessageComposer(params: UseMessageComposerParams) {
     form: { control, errors, isSubmitting },
     actions: {
       cancelScheduledMode,
-      clearFeedback,
       clearSelectedContacts,
       enableScheduledMode,
       submitNow,
