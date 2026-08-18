@@ -14,6 +14,7 @@ import { MessagesPage } from "@/features/messages/messages-page";
 import { PageHeader } from "./components/page-header";
 import { WorkflowSummary } from "./components/workflow-summary";
 import type { DashboardTab, DashboardTabDefinition } from "./types";
+import { useDashboardSummary } from "./use-dashboard-summary";
 
 const tabs: DashboardTabDefinition[] = [
   { icon: <GroupsOutlinedIcon />, label: "Conexões", value: "connections" },
@@ -23,6 +24,7 @@ const tabs: DashboardTabDefinition[] = [
 
 export function Dashboard() {
   const [activeTab, setActiveTab] = useState<DashboardTab>("connections");
+  const { isLoading, summary } = useDashboardSummary();
 
   const changeTab = (_event: unknown, value: DashboardTab) => {
     setActiveTab(value);
@@ -31,7 +33,7 @@ export function Dashboard() {
   return (
     <Stack spacing={3}>
       <PageHeader />
-      <WorkflowSummary />
+      <WorkflowSummary isLoading={isLoading} summary={summary} />
 
       <Paper
         elevation={0}
@@ -57,7 +59,9 @@ export function Dashboard() {
         </Tabs>
 
         <div className="p-5">
-          {activeTab === "connections" && <ConnectionsPage />}
+          {activeTab === "connections" && (
+            <ConnectionsPage connectionsCount={summary.connections} />
+          )}
           {activeTab === "contacts" && <ContactsPage />}
           {activeTab === "messages" && <MessagesPage />}
         </div>

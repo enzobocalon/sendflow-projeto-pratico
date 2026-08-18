@@ -18,10 +18,12 @@ import {
   type CollectionReference,
   type DocumentData,
   type DocumentSnapshot,
+  type FieldValue,
   type QueryConstraint,
   type QueryDocumentSnapshot,
   type Timestamp,
   type Transaction,
+  type UpdateData,
 } from "firebase/firestore";
 import { collection as collection$ } from "rxfire/firestore";
 
@@ -41,9 +43,7 @@ export interface Contact {
   userId: string;
 }
 
-interface ContactDocument extends Omit<Contact, "id"> {
-  connectionName?: string;
-}
+type ContactDocument = Omit<Contact, "id">;
 
 interface CreateContactInput {
   connectionId: Contact["connectionId"];
@@ -60,7 +60,6 @@ interface GetContactsPageParams {
   cursor: QueryDocumentSnapshot<DocumentData> | null;
   resultLimit: number;
   searchTerm: string;
-  userId: string;
 }
 
 const contactsCollection = collection(
@@ -86,8 +85,11 @@ export const getContact = async (contactId: string, userId: string) => {
   return mapContactDocument(snapshot);
 };
 
-const createContactsPageQuery = (params: GetContactsPageParams) => {
-  const { connectionId, cursor, resultLimit, searchTerm, userId } = params;
+const createContactsPageQuery = (
+  params: GetContactsPageParams,
+  userId: string,
+) => {
+  const { connectionId, cursor, resultLimit, searchTerm } = params;
   const normalizedSearchTerm = normalizeSearchText(searchTerm);
   const constraints: QueryConstraint[] = [
     where("userId", "==", userId),
@@ -109,8 +111,11 @@ const createContactsPageQuery = (params: GetContactsPageParams) => {
   return query(contactsCollection, ...constraints);
 };
 
-export const getContactsPage$ = (params: GetContactsPageParams) =>
-  collection$(createContactsPageQuery(params));
+export const getContactsPage$ = (params: GetContactsPageParams) => {
+  const userId = requireAuthenticatedUserId();
+
+  return collection$(createContactsPageQuery(params, userId));
+};
 
 export const getHasContactsByConnection = async (
   connectionId: string,
@@ -193,14 +198,18 @@ export const upsertContact = async (params: UpdateContactInput) => {
   const name = rawName.trim();
   const phone = normalizePhone(rawPhone.trim());
 
-  await updateDoc(doc(contactsCollection, contactId), {
+  const updates: UpdateData<ContactDocument> & {
+    connectionName: FieldValue;
+  } = {
     connectionId,
     connectionName: deleteField(),
     name,
     nameNormalized: normalizeSearchText(name),
     phone,
     updatedAt: serverTimestamp(),
-  });
+  };
+
+  await updateDoc(doc(contactsCollection, contactId), updates);
 };
 
 export const deleteContact = async (contactId: string) => {

@@ -1,6 +1,4 @@
 import type { MessageStatus } from "@sendflow/shared";
-import type { DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
-import { useCallback } from "react";
 
 import { useAuth } from "@/features/auth/use-auth";
 import { useRealtimeCursorPagination } from "@/hooks/use-realtime-cursor-pagination";
@@ -26,37 +24,14 @@ export function useMessages(params: UseMessagesParams = {}) {
   const canLoad = Boolean(user && enabled);
   const queryKey = [userId, status].join(":");
 
-  const getPage$ = useCallback(
-    (cursor: QueryDocumentSnapshot<DocumentData> | null, resultLimit: number) =>
-      getMessagesPage$({ cursor, resultLimit, status, userId }),
-    [status, userId],
-  );
-
-  const {
-    currentPage,
-    goToNextPage,
-    goToPreviousPage,
-    hasNextPage,
-    hasPreviousPage,
-    isLoading,
-    isPageChanging,
-    items: messages,
-  } = useRealtimeCursorPagination({
+  const { items: messages, ...pagination } = useRealtimeCursorPagination({
     enabled: canLoad,
+    getPage$: (cursor, resultLimit) =>
+      getMessagesPage$({ cursor, resultLimit, status }),
     mapDocument: mapMessageDocument,
     pageSize,
     queryKey,
-    getPage$,
   });
 
-  return {
-    currentPage,
-    goToNextPage,
-    goToPreviousPage,
-    hasNextPage,
-    hasPreviousPage,
-    isLoading,
-    isPageChanging,
-    messages,
-  };
+  return { messages, ...pagination };
 }

@@ -6,7 +6,7 @@ import Paper from "@mui/material/Paper";
 import Skeleton from "@mui/material/Skeleton";
 import Typography from "@mui/material/Typography";
 
-import { useDashboardSummary } from "../use-dashboard-summary";
+import type { DashboardSummary } from "../use-dashboard-summary";
 
 const summaryItems = [
   { icon: GroupsOutlinedIcon, label: "Conexões", key: "connections" },
@@ -15,8 +15,13 @@ const summaryItems = [
   { icon: EventIcon, label: "Agendadas", key: "scheduledMessages" },
 ] as const;
 
-export function WorkflowSummary() {
-  const { isLoading, summary } = useDashboardSummary();
+interface WorkflowSummaryProps {
+  isLoading: boolean;
+  summary: DashboardSummary;
+}
+
+export function WorkflowSummary(props: WorkflowSummaryProps) {
+  const { isLoading, summary } = props;
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

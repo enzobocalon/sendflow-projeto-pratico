@@ -1,7 +1,7 @@
 import { normalizeSearchText } from "@sendflow/shared";
-import { useEffect, useState } from "react";
 
 import { useAuth } from "@/features/auth/use-auth";
+import { useRxValue } from "@/hooks/use-rx-value";
 
 import { getConnections$, type Connection } from "../connections.model";
 
@@ -20,41 +20,14 @@ export function useConnections(
 ): ConnectionsState {
   const { enabled = true, searchTerm = "" } = params;
   const { user } = useAuth();
-  const [connections, setConnections] = useState<Connection[]>([]);
-  const [isLoading, setIsLoading] = useState(() => Boolean(user && enabled));
   const normalizedSearchTerm = normalizeSearchText(searchTerm);
-  const canLoad = Boolean(user && enabled);
+  const userId = enabled ? user?.uid : null;
 
-  useEffect(() => {
-    if (!canLoad || !user) return;
-
-    let isActive = true;
-    const handleConnections = (loadedConnections: Connection[]) => {
-      if (!isActive) return;
-
-      setConnections(loadedConnections);
-      setIsLoading(false);
-    };
-
-    const subscription = getConnections$({
-      searchTerm: normalizedSearchTerm,
-      userId: user.uid,
-    }).subscribe({
-      error: () => {
-        if (!isActive) return;
-
-        setIsLoading(false);
-      },
-      next: handleConnections,
-    });
-
-    return () => {
-      isActive = false;
-      subscription.unsubscribe();
-    };
-  }, [canLoad, normalizedSearchTerm, user]);
-
-  if (!canLoad) return { connections: [], isLoading: false };
+  const [connections, isLoading] = useRxValue(
+    () => getConnections$(normalizedSearchTerm),
+    [userId, normalizedSearchTerm],
+    [],
+  );
 
   return { connections, isLoading };
 }

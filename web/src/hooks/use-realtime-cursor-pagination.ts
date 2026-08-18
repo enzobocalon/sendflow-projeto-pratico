@@ -2,108 +2,122 @@ import {
   type DocumentData,
   type QueryDocumentSnapshot,
 } from "firebase/firestore";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Observable } from "rxjs";
+import { useEffect, useMemo, useReducer } from "react";
+import { map, type Observable } from "rxjs";
 
+import { useRxValue } from "@/hooks/use-rx-value";
 import {
-  applyListenerFailure,
-  applyLoadedPage,
-  createPaginationScope,
-  createPaginationState,
-  getStateForScope,
-  readLoadedPage,
-  requestNextPage,
-  requestPreviousPage,
-  returnFromEmptyPage,
+  createEmptyPage,
+  createNavigation,
+  createPageResult,
+  getActiveNavigation,
+  paginationReducer,
   type Cursor,
-} from "@/utils/realtime-cursor-pagination-state";
+} from "@/utils/realtime-cursor-pagination";
 
-interface UseRealtimeCursorPaginationParams<Item> {
+interface UseRealtimeCursorPaginationParams<T> {
   enabled: boolean;
   getPage$: (
     cursor: Cursor,
     resultLimit: number,
   ) => Observable<QueryDocumentSnapshot<DocumentData>[]>;
-  mapDocument: (document: QueryDocumentSnapshot<DocumentData>) => Item;
+  mapDocument: (document: QueryDocumentSnapshot<DocumentData>) => T;
   pageSize: number;
   queryKey: string;
 }
 
-export function useRealtimeCursorPagination<Item>(
-  params: UseRealtimeCursorPaginationParams<Item>,
+export function useRealtimeCursorPagination<T>(
+  params: UseRealtimeCursorPaginationParams<T>,
 ) {
   const { enabled, getPage$, mapDocument, pageSize, queryKey } = params;
-  const scope = useMemo(
-    () => createPaginationScope(queryKey, pageSize, enabled),
-    [enabled, pageSize, queryKey],
+
+  const scopeKey = useMemo(
+    () => JSON.stringify([queryKey, pageSize]),
+    [pageSize, queryKey],
   );
-  const [paginationState, setPaginationState] = useState(() =>
-    createPaginationState<Item>(scope),
+
+  const [navigation, dispatchNavigation] = useReducer(
+    paginationReducer,
+    scopeKey,
+    createNavigation,
   );
-  const activeState = getStateForScope(paginationState, scope); // quando o scope muda, o state criado aqui serve como temporario
-  const { requestedPage, result } = activeState;
-  const cursor = activeState.cursors.get(requestedPage) ?? null;
-  const currentPage = result?.page ?? 1;
-  const hasLoadedRequestedPage = result?.page === requestedPage;
+
+  const activeNavigation = getActiveNavigation(navigation, scopeKey);
+  const { requestedPage } = activeNavigation;
+  const cursor = activeNavigation.cursors[requestedPage - 1] ?? null;
+  const initialPage = useMemo(() => createEmptyPage<T>(), []);
+
+  const [pageResult, isLoadingPage] = useRxValue(
+    () =>
+      getPage$(cursor, pageSize + 1).pipe(
+        map((documents) =>
+          createPageResult({
+            documents,
+            mapDocument,
+            page: requestedPage,
+            pageSize,
+            scopeKey,
+          }),
+        ),
+      ),
+    [enabled ? scopeKey : null, requestedPage],
+    initialPage,
+    false,
+  );
+  const hasResultForScope = pageResult.scopeKey === scopeKey;
+  const hasLoadedRequestedPage =
+    hasResultForScope && pageResult.page === requestedPage;
 
   useEffect(() => {
-    if (!enabled) return;
+    if (
+      !hasLoadedRequestedPage ||
+      requestedPage === 1 ||
+      pageResult.items.length > 0
+    ) {
+      return;
+    }
 
-    let isActive = true;
-    const subscription = getPage$(cursor, pageSize + 1).subscribe({
-      error: () => {
-        if (!isActive) return;
-
-        setPaginationState((currentState) =>
-          applyListenerFailure(currentState, scope, requestedPage),
-        );
-      },
-      next: (documents) => {
-        if (!isActive) return;
-
-        const loadedPage = readLoadedPage(documents, pageSize, mapDocument);
-
-        if (requestedPage > 1 && loadedPage.items.length === 0) {
-          // Guard
-          setPaginationState((currentState) =>
-            returnFromEmptyPage(currentState, scope, requestedPage),
-          );
-          return;
-        }
-
-        setPaginationState((currentState) =>
-          applyLoadedPage(currentState, scope, requestedPage, loadedPage),
-        );
-      },
+    dispatchNavigation({
+      page: requestedPage - 1,
+      scopeKey,
+      type: "set-page",
     });
+  }, [hasLoadedRequestedPage, pageResult.items.length, requestedPage, scopeKey]);
 
-    return () => {
-      isActive = false;
-      subscription.unsubscribe();
-    };
-  }, [cursor, enabled, mapDocument, pageSize, requestedPage, scope, getPage$]);
+  const goToPreviousPage = () => {
+    if (!hasLoadedRequestedPage) return;
 
-  const goToPreviousPage = useCallback(() => {
-    setPaginationState((currentState) =>
-      requestPreviousPage(currentState, scope),
-    );
-  }, [scope]);
+    dispatchNavigation({ scopeKey, type: "previous" });
+  };
 
-  const goToNextPage = useCallback(() => {
-    setPaginationState((currentState) => requestNextPage(currentState, scope));
-  }, [scope]);
+  const goToNextPage = () => {
+    if (
+      !hasLoadedRequestedPage ||
+      !pageResult.hasNextPage ||
+      !pageResult.nextCursor
+    ) {
+      return;
+    }
 
-  const isInitialLoading = enabled && !result;
-  const isPageChanging = enabled && Boolean(result) && !hasLoadedRequestedPage;
+    dispatchNavigation({
+      cursor: pageResult.nextCursor,
+      scopeKey,
+      type: "next",
+    });
+  };
+
+  const visibleResult = hasResultForScope ? pageResult : initialPage;
+  const isInitialLoading = enabled && !hasResultForScope && isLoadingPage;
+  const isPageChanging = enabled && hasResultForScope && isLoadingPage;
 
   return {
-    currentPage,
+    currentPage: enabled ? visibleResult.page : 1,
     goToNextPage,
     goToPreviousPage,
-    hasNextPage: enabled ? (result?.hasNextPage ?? false) : false,
-    hasPreviousPage: enabled && currentPage > 1,
+    hasNextPage: enabled && visibleResult.hasNextPage,
+    hasPreviousPage: enabled && visibleResult.page > 1,
     isLoading: isInitialLoading,
     isPageChanging,
-    items: enabled ? (result?.items ?? []) : [],
+    items: enabled ? visibleResult.items : [],
   };
 }

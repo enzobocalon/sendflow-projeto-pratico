@@ -1,30 +1,32 @@
-import { useMemo, useState } from "react";
+import { normalizeSearchText } from "@sendflow/shared";
+import { useState } from "react";
 
+import { useAuth } from "@/features/auth/use-auth";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useDelete } from "@/hooks/use-delete";
+import { useRealtimeCursorPagination } from "@/hooks/use-realtime-cursor-pagination";
 
-import { deleteConnection, type Connection } from "../connections.model";
+import {
+  deleteConnection,
+  getConnectionsPage$,
+  mapConnectionDocument,
+  type Connection,
+} from "../connections.model";
 
 interface UseConnectionsListParams {
-  connections: Connection[];
   editingConnection: Connection | null;
-  isLoadingConnections: boolean;
   onDeletedEditingConnection: () => void;
 }
 
 const CONNECTIONS_PAGE_SIZE = 30;
 
 export function useConnectionsList(params: UseConnectionsListParams) {
-  const {
-    connections,
-    editingConnection,
-    isLoadingConnections,
-    onDeletedEditingConnection,
-  } = params;
-
+  const { editingConnection, onDeletedEditingConnection } = params;
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const debouncedSearchTerm = useDebouncedValue(searchTerm);
+  const normalizedSearchTerm = normalizeSearchText(debouncedSearchTerm);
+  const userId = user?.uid ?? "";
 
   const handleDeletedConnection = (connection: Connection) => {
     if (editingConnection?.id === connection.id) {
@@ -42,58 +44,45 @@ export function useConnectionsList(params: UseConnectionsListParams) {
     onDeleted: handleDeletedConnection,
   });
 
-  const filteredConnections = useMemo(() => {
-    const normalizedSearchTerm = debouncedSearchTerm.trim().toLowerCase();
-
-    if (!normalizedSearchTerm) {
-      return connections;
-    }
-
-    return connections.filter((connection) =>
-      connection.name.toLowerCase().includes(normalizedSearchTerm),
-    );
-  }, [connections, debouncedSearchTerm]);
-  
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredConnections.length / CONNECTIONS_PAGE_SIZE),
-  );
-  const activePage = Math.min(currentPage, totalPages);
-  const pageStart = (activePage - 1) * CONNECTIONS_PAGE_SIZE;
-  const paginatedConnections = filteredConnections.slice(
-    pageStart,
-    pageStart + CONNECTIONS_PAGE_SIZE,
-  );
-
-  const goToNextPage = () => {
-    setCurrentPage(Math.min(activePage + 1, totalPages));
-  };
-
-  const goToPreviousPage = () => {
-    setCurrentPage(Math.max(activePage - 1, 1));
-  };
-
-  const updateSearchTerm = (value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
-  };
+  const {
+    currentPage,
+    goToNextPage,
+    goToPreviousPage,
+    hasNextPage,
+    hasPreviousPage,
+    isLoading,
+    isPageChanging,
+    items: connections,
+  } = useRealtimeCursorPagination<Connection>({
+    enabled: Boolean(user),
+    getPage$: (cursor, resultLimit) =>
+      getConnectionsPage$({
+        cursor,
+        resultLimit,
+        searchTerm: normalizedSearchTerm,
+      }),
+    mapDocument: mapConnectionDocument,
+    pageSize: CONNECTIONS_PAGE_SIZE,
+    queryKey: [userId, normalizedSearchTerm].join(":"),
+  });
 
   return {
     state: {
-      connections: paginatedConnections,
-      currentPage: activePage,
-      hasNextPage: activePage < totalPages,
-      hasPreviousPage: activePage > 1,
+      connections,
+      currentPage,
+      hasNextPage,
+      hasPreviousPage,
       isDeleting,
-      isLoading: isLoadingConnections,
+      isLoading,
+      isPageChanging,
       searchTerm,
-      totalConnections: paginatedConnections.length,
+      totalConnections: connections.length,
     },
     actions: {
       goToNextPage,
       goToPreviousPage,
       requestDeleteConnection,
-      setSearchTerm: updateSearchTerm,
+      setSearchTerm,
     },
   };
 }

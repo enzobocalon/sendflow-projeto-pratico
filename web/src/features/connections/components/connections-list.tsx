@@ -19,26 +19,16 @@ import {
 } from "./connections-list-copy";
 
 interface ConnectionsListProps {
-  connections: Connection[];
   editingConnection: Connection | null;
-  isLoadingConnections: boolean;
   onEdit: (connection: Connection) => void;
   onDeletedEditingConnection: () => void;
 }
 
 export function ConnectionsList(props: ConnectionsListProps) {
-  const {
-    connections,
-    editingConnection,
-    isLoadingConnections,
-    onEdit,
-    onDeletedEditingConnection,
-  } = props;
+  const { editingConnection, onEdit, onDeletedEditingConnection } = props;
 
   const { state, actions } = useConnectionsList({
-    connections,
     editingConnection,
-    isLoadingConnections,
     onDeletedEditingConnection,
   });
 
@@ -71,7 +61,7 @@ export function ConnectionsList(props: ConnectionsListProps) {
           disabled={state.isDeleting}
           hasNextPage={state.hasNextPage}
           hasPreviousPage={state.hasPreviousPage}
-          isLoading={false}
+          isLoading={state.isPageChanging}
           loadingLabel="Carregando conexões da próxima página"
           onNextPage={actions.goToNextPage}
           onPreviousPage={actions.goToPreviousPage}

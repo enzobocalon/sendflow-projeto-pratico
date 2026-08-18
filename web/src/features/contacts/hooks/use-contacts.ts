@@ -1,6 +1,4 @@
 import { normalizeSearchText } from "@sendflow/shared";
-import type { DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
-import { useCallback } from "react";
 
 import { useAuth } from "@/features/auth/use-auth";
 import { useRealtimeCursorPagination } from "@/hooks/use-realtime-cursor-pagination";
@@ -23,6 +21,7 @@ export function useContacts(params: UseContactsParams = {}) {
     pageSize = DEFAULT_PAGE_SIZE,
     searchTerm = "",
   } = params;
+
   const { user } = useAuth();
   const userId = user?.uid ?? "";
   const normalizedSearchTerm = normalizeSearchText(searchTerm);
@@ -31,43 +30,19 @@ export function useContacts(params: UseContactsParams = {}) {
     ":",
   );
 
-  const getPage$ = useCallback(
-    (cursor: QueryDocumentSnapshot<DocumentData> | null, resultLimit: number) =>
+  const { items: contacts, ...pagination } = useRealtimeCursorPagination({
+    enabled: canLoad,
+    getPage$: (cursor, resultLimit) =>
       getContactsPage$({
         connectionId,
         cursor,
         resultLimit,
         searchTerm: normalizedSearchTerm,
-        userId,
       }),
-    [connectionId, normalizedSearchTerm, userId],
-  );
-
-  const {
-    currentPage,
-    goToNextPage,
-    goToPreviousPage,
-    hasNextPage,
-    hasPreviousPage,
-    isLoading,
-    isPageChanging,
-    items: contacts,
-  } = useRealtimeCursorPagination({
-    enabled: canLoad,
     mapDocument: mapContactDocument,
     pageSize,
     queryKey,
-    getPage$,
   });
 
-  return {
-    contacts,
-    currentPage,
-    goToNextPage,
-    goToPreviousPage,
-    hasNextPage,
-    hasPreviousPage,
-    isLoading,
-    isPageChanging,
-  };
+  return { contacts, ...pagination };
 }

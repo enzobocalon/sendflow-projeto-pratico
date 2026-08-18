@@ -70,7 +70,6 @@ interface GetMessagesPageParams {
   cursor: QueryDocumentSnapshot<DocumentData> | null;
   resultLimit: number;
   status: MessageStatus | "all";
-  userId: string;
 }
 
 const messagesCollection = collection(
@@ -132,8 +131,11 @@ export const getMessage = async (messageId: string, userId: string) => {
   return mapMessageDocument(snapshot);
 };
 
-const createMessagesPageQuery = (params: GetMessagesPageParams) => {
-  const { cursor, resultLimit, status, userId } = params;
+const createMessagesPageQuery = (
+  params: GetMessagesPageParams,
+  userId: string,
+) => {
+  const { cursor, resultLimit, status } = params;
   const constraints: QueryConstraint[] = [
     where("userId", "==", userId),
     orderBy("createdAt", "desc"),
@@ -149,8 +151,11 @@ const createMessagesPageQuery = (params: GetMessagesPageParams) => {
   return query(messagesCollection, ...constraints);
 };
 
-export const getMessagesPage$ = (params: GetMessagesPageParams) =>
-  collection$(createMessagesPageQuery(params));
+export const getMessagesPage$ = (params: GetMessagesPageParams) => {
+  const userId = requireAuthenticatedUserId();
+
+  return collection$(createMessagesPageQuery(params, userId));
+};
 
 export const getHasMessagesByConnection = async (
   connectionId: string,

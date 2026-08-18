@@ -6,6 +6,7 @@ import {
   increment,
   serverTimestamp,
   type CollectionReference,
+  type Timestamp,
   type Transaction,
 } from "firebase/firestore";
 import { docData } from "rxfire/firestore";
@@ -14,6 +15,7 @@ import { map } from "rxjs";
 import { collectionPaths } from "@/config/collection-paths";
 import { BusinessRuleError } from "@/errors/business-rule.error";
 import { db } from "@/lib/firebase";
+import { requireAuthenticatedUserId } from "@/lib/firestore";
 
 export interface UsageCounters {
   connectionsCount: number;
@@ -24,11 +26,14 @@ export interface UsageCounters {
 
 export type UsageCounterChanges = Partial<UsageCounters>;
 
-interface UsageDocument extends UsageCounters {
-  createdAt: Date;
-  updatedAt: Date;
+export interface Usage extends UsageCounters {
+  createdAt: Timestamp;
+  id: string;
+  updatedAt: Timestamp;
   userId: string;
 }
+
+type UsageDocument = Omit<Usage, "id">;
 
 const usageCollection = collection(
   db,
@@ -51,16 +56,20 @@ const mapUsageCounters = (data: Partial<UsageCounters>): UsageCounters => ({
   scheduledMessagesCount: data.scheduledMessagesCount ?? 0,
 });
 
-export const getUsage = async (userId: string) => {
+export const getUsage = async () => {
+  const userId = requireAuthenticatedUserId();
   const snapshot = await getDoc(getUsageReference(userId));
 
   return mapUsageCounters(snapshot.data() ?? {});
 };
 
-export const getUsage$ = (userId: string) =>
-  docData(getUsageReference(userId)).pipe(
+export const getUsage$ = () => {
+  const userId = requireAuthenticatedUserId();
+
+  return docData(getUsageReference(userId)).pipe(
     map((usage) => mapUsageCounters(usage ?? {})),
   );
+};
 
 export const updateUsageInTransaction = async (
   transaction: Transaction,

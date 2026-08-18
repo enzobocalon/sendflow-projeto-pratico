@@ -1,37 +1,15 @@
-import { useEffect, useState } from "react";
-
 import { useAuth } from "@/features/auth/use-auth";
+import { useRxValue } from "@/hooks/use-rx-value";
 
-import {
-  emptyUsageCounters,
-  getUsage$,
-  type UsageCounters,
-} from "./usage.model";
+import { emptyUsageCounters, getUsage$ } from "./usage.model";
 
 export function useUsage() {
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(() => Boolean(user));
-  const [usage, setUsage] = useState<UsageCounters>(emptyUsageCounters);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const subscription = getUsage$(user.uid).subscribe({
-      error: () => {
-        setIsLoading(false);
-      },
-      next: (loadedUsage) => {
-        setUsage(loadedUsage);
-        setIsLoading(false);
-      },
-    });
-
-    return () => subscription.unsubscribe();
-  }, [user]);
-
-  if (!user) {
-    return { isLoading: false, usage: emptyUsageCounters };
-  }
+  const [usage, isLoading] = useRxValue(
+    getUsage$,
+    [user?.uid],
+    emptyUsageCounters,
+  );
 
   return { isLoading, usage };
 }
