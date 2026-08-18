@@ -97,8 +97,11 @@ const createConnectionsQuery = (
   const constraints: QueryConstraint[] = [
     where("userId", "==", userId),
     where("status", "==", "active"),
-    orderBy(normalizedSearchTerm ? "nameNormalized" : "name", "asc"),
   ];
+
+  constraints.push(
+    orderBy(normalizedSearchTerm ? "nameNormalized" : "name", "asc"),
+  );
 
   if (normalizedSearchTerm) {
     if (!cursor) constraints.push(startAt(normalizedSearchTerm));

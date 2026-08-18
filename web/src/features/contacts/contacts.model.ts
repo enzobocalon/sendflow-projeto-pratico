@@ -79,14 +79,15 @@ const createContactsPageQuery = (
 ) => {
   const { connectionId, cursor, resultLimit, searchTerm } = params;
   const normalizedSearchTerm = normalizeSearchText(searchTerm);
-  const constraints: QueryConstraint[] = [
-    where("userId", "==", userId),
-    orderBy(normalizedSearchTerm ? "nameNormalized" : "name", "asc"),
-  ];
+  const constraints: QueryConstraint[] = [where("userId", "==", userId)];
 
   if (connectionId) {
-    constraints.splice(1, 0, where("connectionId", "==", connectionId));
+    constraints.push(where("connectionId", "==", connectionId));
   }
+
+  constraints.push(
+    orderBy(normalizedSearchTerm ? "nameNormalized" : "name", "asc"),
+  );
 
   if (normalizedSearchTerm) {
     if (!cursor) constraints.push(startAt(normalizedSearchTerm));

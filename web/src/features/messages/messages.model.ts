@@ -124,14 +124,11 @@ const createMessagesPageQuery = (
   userId: string,
 ) => {
   const { cursor, resultLimit, status } = params;
-  const constraints: QueryConstraint[] = [
-    where("userId", "==", userId),
-    orderBy("createdAt", "desc"),
-  ];
+  const constraints: QueryConstraint[] = [where("userId", "==", userId)];
 
-  if (status !== "all") {
-    constraints.splice(1, 0, where("status", "==", status));
-  }
+  if (status !== "all") constraints.push(where("status", "==", status));
+
+  constraints.push(orderBy("createdAt", "desc"));
 
   if (cursor) constraints.push(startAfter(cursor));
   constraints.push(limit(resultLimit));
