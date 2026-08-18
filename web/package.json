@@ -25,6 +25,8 @@
     "react-dom": "^19.2.6",
     "react-hook-form": "^7.76.0",
     "react-router-dom": "^7.10.1",
+    "rxfire": "6.2.0",
+    "rxjs": "7.8.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {

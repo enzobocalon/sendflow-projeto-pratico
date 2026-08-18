@@ -1,10 +1,9 @@
 import {
   type DocumentData,
   type QueryDocumentSnapshot,
-  type QuerySnapshot,
-  type Unsubscribe,
 } from "firebase/firestore";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Observable } from "rxjs";
 
 import {
   applyListenerFailure,
@@ -17,25 +16,23 @@ import {
   requestPreviousPage,
   returnFromEmptyPage,
   type Cursor,
-} from "./realtime-cursor-pagination-state";
+} from "@/utils/realtime-cursor-pagination-state";
 
 interface UseRealtimeCursorPaginationParams<Item> {
   enabled: boolean;
+  getPage$: (
+    cursor: Cursor,
+    resultLimit: number,
+  ) => Observable<QueryDocumentSnapshot<DocumentData>[]>;
   mapDocument: (document: QueryDocumentSnapshot<DocumentData>) => Item;
   pageSize: number;
   queryKey: string;
-  subscribeToPage: (
-    cursor: Cursor,
-    resultLimit: number,
-    onValue: (snapshot: QuerySnapshot<DocumentData>) => void,
-    onError: () => void,
-  ) => Unsubscribe;
 }
 
 export function useRealtimeCursorPagination<Item>(
   params: UseRealtimeCursorPaginationParams<Item>,
 ) {
-  const { enabled, mapDocument, pageSize, queryKey, subscribeToPage } = params;
+  const { enabled, getPage$, mapDocument, pageSize, queryKey } = params;
   const scope = useMemo(
     () => createPaginationScope(queryKey, pageSize, enabled),
     [enabled, pageSize, queryKey],
@@ -53,13 +50,18 @@ export function useRealtimeCursorPagination<Item>(
     if (!enabled) return;
 
     let isActive = true;
-    const unsubscribe = subscribeToPage(
-      cursor,
-      pageSize + 1,
-      (snapshot) => {
+    const subscription = getPage$(cursor, pageSize + 1).subscribe({
+      error: () => {
         if (!isActive) return;
 
-        const loadedPage = readLoadedPage(snapshot.docs, pageSize, mapDocument);
+        setPaginationState((currentState) =>
+          applyListenerFailure(currentState, scope, requestedPage),
+        );
+      },
+      next: (documents) => {
+        if (!isActive) return;
+
+        const loadedPage = readLoadedPage(documents, pageSize, mapDocument);
 
         if (requestedPage > 1 && loadedPage.items.length === 0) {
           // Guard
@@ -73,28 +75,13 @@ export function useRealtimeCursorPagination<Item>(
           applyLoadedPage(currentState, scope, requestedPage, loadedPage),
         );
       },
-      () => {
-        if (!isActive) return;
-
-        setPaginationState((currentState) =>
-          applyListenerFailure(currentState, scope, requestedPage),
-        );
-      },
-    );
+    });
 
     return () => {
       isActive = false;
-      unsubscribe();
+      subscription.unsubscribe();
     };
-  }, [
-    cursor,
-    enabled,
-    mapDocument,
-    pageSize,
-    requestedPage,
-    scope,
-    subscribeToPage,
-  ]);
+  }, [cursor, enabled, mapDocument, pageSize, requestedPage, scope, getPage$]);
 
   const goToPreviousPage = useCallback(() => {
     setPaginationState((currentState) =>

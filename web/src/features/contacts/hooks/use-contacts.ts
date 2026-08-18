@@ -5,7 +5,7 @@ import { useCallback } from "react";
 import { useAuth } from "@/features/auth/use-auth";
 import { useRealtimeCursorPagination } from "@/hooks/use-realtime-cursor-pagination";
 
-import { getContactsPageRealtime, mapContactDocument } from "../contacts.model";
+import { getContactsPage$, mapContactDocument } from "../contacts.model";
 
 interface UseContactsParams {
   connectionId?: string;
@@ -31,24 +31,15 @@ export function useContacts(params: UseContactsParams = {}) {
     ":",
   );
 
-  const getPageRealtime = useCallback(
-    (
-      cursor: QueryDocumentSnapshot<DocumentData> | null,
-      resultLimit: number,
-      onValue: Parameters<typeof getContactsPageRealtime>[1],
-      onError: Parameters<typeof getContactsPageRealtime>[2],
-    ) =>
-      getContactsPageRealtime(
-        {
-          connectionId,
-          cursor,
-          resultLimit,
-          searchTerm: normalizedSearchTerm,
-          userId,
-        },
-        onValue,
-        onError,
-      ),
+  const getPage$ = useCallback(
+    (cursor: QueryDocumentSnapshot<DocumentData> | null, resultLimit: number) =>
+      getContactsPage$({
+        connectionId,
+        cursor,
+        resultLimit,
+        searchTerm: normalizedSearchTerm,
+        userId,
+      }),
     [connectionId, normalizedSearchTerm, userId],
   );
 
@@ -66,7 +57,7 @@ export function useContacts(params: UseContactsParams = {}) {
     mapDocument: mapContactDocument,
     pageSize,
     queryKey,
-    subscribeToPage: getPageRealtime,
+    getPage$,
   });
 
   return {

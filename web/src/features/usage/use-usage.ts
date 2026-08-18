@@ -4,7 +4,7 @@ import { useAuth } from "@/features/auth/use-auth";
 
 import {
   emptyUsageCounters,
-  getUsageRealtime,
+  getUsage$,
   type UsageCounters,
 } from "./usage.model";
 
@@ -16,16 +16,17 @@ export function useUsage() {
   useEffect(() => {
     if (!user) return;
 
-    return getUsageRealtime(
-      user.uid,
-      (loadedUsage) => {
+    const subscription = getUsage$(user.uid).subscribe({
+      error: () => {
+        setIsLoading(false);
+      },
+      next: (loadedUsage) => {
         setUsage(loadedUsage);
         setIsLoading(false);
       },
-      () => {
-        setIsLoading(false);
-      },
-    );
+    });
+
+    return () => subscription.unsubscribe();
   }, [user]);
 
   if (!user) {

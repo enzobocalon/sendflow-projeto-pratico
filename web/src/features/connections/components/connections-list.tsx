@@ -8,6 +8,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
 import { EmptyState } from "@/components/empty-state";
+import { PaginatedContent } from "@/components/paginated-content";
 import { SectionTitle } from "@/features/dashboard/components/section-title";
 
 import { useConnectionsList } from "../hooks/use-connections-list";
@@ -64,46 +65,60 @@ export function ConnectionsList(props: ConnectionsListProps) {
           <CircularProgress aria-label="Carregando conexões" />
         </div>
       ) : (
-        <Stack spacing={1.5}>
-          {state.connections.length === 0 && <EmptyState {...emptyState} />}
+        <PaginatedContent
+          contentLabel="conexões"
+          currentPage={state.currentPage}
+          disabled={state.isDeleting}
+          hasNextPage={state.hasNextPage}
+          hasPreviousPage={state.hasPreviousPage}
+          isLoading={false}
+          loadingLabel="Carregando conexões da próxima página"
+          onNextPage={actions.goToNextPage}
+          onPreviousPage={actions.goToPreviousPage}
+        >
+          <Stack spacing={1.5}>
+            {state.connections.length === 0 && <EmptyState {...emptyState} />}
 
-          {state.connections.map((connection) => (
-            <Paper
-              key={connection.id}
-              elevation={0}
-              className="rounded-lg border border-slate-200 p-4 transition hover:border-blue-200 hover:bg-blue-50/30"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <Typography className="font-semibold text-slate-900">
-                    {connection.name}
-                  </Typography>
-                  <Typography className="mt-1 text-sm text-slate-500">
-                    Conexão cadastrada
-                  </Typography>
+            {state.connections.map((connection) => (
+              <Paper
+                key={connection.id}
+                elevation={0}
+                className="rounded-lg border border-slate-200 p-4 transition hover:border-blue-200 hover:bg-blue-50/30"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <Typography className="font-semibold text-slate-900">
+                      {connection.name}
+                    </Typography>
+                    <Typography className="mt-1 text-sm text-slate-500">
+                      Conexão cadastrada
+                    </Typography>
+                  </div>
+                  <Stack direction="row" spacing={0.5}>
+                    <IconButton
+                      aria-label="Editar conexão"
+                      size="small"
+                      onClick={() => onEdit(connection)}
+                      disabled={state.isDeleting}
+                    >
+                      <EditOutlinedIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      aria-label="Excluir conexão"
+                      size="small"
+                      onClick={() =>
+                        actions.requestDeleteConnection(connection)
+                      }
+                      disabled={state.isDeleting}
+                    >
+                      <DeleteOutlineIcon fontSize="small" />
+                    </IconButton>
+                  </Stack>
                 </div>
-                <Stack direction="row" spacing={0.5}>
-                  <IconButton
-                    aria-label="Editar conexão"
-                    size="small"
-                    onClick={() => onEdit(connection)}
-                    disabled={state.isDeleting}
-                  >
-                    <EditOutlinedIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton
-                    aria-label="Excluir conexão"
-                    size="small"
-                    onClick={() => actions.requestDeleteConnection(connection)}
-                    disabled={state.isDeleting}
-                  >
-                    <DeleteOutlineIcon fontSize="small" />
-                  </IconButton>
-                </Stack>
-              </div>
-            </Paper>
-          ))}
-        </Stack>
+              </Paper>
+            ))}
+          </Stack>
+        </PaginatedContent>
       )}
     </section>
   );

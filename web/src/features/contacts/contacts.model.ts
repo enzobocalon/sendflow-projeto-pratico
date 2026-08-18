@@ -7,7 +7,6 @@ import {
   getDoc,
   getDocs,
   limit,
-  onSnapshot,
   orderBy,
   query,
   runTransaction,
@@ -21,10 +20,10 @@ import {
   type DocumentSnapshot,
   type QueryConstraint,
   type QueryDocumentSnapshot,
-  type QuerySnapshot,
   type Timestamp,
   type Transaction,
 } from "firebase/firestore";
+import { collection as collection$ } from "rxfire/firestore";
 
 import { collectionPaths } from "@/config/collection-paths";
 import { updateUsageInTransaction } from "@/features/usage/usage.model";
@@ -56,7 +55,7 @@ interface UpdateContactInput extends CreateContactInput {
   contactId: string;
 }
 
-interface GetContactsPageRealtimeParams {
+interface GetContactsPageParams {
   connectionId?: string;
   cursor: QueryDocumentSnapshot<DocumentData> | null;
   resultLimit: number;
@@ -87,7 +86,7 @@ export const getContact = async (contactId: string, userId: string) => {
   return mapContactDocument(snapshot);
 };
 
-const createContactsPageQuery = (params: GetContactsPageRealtimeParams) => {
+const createContactsPageQuery = (params: GetContactsPageParams) => {
   const { connectionId, cursor, resultLimit, searchTerm, userId } = params;
   const normalizedSearchTerm = normalizeSearchText(searchTerm);
   const constraints: QueryConstraint[] = [
@@ -110,11 +109,8 @@ const createContactsPageQuery = (params: GetContactsPageRealtimeParams) => {
   return query(contactsCollection, ...constraints);
 };
 
-export const getContactsPageRealtime = (
-  params: GetContactsPageRealtimeParams,
-  onValue: (snapshot: QuerySnapshot<DocumentData>) => void,
-  onError: () => void,
-) => onSnapshot(createContactsPageQuery(params), onValue, onError);
+export const getContactsPage$ = (params: GetContactsPageParams) =>
+  collection$(createContactsPageQuery(params));
 
 export const getHasContactsByConnection = async (
   connectionId: string,

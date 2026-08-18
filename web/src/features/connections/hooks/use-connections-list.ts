@@ -12,6 +12,8 @@ interface UseConnectionsListParams {
   onDeletedEditingConnection: () => void;
 }
 
+const CONNECTIONS_PAGE_SIZE = 30;
+
 export function useConnectionsList(params: UseConnectionsListParams) {
   const {
     connections,
@@ -21,6 +23,7 @@ export function useConnectionsList(params: UseConnectionsListParams) {
   } = params;
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const debouncedSearchTerm = useDebouncedValue(searchTerm);
 
   const handleDeletedConnection = (connection: Connection) => {
@@ -50,18 +53,47 @@ export function useConnectionsList(params: UseConnectionsListParams) {
       connection.name.toLowerCase().includes(normalizedSearchTerm),
     );
   }, [connections, debouncedSearchTerm]);
+  
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredConnections.length / CONNECTIONS_PAGE_SIZE),
+  );
+  const activePage = Math.min(currentPage, totalPages);
+  const pageStart = (activePage - 1) * CONNECTIONS_PAGE_SIZE;
+  const paginatedConnections = filteredConnections.slice(
+    pageStart,
+    pageStart + CONNECTIONS_PAGE_SIZE,
+  );
+
+  const goToNextPage = () => {
+    setCurrentPage(Math.min(activePage + 1, totalPages));
+  };
+
+  const goToPreviousPage = () => {
+    setCurrentPage(Math.max(activePage - 1, 1));
+  };
+
+  const updateSearchTerm = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
 
   return {
     state: {
-      connections: filteredConnections,
+      connections: paginatedConnections,
+      currentPage: activePage,
+      hasNextPage: activePage < totalPages,
+      hasPreviousPage: activePage > 1,
       isDeleting,
       isLoading: isLoadingConnections,
       searchTerm,
-      totalConnections: filteredConnections.length,
+      totalConnections: paginatedConnections.length,
     },
     actions: {
+      goToNextPage,
+      goToPreviousPage,
       requestDeleteConnection,
-      setSearchTerm,
+      setSearchTerm: updateSearchTerm,
     },
   };
 }

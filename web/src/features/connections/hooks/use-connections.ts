@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 import { useAuth } from "@/features/auth/use-auth";
 
-import { getConnectionsRealtime, type Connection } from "../connections.model";
+import { getConnections$, type Connection } from "../connections.model";
 
 interface UseConnectionsParams {
   enabled?: boolean;
@@ -36,20 +36,21 @@ export function useConnections(
       setIsLoading(false);
     };
 
-    const unsubscribe = getConnectionsRealtime({
-      onError: () => {
+    const subscription = getConnections$({
+      searchTerm: normalizedSearchTerm,
+      userId: user.uid,
+    }).subscribe({
+      error: () => {
         if (!isActive) return;
 
         setIsLoading(false);
       },
-      onValue: handleConnections,
-      searchTerm: normalizedSearchTerm,
-      userId: user.uid,
+      next: handleConnections,
     });
 
     return () => {
       isActive = false;
-      unsubscribe();
+      subscription.unsubscribe();
     };
   }, [canLoad, normalizedSearchTerm, user]);
 

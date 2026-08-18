@@ -5,7 +5,7 @@ import { useCallback } from "react";
 import { useAuth } from "@/features/auth/use-auth";
 import { useRealtimeCursorPagination } from "@/hooks/use-realtime-cursor-pagination";
 
-import { getMessagesPageRealtime, mapMessageDocument } from "../messages.model";
+import { getMessagesPage$, mapMessageDocument } from "../messages.model";
 
 interface UseMessagesParams {
   enabled?: boolean;
@@ -26,18 +26,9 @@ export function useMessages(params: UseMessagesParams = {}) {
   const canLoad = Boolean(user && enabled);
   const queryKey = [userId, status].join(":");
 
-  const getPageRealtime = useCallback(
-    (
-      cursor: QueryDocumentSnapshot<DocumentData> | null,
-      resultLimit: number,
-      onValue: Parameters<typeof getMessagesPageRealtime>[1],
-      onError: Parameters<typeof getMessagesPageRealtime>[2],
-    ) =>
-      getMessagesPageRealtime(
-        { cursor, resultLimit, status, userId },
-        onValue,
-        onError,
-      ),
+  const getPage$ = useCallback(
+    (cursor: QueryDocumentSnapshot<DocumentData> | null, resultLimit: number) =>
+      getMessagesPage$({ cursor, resultLimit, status, userId }),
     [status, userId],
   );
 
@@ -55,7 +46,7 @@ export function useMessages(params: UseMessagesParams = {}) {
     mapDocument: mapMessageDocument,
     pageSize,
     queryKey,
-    subscribeToPage: getPageRealtime,
+    getPage$,
   });
 
   return {

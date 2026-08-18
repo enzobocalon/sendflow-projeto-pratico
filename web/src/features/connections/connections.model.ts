@@ -5,7 +5,6 @@ import {
   endAt,
   getDoc,
   getDocs,
-  onSnapshot,
   orderBy,
   query,
   runTransaction,
@@ -19,6 +18,8 @@ import {
   type QueryConstraint,
   type Timestamp,
 } from "firebase/firestore";
+import { collection as collection$ } from "rxfire/firestore";
+import { map } from "rxjs";
 
 import { collectionPaths } from "@/config/collection-paths";
 import { BusinessRuleError } from "@/errors/business-rule.error";
@@ -52,11 +53,6 @@ interface UpdateConnectionInput extends CreateConnectionInput {
 interface GetConnectionsParams {
   searchTerm?: string;
   userId: string;
-}
-
-interface GetConnectionsRealtimeParams extends GetConnectionsParams {
-  onError: () => void;
-  onValue: (connections: Connection[]) => void;
 }
 
 const connectionsCollection = collection(
@@ -142,23 +138,14 @@ export const getConnections = async (params: GetConnectionsParams) => {
     .map(mapConnectionDocument);
 };
 
-export const getConnectionsRealtime = (
-  params: GetConnectionsRealtimeParams,
-) => {
-  const { onError, onValue, searchTerm = "", userId } = params;
-
-  return onSnapshot(
-    createConnectionsQuery({ searchTerm, userId }),
-    (snapshot) => {
-      onValue(
-        snapshot.docs
-          .filter((document) => isActiveConnection(document.data()))
-          .map(mapConnectionDocument),
-      );
-    },
-    onError,
+export const getConnections$ = (params: GetConnectionsParams) =>
+  collection$(createConnectionsQuery(params)).pipe(
+    map((documents) =>
+      documents
+        .filter((document) => isActiveConnection(document.data()))
+        .map(mapConnectionDocument),
+    ),
   );
-};
 
 export const createConnection = async (params: CreateConnectionInput) => {
   const { name: rawName } = params;

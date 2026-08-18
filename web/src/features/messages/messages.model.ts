@@ -5,7 +5,6 @@ import {
   getDoc,
   getDocs,
   limit,
-  onSnapshot,
   orderBy,
   query,
   runTransaction,
@@ -18,9 +17,9 @@ import {
   type DocumentSnapshot,
   type QueryConstraint,
   type QueryDocumentSnapshot,
-  type QuerySnapshot,
   type Transaction,
 } from "firebase/firestore";
+import { collection as collection$ } from "rxfire/firestore";
 
 import { collectionPaths } from "@/config/collection-paths";
 import { BusinessRuleError } from "@/errors/business-rule.error";
@@ -67,7 +66,7 @@ type UpdateMessageInput = CreateMessageInput & {
 
 type MessageDocument = Omit<Message, "id">;
 
-interface GetMessagesPageRealtimeParams {
+interface GetMessagesPageParams {
   cursor: QueryDocumentSnapshot<DocumentData> | null;
   resultLimit: number;
   status: MessageStatus | "all";
@@ -133,7 +132,7 @@ export const getMessage = async (messageId: string, userId: string) => {
   return mapMessageDocument(snapshot);
 };
 
-const createMessagesPageQuery = (params: GetMessagesPageRealtimeParams) => {
+const createMessagesPageQuery = (params: GetMessagesPageParams) => {
   const { cursor, resultLimit, status, userId } = params;
   const constraints: QueryConstraint[] = [
     where("userId", "==", userId),
@@ -150,11 +149,8 @@ const createMessagesPageQuery = (params: GetMessagesPageRealtimeParams) => {
   return query(messagesCollection, ...constraints);
 };
 
-export const getMessagesPageRealtime = (
-  params: GetMessagesPageRealtimeParams,
-  onValue: (snapshot: QuerySnapshot<DocumentData>) => void,
-  onError: () => void,
-) => onSnapshot(createMessagesPageQuery(params), onValue, onError);
+export const getMessagesPage$ = (params: GetMessagesPageParams) =>
+  collection$(createMessagesPageQuery(params));
 
 export const getHasMessagesByConnection = async (
   connectionId: string,

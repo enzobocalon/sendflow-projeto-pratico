@@ -4,11 +4,12 @@ import {
   doc,
   getDoc,
   increment,
-  onSnapshot,
   serverTimestamp,
   type CollectionReference,
   type Transaction,
 } from "firebase/firestore";
+import { docData } from "rxfire/firestore";
+import { map } from "rxjs";
 
 import { collectionPaths } from "@/config/collection-paths";
 import { BusinessRuleError } from "@/errors/business-rule.error";
@@ -56,15 +57,9 @@ export const getUsage = async (userId: string) => {
   return mapUsageCounters(snapshot.data() ?? {});
 };
 
-export const getUsageRealtime = (
-  userId: string,
-  onValue: (usage: UsageCounters) => void,
-  onError: () => void,
-) =>
-  onSnapshot(
-    getUsageReference(userId),
-    (snapshot) => onValue(mapUsageCounters(snapshot.data() ?? {})),
-    onError,
+export const getUsage$ = (userId: string) =>
+  docData(getUsageReference(userId)).pipe(
+    map((usage) => mapUsageCounters(usage ?? {})),
   );
 
 export const updateUsageInTransaction = async (
