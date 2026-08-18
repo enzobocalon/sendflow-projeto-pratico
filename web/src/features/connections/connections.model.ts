@@ -28,7 +28,7 @@ import { getHasContactsByConnection } from "@/features/contacts/contacts.model";
 import { getHasMessagesByConnection } from "@/features/messages/messages.model";
 import { updateUsageInTransaction } from "@/features/usage/usage.model";
 import { db } from "@/lib/firebase";
-import { requireAuthenticatedUserId } from "@/lib/firestore";
+import { requireAuthenticatedUserId, snapDoc } from "@/lib/firestore";
 
 export interface Connection {
   archivedAt?: Timestamp | null;
@@ -65,12 +65,11 @@ const connectionsCollection = collection(
 export const mapConnectionDocument = (
   snapshot: DocumentSnapshot<DocumentData>,
 ): Connection => {
-  const data = snapshot.data() as ConnectionDocument;
+  const data = snapDoc<ConnectionDocument>(snapshot);
 
   return {
     ...data,
     archivedAt: data.archivedAt ?? null,
-    id: snapshot.id,
     status: data.status ?? "active",
   };
 };

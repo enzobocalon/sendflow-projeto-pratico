@@ -29,7 +29,7 @@ import { collection as collection$ } from "rxfire/firestore";
 import { collectionPaths } from "@/config/collection-paths";
 import { updateUsageInTransaction } from "@/features/usage/usage.model";
 import { db } from "@/lib/firebase";
-import { requireAuthenticatedUserId } from "@/lib/firestore";
+import { requireAuthenticatedUserId, snapDoc } from "@/lib/firestore";
 
 export interface Contact {
   connectionId: string;
@@ -68,10 +68,7 @@ const contactsCollection = collection(
 
 export const mapContactDocument = (
   document: DocumentSnapshot<DocumentData>,
-): Contact => ({
-  id: document.id,
-  ...(document.data() as ContactDocument),
-});
+): Contact => snapDoc<ContactDocument>(document);
 
 const createContactsPageQuery = (
   params: GetContactsPageParams,

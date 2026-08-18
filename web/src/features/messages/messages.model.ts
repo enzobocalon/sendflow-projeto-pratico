@@ -25,7 +25,7 @@ import { BusinessRuleError } from "@/errors/business-rule.error";
 import { getAreContactsValidForConnection } from "@/features/contacts/contacts.model";
 import { updateUsageInTransaction } from "@/features/usage/usage.model";
 import { db } from "@/lib/firebase";
-import { requireAuthenticatedUserId } from "@/lib/firestore";
+import { requireAuthenticatedUserId, snapDoc } from "@/lib/firestore";
 
 export interface Message {
   connectionId: string;
@@ -114,10 +114,7 @@ const validateContactsInTransaction = async (
 
 export const mapMessageDocument = (
   document: DocumentSnapshot<DocumentData>,
-): Message => ({
-  id: document.id,
-  ...(document.data() as MessageDocument),
-});
+): Message => snapDoc<MessageDocument>(document);
 
 const createMessagesPageQuery = (
   params: GetMessagesPageParams,
