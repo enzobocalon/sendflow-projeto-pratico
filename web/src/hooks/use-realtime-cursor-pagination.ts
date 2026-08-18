@@ -81,7 +81,12 @@ export function useRealtimeCursorPagination<T>(
       scopeKey,
       type: "previous",
     });
-  }, [hasLoadedRequestedPage, pageResult.items.length, requestedPage, scopeKey]);
+  }, [
+    hasLoadedRequestedPage,
+    pageResult.items.length,
+    requestedPage,
+    scopeKey,
+  ]);
 
   const goToPreviousPage = () => {
     if (!hasLoadedRequestedPage) return;

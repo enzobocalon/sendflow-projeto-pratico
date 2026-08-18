@@ -1,7 +1,4 @@
-import type {
-  DocumentData,
-  QueryDocumentSnapshot,
-} from "firebase/firestore";
+import type { DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
 
 export type Cursor = QueryDocumentSnapshot<DocumentData> | null;
 
@@ -33,9 +30,7 @@ interface CreatePageResultParams<Item> {
   scopeKey: string;
 }
 
-export const createNavigation = (
-  scopeKey: string,
-): PaginationNavigation => ({
+export const createNavigation = (scopeKey: string): PaginationNavigation => ({
   cursors: [null],
   requestedPage: 1,
   scopeKey,
@@ -45,9 +40,7 @@ export const getActiveNavigation = (
   navigation: PaginationNavigation,
   scopeKey: string,
 ) =>
-  navigation.scopeKey === scopeKey
-    ? navigation
-    : createNavigation(scopeKey);
+  navigation.scopeKey === scopeKey ? navigation : createNavigation(scopeKey);
 
 export const createEmptyPage = <Item>(): PageResult<Item> => ({
   hasNextPage: false,
