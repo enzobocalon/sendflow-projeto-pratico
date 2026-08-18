@@ -1,20 +1,15 @@
-import { useState } from "react";
-
 import { useConnections } from "@/features/connections/hooks/use-connections";
+import { useEditableItem } from "@/hooks/use-editable-item";
 
 import type { Contact } from "../contacts.model";
 
 export function useContactsPage() {
-  const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const {
+    cancelEdit: cancelEditContact,
+    editItem: editContact,
+    editingItem: editingContact,
+  } = useEditableItem<Contact>();
   const connectionsState = useConnections();
-
-  const editContact = (contact: Contact) => {
-    setEditingContact(contact);
-  };
-
-  const cancelEditContact = () => {
-    setEditingContact(null);
-  };
 
   return {
     cancelEditContact,

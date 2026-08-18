@@ -2,7 +2,6 @@ import { MAX_CONNECTIONS_PER_USER } from "@sendflow/shared";
 import {
   collection,
   doc,
-  getDoc,
   increment,
   serverTimestamp,
   type CollectionReference,
@@ -26,14 +25,11 @@ export interface UsageCounters {
 
 export type UsageCounterChanges = Partial<UsageCounters>;
 
-export interface Usage extends UsageCounters {
+interface UsageDocument extends UsageCounters {
   createdAt: Timestamp;
-  id: string;
   updatedAt: Timestamp;
   userId: string;
 }
-
-type UsageDocument = Omit<Usage, "id">;
 
 const usageCollection = collection(
   db,
@@ -55,13 +51,6 @@ const mapUsageCounters = (data: Partial<UsageCounters>): UsageCounters => ({
   messagesCount: data.messagesCount ?? 0,
   scheduledMessagesCount: data.scheduledMessagesCount ?? 0,
 });
-
-export const getUsage = async () => {
-  const userId = requireAuthenticatedUserId();
-  const snapshot = await getDoc(getUsageReference(userId));
-
-  return mapUsageCounters(snapshot.data() ?? {});
-};
 
 export const getUsage$ = () => {
   const userId = requireAuthenticatedUserId();

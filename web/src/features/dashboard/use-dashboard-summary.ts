@@ -1,12 +1,7 @@
 import type { UsageCounters } from "@/features/usage/usage.model";
 import { useUsage } from "@/features/usage/use-usage";
 
-export interface DashboardSummary {
-  connections: number;
-  contacts: number;
-  messages: number;
-  scheduledMessages: number;
-}
+import type { DashboardSummary } from "./types";
 
 const mapSummary = (usage: UsageCounters): DashboardSummary => ({
   connections: usage.connectionsCount,

@@ -2,7 +2,6 @@ import type { MessageStatus } from "@sendflow/shared";
 import {
   collection,
   doc,
-  getDoc,
   getDocs,
   limit,
   orderBy,
@@ -119,17 +118,6 @@ export const mapMessageDocument = (
   id: document.id,
   ...(document.data() as MessageDocument),
 });
-
-export const getMessage = async (messageId: string, userId: string) => {
-  const snapshot = await getDoc(doc(messagesCollection, messageId));
-  const message = snapshot.data();
-
-  if (!snapshot.exists() || message?.userId !== userId) {
-    throw new Error("Mensagem inválida.");
-  }
-
-  return mapMessageDocument(snapshot);
-};
 
 const createMessagesPageQuery = (
   params: GetMessagesPageParams,

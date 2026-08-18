@@ -1,17 +1,13 @@
-import { useState } from "react";
+import { useEditableItem } from "@/hooks/use-editable-item";
 
 import type { Message } from "../messages.model";
 
 export function useMessagesPage() {
-  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
-
-  const editMessage = (message: Message) => {
-    setEditingMessage(message);
-  };
-
-  const cancelEditMessage = () => {
-    setEditingMessage(null);
-  };
+  const {
+    cancelEdit: cancelEditMessage,
+    editItem: editMessage,
+    editingItem: editingMessage,
+  } = useEditableItem<Message>();
 
   return {
     cancelEditMessage,

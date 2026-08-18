@@ -4,7 +4,6 @@ import {
   deleteField,
   doc,
   endAt,
-  getDoc,
   getDocs,
   limit,
   orderBy,
@@ -73,17 +72,6 @@ export const mapContactDocument = (
   id: document.id,
   ...(document.data() as ContactDocument),
 });
-
-export const getContact = async (contactId: string, userId: string) => {
-  const snapshot = await getDoc(doc(contactsCollection, contactId));
-  const contact = snapshot.data();
-
-  if (!snapshot.exists() || contact?.userId !== userId) {
-    throw new Error("Contato inválido.");
-  }
-
-  return mapContactDocument(snapshot);
-};
 
 const createContactsPageQuery = (
   params: GetContactsPageParams,

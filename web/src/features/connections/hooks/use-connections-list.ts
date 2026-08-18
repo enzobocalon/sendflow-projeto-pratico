@@ -76,7 +76,6 @@ export function useConnectionsList(params: UseConnectionsListParams) {
       isLoading,
       isPageChanging,
       searchTerm,
-      totalConnections: connections.length,
     },
     actions: {
       goToNextPage,

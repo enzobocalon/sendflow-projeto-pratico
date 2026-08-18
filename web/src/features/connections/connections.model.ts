@@ -3,8 +3,6 @@ import {
   collection,
   doc,
   endAt,
-  getDoc,
-  getDocs,
   limit,
   orderBy,
   query,
@@ -53,18 +51,16 @@ interface UpdateConnectionInput extends CreateConnectionInput {
   connectionId: string;
 }
 
-interface GetConnectionsPageParams {
-  cursor: QueryDocumentSnapshot<DocumentData> | null;
-  resultLimit: number;
-  searchTerm: string;
+interface ConnectionsQueryParams {
+  cursor?: QueryDocumentSnapshot<DocumentData> | null;
+  resultLimit?: number;
+  searchTerm?: string;
 }
 
 const connectionsCollection = collection(
   db,
   collectionPaths.connections,
 ) as CollectionReference<ConnectionDocument, ConnectionDocument>;
-
-const isActiveConnection = (data: DocumentData) => data.status !== "archived";
 
 export const mapConnectionDocument = (
   snapshot: DocumentSnapshot<DocumentData>,
@@ -92,57 +88,11 @@ const assertOwnedConnection = (
   return mapConnectionDocument(snapshot);
 };
 
-const assertOwnedActiveConnection = (
-  snapshot: DocumentSnapshot<DocumentData>,
+const createConnectionsQuery = (
+  params: ConnectionsQueryParams,
   userId: string,
 ) => {
-  const connection = assertOwnedConnection(snapshot, userId);
-
-  if (!isActiveConnection(connection)) {
-    throw new Error("Conexão inválida.");
-  }
-
-  return connection;
-};
-
-export const getActiveConnection = async (
-  connectionId: string,
-  userId: string,
-) => {
-  const snapshot = await getDoc(doc(connectionsCollection, connectionId));
-
-  return assertOwnedActiveConnection(snapshot, userId);
-};
-
-export const getConnection = async (connectionId: string, userId: string) => {
-  const snapshot = await getDoc(doc(connectionsCollection, connectionId));
-
-  return assertOwnedConnection(snapshot, userId);
-};
-
-const createConnectionsQuery = (userId: string, searchTerm = "") => {
-  const normalizedSearchTerm = normalizeSearchText(searchTerm);
-  const constraints: QueryConstraint[] = [
-    where("userId", "==", userId),
-    where("status", "==", "active"),
-    orderBy(normalizedSearchTerm ? "nameNormalized" : "name", "asc"),
-  ];
-
-  if (normalizedSearchTerm) {
-    constraints.push(
-      startAt(normalizedSearchTerm),
-      endAt(`${normalizedSearchTerm}\uf8ff`),
-    );
-  }
-
-  return query(connectionsCollection, ...constraints);
-};
-
-const createConnectionsPageQuery = (
-  params: GetConnectionsPageParams,
-  userId: string,
-) => {
-  const { cursor, resultLimit, searchTerm } = params;
+  const { cursor, resultLimit, searchTerm = "" } = params;
   const normalizedSearchTerm = normalizeSearchText(searchTerm);
   const constraints: QueryConstraint[] = [
     where("userId", "==", userId),
@@ -156,30 +106,23 @@ const createConnectionsPageQuery = (
   }
 
   if (cursor) constraints.push(startAfter(cursor));
-  constraints.push(limit(resultLimit));
+  if (resultLimit !== undefined) constraints.push(limit(resultLimit));
 
   return query(connectionsCollection, ...constraints);
-};
-
-export const getConnections = async (searchTerm = "") => {
-  const userId = requireAuthenticatedUserId();
-  const snapshot = await getDocs(createConnectionsQuery(userId, searchTerm));
-
-  return snapshot.docs.map(mapConnectionDocument);
 };
 
 export const getConnections$ = (searchTerm = "") => {
   const userId = requireAuthenticatedUserId();
 
-  return collection$(createConnectionsQuery(userId, searchTerm)).pipe(
+  return collection$(createConnectionsQuery({ searchTerm }, userId)).pipe(
     map((documents) => documents.map(mapConnectionDocument)),
   );
 };
 
-export const getConnectionsPage$ = (params: GetConnectionsPageParams) => {
+export const getConnectionsPage$ = (params: ConnectionsQueryParams) => {
   const userId = requireAuthenticatedUserId();
 
-  return collection$(createConnectionsPageQuery(params, userId));
+  return collection$(createConnectionsQuery(params, userId));
 };
 
 export const createConnection = async (params: CreateConnectionInput) => {

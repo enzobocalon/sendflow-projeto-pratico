@@ -21,9 +21,8 @@ interface PaginationNavigation {
 
 interface PaginationAction {
   cursor?: Cursor;
-  page?: number;
   scopeKey: string;
-  type: "next" | "previous" | "set-page";
+  type: "next" | "previous";
 }
 
 interface CreatePageResultParams<Item> {
@@ -78,14 +77,6 @@ export const paginationReducer = (
   action: PaginationAction,
 ): PaginationNavigation => {
   const currentNavigation = getActiveNavigation(navigation, action.scopeKey);
-
-  if (action.type === "set-page") {
-    const requestedPage = Math.max(1, action.page ?? 1);
-
-    return requestedPage === currentNavigation.requestedPage
-      ? currentNavigation
-      : { ...currentNavigation, requestedPage };
-  }
 
   if (action.type === "previous") {
     return {

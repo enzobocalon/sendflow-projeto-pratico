@@ -41,7 +41,7 @@ export function ContactsList(props: ContactsListProps) {
   });
 
   const hasSearch = Boolean(state.searchTerm.trim());
-  const subtitle = getContactsListSubtitle(state.totalContacts, hasSearch);
+  const subtitle = getContactsListSubtitle(state.contacts.length, hasSearch);
   const emptyState = getContactsListEmptyState(hasSearch);
 
   return (

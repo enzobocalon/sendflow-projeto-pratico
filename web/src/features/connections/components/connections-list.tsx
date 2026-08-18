@@ -33,7 +33,7 @@ export function ConnectionsList(props: ConnectionsListProps) {
   });
 
   const hasSearch = Boolean(state.searchTerm.trim());
-  const subtitle = getConnectionsListSubtitle(state.totalConnections);
+  const subtitle = getConnectionsListSubtitle(state.connections.length);
   const emptyState = getConnectionsListEmptyState(hasSearch);
 
   return (

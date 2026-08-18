@@ -67,7 +67,6 @@ export function useContactsList(params: UseContactsListParams) {
       isLoading: isLoadingContacts || isLoadingConnections,
       isPageChanging,
       searchTerm,
-      totalContacts: contacts.length,
     },
     actions: {
       goToNextPage,

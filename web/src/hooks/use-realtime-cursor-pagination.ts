@@ -78,9 +78,8 @@ export function useRealtimeCursorPagination<T>(
     }
 
     dispatchNavigation({
-      page: requestedPage - 1,
       scopeKey,
-      type: "set-page",
+      type: "previous",
     });
   }, [hasLoadedRequestedPage, pageResult.items.length, requestedPage, scopeKey]);
 

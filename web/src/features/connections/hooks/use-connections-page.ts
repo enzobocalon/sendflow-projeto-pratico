@@ -1,19 +1,13 @@
-import { useState } from "react";
+import { useEditableItem } from "@/hooks/use-editable-item";
 
 import type { Connection } from "../connections.model";
 
 export function useConnectionsPage() {
-  const [editingConnection, setEditingConnection] = useState<Connection | null>(
-    null,
-  );
-
-  const editConnection = (connection: Connection) => {
-    setEditingConnection(connection);
-  };
-
-  const cancelEdit = () => {
-    setEditingConnection(null);
-  };
+  const {
+    cancelEdit,
+    editItem: editConnection,
+    editingItem: editingConnection,
+  } = useEditableItem<Connection>();
 
   return {
     cancelEdit,
